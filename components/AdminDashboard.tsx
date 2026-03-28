@@ -1,11 +1,22 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { Users, Activity, Brain, TrendingUp, TrendingDown, type LucideIcon } from 'lucide-react'
+import {
+  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from 'recharts'
+import { Users, Activity, Brain, TrendingUp, TrendingDown, Globe, type LucideIcon } from 'lucide-react'
 import { dailyStats, featureUsage, experienceLevels, recentActivity, adminStats } from '@/lib/mock-data'
+import { getVisitorStats, getRealFeatureUsage } from '@/lib/analytics'
 
-const StatCard = ({ title, value, change, icon: Icon, color }: { title: string; value: string | number; change: number; icon: LucideIcon; color: string }) => (
+const BAR_RADIUS_HORIZONTAL = [0, 4, 4, 0] as [number, number, number, number]
+const BAR_RADIUS_VERTICAL = [3, 3, 0, 0] as [number, number, number, number]
+
+const StatCard = ({
+  title, value, change, icon: Icon, color,
+}: {
+  title: string; value: string | number; change: number; icon: LucideIcon; color: string
+}) => (
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2 }} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6">
     <div className="flex items-center justify-between mb-4">
       <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: `${color}20`, border: `1px solid ${color}30` }}>
@@ -22,17 +33,93 @@ const StatCard = ({ title, value, change, icon: Icon, color }: { title: string; 
 
 export default function AdminDashboard() {
   const [activeChart, setActiveChart] = useState<'users' | 'experiments' | 'queries'>('users')
+  const [visitorStats, setVisitorStats] = useState(getVisitorStats())
+  const [realFeatures, setRealFeatures] = useState(getRealFeatureUsage())
+
+  useEffect(() => {
+    setVisitorStats(getVisitorStats())
+    setRealFeatures(getRealFeatureUsage())
+  }, [])
+
   const chartDataKey = activeChart === 'users' ? 'activeUsers' : activeChart === 'experiments' ? 'experiments' : 'aiQueries'
   const chartColor = activeChart === 'users' ? '#6366f1' : activeChart === 'experiments' ? '#06b6d4' : '#8b5cf6'
 
+  // Merge real feature data with mock fallback
+  const displayedFeatures = realFeatures.length > 0 ? realFeatures : featureUsage
+
   return (
     <div className="space-y-6">
+      {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Total Users" value={adminStats.totalUsers} change={12} icon={Users} color="#6366f1" />
         <StatCard title="Active Sessions" value={adminStats.activeSessions} change={-3} icon={Activity} color="#06b6d4" />
-        <StatCard title="Experiments Run" value={adminStats.experimentsRun} change={24} icon={Brain} color="#10b981" />
+        <StatCard title="Page Visits" value={visitorStats.totalVisits || adminStats.experimentsRun} change={24} icon={Brain} color="#10b981" />
         <StatCard title="AI Queries" value={adminStats.aiQueries} change={18} icon={Brain} color="#8b5cf6" />
       </div>
+
+      {/* Visitor Stats */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6">
+        <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
+          <Globe size={16} className="text-[#6366f1]" />
+          Visitor Stats (Real Analytics)
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div className="bg-[#0a0a0f] rounded-lg p-4 border border-[#1e1e2e]">
+            <p className="text-xs text-[#64748b] mb-1">Total Visits</p>
+            <p className="text-2xl font-bold text-white">{visitorStats.totalVisits}</p>
+          </div>
+          <div className="bg-[#0a0a0f] rounded-lg p-4 border border-[#1e1e2e]">
+            <p className="text-xs text-[#64748b] mb-2">Top Pages</p>
+            {visitorStats.topPages.length > 0 ? visitorStats.topPages.slice(0, 3).map(p => (
+              <div key={p.path} className="flex justify-between text-xs mb-1">
+                <span className="text-[#e2e8f0] truncate max-w-[120px]">{p.path}</span>
+                <span className="text-[#6366f1] font-medium">{p.count}</span>
+              </div>
+            )) : <p className="text-xs text-[#64748b]">No data yet</p>}
+          </div>
+          <div className="bg-[#0a0a0f] rounded-lg p-4 border border-[#1e1e2e]">
+            <p className="text-xs text-[#64748b] mb-2">Languages</p>
+            {visitorStats.uniqueLanguages.length > 0 ? visitorStats.uniqueLanguages.slice(0, 3).map(l => (
+              <div key={l.language} className="flex justify-between text-xs mb-1">
+                <span className="text-[#e2e8f0]">{l.language}</span>
+                <span className="text-[#06b6d4] font-medium">{l.count}</span>
+              </div>
+            )) : <p className="text-xs text-[#64748b]">No data yet</p>}
+          </div>
+        </div>
+        {visitorStats.visitsPerDay.length > 0 && (
+          <>
+            <p className="text-xs text-[#64748b] mb-2">Visits Per Day (last 14 days)</p>
+            <ResponsiveContainer width="100%" height={120}>
+              <BarChart data={visitorStats.visitsPerDay}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" vertical={false} />
+                <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} />
+                <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} />
+                <Tooltip contentStyle={{ background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '8px', color: '#e2e8f0' }} />
+                <Bar dataKey="count" fill="#6366f1" radius={BAR_RADIUS_VERTICAL} />
+              </BarChart>
+            </ResponsiveContainer>
+          </>
+        )}
+      </motion.div>
+
+      {/* Languages / Regions */}
+      {visitorStats.uniqueLanguages.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6">
+          <h3 className="font-semibold text-white mb-4">Languages / Regions</h3>
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={visitorStats.uniqueLanguages} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" horizontal={false} />
+              <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} tickLine={false} axisLine={false} />
+              <YAxis type="category" dataKey="language" tick={{ fill: '#64748b', fontSize: 11 }} tickLine={false} axisLine={false} width={80} />
+              <Tooltip contentStyle={{ background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '8px', color: '#e2e8f0' }} />
+              <Bar dataKey="count" fill="#06b6d4" radius={BAR_RADIUS_HORIZONTAL} />
+            </BarChart>
+          </ResponsiveContainer>
+        </motion.div>
+      )}
+
+      {/* Activity Over Time */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6">
         <div className="flex items-center justify-between mb-6">
           <h3 className="font-semibold text-white">Activity Over Time (30 Days)</h3>
@@ -55,19 +142,26 @@ export default function AdminDashboard() {
           </LineChart>
         </ResponsiveContainer>
       </motion.div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Feature Usage */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6">
-          <h3 className="font-semibold text-white mb-6">Feature Usage</h3>
+          <h3 className="font-semibold text-white mb-2">Feature Usage</h3>
+          {realFeatures.length > 0 && (
+            <p className="text-xs text-[#10b981] mb-4">● Live data from your session</p>
+          )}
           <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={featureUsage} layout="vertical">
+            <BarChart data={displayedFeatures} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" horizontal={false} />
               <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} tickLine={false} axisLine={false} />
               <YAxis type="category" dataKey="feature" tick={{ fill: '#64748b', fontSize: 11 }} tickLine={false} axisLine={false} width={70} />
               <Tooltip contentStyle={{ background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '8px', color: '#e2e8f0' }} />
-              <Bar dataKey="count" fill="#6366f1" radius={[0, 4, 4, 0] as [number, number, number, number]} />
+              <Bar dataKey="count" fill="#6366f1" radius={BAR_RADIUS_HORIZONTAL} />
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
+
+        {/* User Experience Levels */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6">
           <h3 className="font-semibold text-white mb-6">User Experience Levels</h3>
           <ResponsiveContainer width="100%" height={200}>
@@ -81,6 +175,8 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </motion.div>
       </div>
+
+      {/* Recent Activity */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6">
         <h3 className="font-semibold text-white mb-4">Recent Activity</h3>
         <div className="space-y-3">

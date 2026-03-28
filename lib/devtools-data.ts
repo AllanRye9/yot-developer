@@ -53,18 +53,40 @@ console.log("Sum:", sum);`,
         expectedOutput: 'myTimer: ~Xms\nSum: 499999500000'
       },
       {
-        title: 'console.group',
-        description: 'Group related console messages',
-        code: `console.group("User Details");
-console.log("Name: John Doe");
-console.log("Email: john@example.com");
-console.groupCollapsed("Address");
-console.log("Street: 123 Main St");
-console.log("City: Springfield");
-console.groupEnd();
-console.groupEnd();`,
-        expectedOutput: 'Grouped output in console'
-      }
+        title: 'console.dir',
+        description: 'Display object properties in an interactive tree',
+        code: `const element = { tagName: 'DIV', id: 'app', className: 'container', children: [] };
+console.dir(element);
+// In browser: console.dir(document.body) shows interactive DOM tree
+console.log("console.dir shows all enumerable properties");
+console.dir({ nested: { deep: { value: 42 } } });`,
+        expectedOutput: 'Interactive property tree in DevTools Console'
+      },
+      {
+        title: 'console.trace',
+        description: 'Output a stack trace from the current call site',
+        code: `function grandchild() {
+  console.trace("Trace from grandchild");
+}
+function child() { grandchild(); }
+function parent() { child(); }
+parent();
+console.log("Stack trace shows full call chain above");`,
+        expectedOutput: 'Stack trace with call chain in Console'
+      },
+      {
+        title: 'console.profile',
+        description: 'Start/stop CPU profiling sessions',
+        code: `console.profile("myProfile");
+let result = 0;
+for (let i = 0; i < 1000000; i++) {
+  result += Math.sqrt(i);
+}
+console.profileEnd("myProfile");
+console.log("Result:", result.toFixed(2));
+console.log("→ Check DevTools > Performance > Profiles");`,
+        expectedOutput: 'CPU profile recorded (view in Performance tab)'
+      },
     ]
   },
   {
@@ -102,6 +124,47 @@ console.log("Time to First Byte:", timing.ttfb + "ms");
 console.log("Download:", timing.download + "ms");
 console.log("Total:", timing.total + "ms");`,
         expectedOutput: 'Network timing metrics'
+      },
+      {
+        title: 'WebSocket',
+        description: 'Real-time bidirectional communication with WebSocket API',
+        code: `// WebSocket connection example
+const ws = new WebSocket('wss://echo.websocket.org');
+ws.addEventListener('open', () => {
+  console.log('WebSocket connected!');
+  ws.send(JSON.stringify({ type: 'ping', data: 'Hello Server' }));
+});
+ws.addEventListener('message', (event) => {
+  // Note: wrap in try-catch if server may send non-JSON data
+  try {
+    const data = JSON.parse(event.data);
+    console.log('Received:', data);
+  } catch {
+    console.log('Received (raw):', event.data);
+  }
+});
+ws.addEventListener('close', (event) => {
+  console.log('Connection closed:', event.code, event.reason);
+});
+// Check DevTools > Network > WS tab for frames`,
+        expectedOutput: 'WebSocket frames visible in Network tab'
+      },
+      {
+        title: 'XMLHttpRequest',
+        description: 'Legacy but widely supported HTTP request API',
+        code: `const xhr = new XMLHttpRequest();
+xhr.open('GET', 'https://jsonplaceholder.typicode.com/todos/1');
+xhr.setRequestHeader('Accept', 'application/json');
+xhr.onreadystatechange = function() {
+  if (xhr.readyState === XMLHttpRequest.DONE) {
+    console.log('Status:', xhr.status);
+    console.log('Response:', xhr.responseText);
+    console.log('Headers:', xhr.getResponseHeader('content-type'));
+  }
+};
+xhr.onprogress = (e) => console.log('Progress:', e.loaded, '/', e.total);
+xhr.send();`,
+        expectedOutput: 'XHR request visible in Network tab'
       }
     ]
   },
@@ -137,6 +200,40 @@ console.log("Total Heap:", memInfo.totalJSHeapSize + " MB");
 console.log("Heap Limit:", memInfo.jsHeapSizeLimit + " MB");
 console.log("Usage:", ((memInfo.usedJSHeapSize / memInfo.totalJSHeapSize) * 100).toFixed(1) + "%");`,
         expectedOutput: 'Memory usage metrics'
+      },
+      {
+        title: 'PerformanceObserver',
+        description: 'Observe real-time performance entries as they happen',
+        code: `const observer = new PerformanceObserver((list) => {
+  for (const entry of list.getEntries()) {
+    console.log(\`[\${entry.entryType}] \${entry.name}\`);
+    console.log(\`  Duration: \${entry.duration.toFixed(2)}ms\`);
+    console.log(\`  Start: \${entry.startTime.toFixed(2)}ms\`);
+  }
+});
+observer.observe({ entryTypes: ['measure', 'navigation', 'resource'] });
+// Trigger a measure
+performance.mark('obs-start');
+performance.mark('obs-end');
+performance.measure('my-task', 'obs-start', 'obs-end');
+observer.disconnect();`,
+        expectedOutput: 'PerformanceObserver entries logged'
+      },
+      {
+        title: 'Navigation Timing',
+        description: 'Analyze page load performance metrics',
+        code: `const nav = performance.getEntriesByType('navigation')[0];
+if (nav) {
+  console.log('=== Navigation Timing ===');
+  console.log('DNS:', (nav.domainLookupEnd - nav.domainLookupStart).toFixed(2), 'ms');
+  console.log('TCP:', (nav.connectEnd - nav.connectStart).toFixed(2), 'ms');
+  console.log('TTFB:', (nav.responseStart - nav.requestStart).toFixed(2), 'ms');
+  console.log('DOM Content Loaded:', nav.domContentLoadedEventEnd.toFixed(2), 'ms');
+  console.log('Total Load:', nav.loadEventEnd.toFixed(2), 'ms');
+} else {
+  console.log('Navigation timing not available');
+}`,
+        expectedOutput: 'Navigation timing metrics in ms'
       }
     ]
   },
@@ -175,6 +272,61 @@ mutations.forEach(m => {
   if (m.attributeName) console.log("  Changed attribute:", m.attributeName);
 });`,
         expectedOutput: 'MutationObserver events'
+      },
+      {
+        title: 'IntersectionObserver',
+        description: 'Detect when elements enter or leave the viewport',
+        code: `const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    console.log('Element:', entry.target.id || entry.target.tagName);
+    console.log('Is intersecting:', entry.isIntersecting);
+    console.log('Intersection ratio:', entry.intersectionRatio.toFixed(2));
+    console.log('Visible area:', JSON.stringify(entry.intersectionRect));
+  });
+}, {
+  root: null,       // viewport
+  rootMargin: '0px',
+  threshold: [0, 0.5, 1.0]
+});
+// observer.observe(element); — attach to any DOM element`,
+        expectedOutput: 'IntersectionObserver callbacks with ratio'
+      },
+      {
+        title: 'ResizeObserver',
+        description: 'Watch for changes to element dimensions',
+        code: `const resizeObserver = new ResizeObserver(entries => {
+  for (const entry of entries) {
+    const { width, height } = entry.contentRect;
+    console.log(\`Element resized: \${width.toFixed(0)}×\${height.toFixed(0)}px\`);
+    if (entry.borderBoxSize) {
+      const bs = entry.borderBoxSize[0];
+      console.log(\`Border box: \${bs.inlineSize.toFixed(0)}×\${bs.blockSize.toFixed(0)}\`);
+    }
+  }
+});
+// resizeObserver.observe(document.body);
+console.log('ResizeObserver ready — attach to any element');`,
+        expectedOutput: 'ResizeObserver dimension updates'
+      },
+      {
+        title: 'CustomEvent',
+        description: 'Create and dispatch custom DOM events',
+        code: `// Create a custom event with detail data
+const event = new CustomEvent('user:login', {
+  detail: { username: 'alice', timestamp: Date.now() },
+  bubbles: true,
+  cancelable: true
+});
+// Listen for it
+document.addEventListener('user:login', (e) => {
+  console.log('Custom event received!');
+  console.log('Username:', e.detail.username);
+  console.log('Bubbles:', e.bubbles);
+});
+// Dispatch
+document.dispatchEvent(event);
+console.log('Event dispatched');`,
+        expectedOutput: 'Custom event fired and caught'
       }
     ]
   },
@@ -214,6 +366,58 @@ console.log("Cookie set:", cookieStr);
 console.log("Session cookie:", cookies.get('session'));
 console.log("Cookie exists:", cookies.get('session') !== null);`,
         expectedOutput: 'Cookie information'
+      },
+      {
+        title: 'IndexedDB',
+        description: 'Client-side structured data storage with transactions',
+        code: `const request = indexedDB.open('YOTDatabase', 1);
+request.onupgradeneeded = (event) => {
+  const db = event.target.result;
+  const store = db.createObjectStore('users', { keyPath: 'id' });
+  store.createIndex('name', 'name', { unique: false });
+  console.log('Database schema created');
+};
+request.onsuccess = (event) => {
+  const db = event.target.result;
+  const tx = db.transaction('users', 'readwrite');
+  tx.objectStore('users').add({ id: 1, name: 'Alice', role: 'admin' });
+  console.log('Record added to IndexedDB');
+  console.log('Check DevTools > Application > IndexedDB');
+};`,
+        expectedOutput: 'IndexedDB record stored'
+      },
+      {
+        title: 'sessionStorage',
+        description: 'Temporary per-tab storage cleared on session end',
+        code: `sessionStorage.setItem('session-token', 'eyJhbGciOiJIUzI1Ni...');
+sessionStorage.setItem('user-preferences', JSON.stringify({
+  theme: 'dark', fontSize: 14, autoSave: true
+}));
+console.log('Token:', sessionStorage.getItem('session-token')?.slice(0, 20) + '...');
+const prefs = JSON.parse(sessionStorage.getItem('user-preferences') || '{}');
+console.log('Prefs:', prefs);
+console.log('Session items:', sessionStorage.length);
+// Cleared when tab/browser closed
+console.log('→ Check DevTools > Application > Session Storage');`,
+        expectedOutput: 'sessionStorage data'
+      },
+      {
+        title: 'CacheStorage',
+        description: 'Service Worker cache API for offline assets',
+        code: `// Cache API (typically used inside Service Worker)
+caches.open('yot-cache-v1').then(cache => {
+  console.log('Cache opened: yot-cache-v1');
+  return cache.addAll(['/index.html', '/styles.css', '/app.js']);
+}).then(() => {
+  console.log('Assets cached for offline use');
+  return caches.keys();
+}).then(cacheNames => {
+  console.log('Active caches:', cacheNames);
+}).catch(err => {
+  console.log('Cache API requires HTTPS or localhost');
+  console.log('Error:', err.message);
+});`,
+        expectedOutput: 'CacheStorage entries'
       }
     ]
   },
@@ -257,6 +461,44 @@ console.log("---");
 console.log("In real browser: 'debugger;' pauses execution");
 console.log("Use Sources panel to set breakpoints");`,
         expectedOutput: 'Debugging output'
+      },
+      {
+        title: 'debugger Statement',
+        description: 'Pause code execution in DevTools with the debugger keyword',
+        code: `function calculateTotal(items) {
+  let total = 0;
+  for (const item of items) {
+    debugger; // Execution pauses here when DevTools is open
+    total += item.price * item.quantity;
+  }
+  return total;
+}
+const cart = [
+  { name: 'Widget', price: 9.99, quantity: 3 },
+  { name: 'Gadget', price: 24.99, quantity: 1 }
+];
+// Open DevTools first, then run to hit the debugger
+console.log('Total:', calculateTotal(cart));`,
+        expectedOutput: 'Pauses execution in Sources panel'
+      },
+      {
+        title: 'Source Maps',
+        description: 'Map minified code back to original source',
+        code: `// Source maps are configured in your build tool (webpack/vite)
+// webpack.config.js:
+//   devtool: 'source-map'
+// vite.config.js:
+//   build: { sourcemap: true }
+
+// The //# sourceMappingURL comment links minified to source:
+// app.min.js ends with:
+// //# sourceMappingURL=app.min.js.map
+
+console.log("Source map example:");
+console.log("Minified: a.b(c=>c.d(e=>f(e)))");
+console.log("Original: items.filter(item => item.checkStock(sku => validate(sku)))");
+console.log("→ DevTools Sources tab shows original TypeScript/JSX");`,
+        expectedOutput: 'Source map explanation'
       }
     ]
   },
@@ -341,6 +583,129 @@ console.log("---");
 console.log("Original:", userInput);
 console.log("Sanitized:", sanitizeHTML(userInput));`,
         expectedOutput: 'Sanitized HTML output'
+      }
+    ]
+  },
+  {
+    id: 'css-animations',
+    name: 'CSS/Animations',
+    icon: 'Sparkles',
+    description: 'Inspect CSS variables, animations, computed styles and use the Web Animations API from JavaScript.',
+    examples: [
+      {
+        title: 'CSS Variables',
+        description: 'Read and update CSS custom properties at runtime',
+        code: `// Read a CSS variable
+const root = document.documentElement;
+const accent = getComputedStyle(root).getPropertyValue('--color-accent');
+console.log('Accent color:', accent.trim());
+
+// Set CSS variables dynamically
+root.style.setProperty('--dynamic-spacing', '16px');
+root.style.setProperty('--dynamic-color', '#6366f1');
+console.log('Variables updated on :root');
+console.log('→ Check DevTools > Elements > :root to see them');`,
+        expectedOutput: 'CSS variable values and updates'
+      },
+      {
+        title: 'CSS Animations API',
+        description: 'Control animations with the Web Animations API',
+        code: `const el = document.createElement('div');
+el.style.cssText = 'width:50px;height:50px;background:#6366f1;position:fixed;top:50%;left:50%';
+document.body.appendChild(el);
+
+// Web Animations API
+const animation = el.animate([
+  { transform: 'rotate(0deg) scale(1)', opacity: 1 },
+  { transform: 'rotate(360deg) scale(1.5)', opacity: 0.5 }
+], { duration: 1000, iterations: 3, easing: 'ease-in-out' });
+
+animation.onfinish = () => {
+  console.log('Animation complete!');
+  el.remove();
+};
+console.log('Animation state:', animation.playState);
+console.log('→ Check DevTools > Animations panel');`,
+        expectedOutput: 'Animation playing — check Animations tab'
+      },
+      {
+        title: 'getComputedStyle',
+        description: 'Inspect final resolved styles of any element',
+        code: `const body = document.body;
+const styles = getComputedStyle(body);
+console.log('=== Computed Styles (body) ===');
+console.log('font-size:', styles.fontSize);
+console.log('font-family:', styles.fontFamily.slice(0, 40));
+console.log('background-color:', styles.backgroundColor);
+console.log('display:', styles.display);
+console.log('box-sizing:', styles.boxSizing);
+// Pseudo-elements
+const before = getComputedStyle(body, '::before');
+console.log('::before content:', before.content);`,
+        expectedOutput: 'Resolved CSS property values'
+      }
+    ]
+  },
+  {
+    id: 'clipboard-drag',
+    name: 'Clipboard/Drag',
+    icon: 'ClipboardList',
+    description: 'Access the Clipboard API for copy/paste and implement drag-and-drop interactions.',
+    examples: [
+      {
+        title: 'Clipboard API',
+        description: 'Read from and write to the system clipboard',
+        code: `// Write to clipboard
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    console.log('Copied:', text);
+  } catch (err) {
+    console.log('Clipboard write error:', err.message);
+  }
+}
+
+// Read from clipboard
+async function readFromClipboard() {
+  try {
+    const text = await navigator.clipboard.readText();
+    console.log('Clipboard contents:', text.slice(0, 50));
+  } catch (err) {
+    console.log('Clipboard read error (needs permission):', err.message);
+  }
+}
+
+copyToClipboard('Hello from YOT DevTools!');
+readFromClipboard();`,
+        expectedOutput: 'Clipboard read/write results'
+      },
+      {
+        title: 'Drag and Drop API',
+        description: 'Implement native drag-and-drop with DataTransfer',
+        code: `const draggable = document.createElement('div');
+draggable.textContent = '📦 Drag me';
+draggable.draggable = true;
+draggable.style.cssText = 'padding:8px;background:#6366f1;color:white;cursor:grab;display:inline-block';
+
+draggable.addEventListener('dragstart', (e) => {
+  e.dataTransfer.setData('text/plain', 'item-data-123');
+  e.dataTransfer.effectAllowed = 'move';
+  console.log('Drag started, data set');
+});
+
+const dropZone = document.createElement('div');
+dropZone.textContent = '🎯 Drop here';
+dropZone.style.cssText = 'padding:16px;border:2px dashed #1e1e2e;margin-top:8px';
+
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+dropZone.addEventListener('drop', (e) => {
+  const data = e.dataTransfer.getData('text/plain');
+  console.log('Dropped! Data:', data);
+});
+
+document.body.append(draggable, dropZone);
+console.log('Drag demo elements added to page');`,
+        expectedOutput: 'Drag-and-drop elements added to page'
       }
     ]
   }
