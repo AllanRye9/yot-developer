@@ -323,7 +323,7 @@ const tests: Test[] = [
             out.push(`✓ Longitude: ${pos.coords.longitude.toFixed(4)}`)
             out.push(`✓ Accuracy:  ${pos.coords.accuracy.toFixed(0)}m`)
             if (pos.coords.altitude !== null)
-              out.push(`✓ Altitude:  ${pos.coords.altitude?.toFixed(0)}m`)
+              out.push(`✓ Altitude:  ${pos.coords.altitude.toFixed(0)}m`)
             out.push('→ Check DevTools > Sensors to override location')
             resolve(out)
           },

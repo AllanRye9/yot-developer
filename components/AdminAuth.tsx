@@ -192,7 +192,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
                 {loginLoading ? 'Signing in…' : 'Sign In'}
               </button>
               <p className="text-xs text-center text-[#64748b]">
-                Default: <code className="text-[#8b5cf6]">admin</code> / <code className="text-[#8b5cf6]">admin123</code>
+                First login: use the credentials shown in the username/password placeholders.
               </p>
             </motion.form>
           ) : (

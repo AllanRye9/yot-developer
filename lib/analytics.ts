@@ -35,13 +35,19 @@ function safeWrite<T>(key: string, data: T[]): void {
 
 export function trackPageVisit(path: string): void {
   const visits = safeRead<PageVisit>(VISITS_KEY)
+  let timezone = 'unknown'
+  try {
+    timezone = typeof Intl !== 'undefined'
+      ? (Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'unknown')
+      : 'unknown'
+  } catch {
+    // Intl not available or timeZone not resolvable
+  }
   const visit: PageVisit = {
     path,
     timestamp: Date.now(),
     language: typeof navigator !== 'undefined' ? navigator.language : 'unknown',
-    timezone: typeof Intl !== 'undefined'
-      ? Intl.DateTimeFormat().resolvedOptions().timeZone
-      : 'unknown',
+    timezone,
   }
   visits.push(visit)
   safeWrite(VISITS_KEY, visits.slice(-MAX_VISITS))

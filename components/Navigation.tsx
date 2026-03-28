@@ -92,6 +92,8 @@ export default function Navigation() {
               onClick={() => setThemeOpen(o => !o)}
               className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium text-[#64748b] hover:text-white hover:bg-[#1e1e2e] transition-colors"
               title="Change theme"
+              aria-label="Change color theme"
+              aria-expanded={themeOpen}
             >
               <Palette size={14} />
               <span className="hidden sm:inline">Theme</span>

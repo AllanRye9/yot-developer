@@ -9,6 +9,9 @@ import { Users, Activity, Brain, TrendingUp, TrendingDown, Globe, type LucideIco
 import { dailyStats, featureUsage, experienceLevels, recentActivity, adminStats } from '@/lib/mock-data'
 import { getVisitorStats, getRealFeatureUsage } from '@/lib/analytics'
 
+const BAR_RADIUS_HORIZONTAL = [0, 4, 4, 0] as [number, number, number, number]
+const BAR_RADIUS_VERTICAL = [3, 3, 0, 0] as [number, number, number, number]
+
 const StatCard = ({
   title, value, change, icon: Icon, color,
 }: {
@@ -93,7 +96,7 @@ export default function AdminDashboard() {
                 <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} />
                 <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={{ background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '8px', color: '#e2e8f0' }} />
-                <Bar dataKey="count" fill="#6366f1" radius={[3, 3, 0, 0] as [number, number, number, number]} />
+                <Bar dataKey="count" fill="#6366f1" radius={BAR_RADIUS_VERTICAL} />
               </BarChart>
             </ResponsiveContainer>
           </>
@@ -110,7 +113,7 @@ export default function AdminDashboard() {
               <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} tickLine={false} axisLine={false} />
               <YAxis type="category" dataKey="language" tick={{ fill: '#64748b', fontSize: 11 }} tickLine={false} axisLine={false} width={80} />
               <Tooltip contentStyle={{ background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '8px', color: '#e2e8f0' }} />
-              <Bar dataKey="count" fill="#06b6d4" radius={[0, 4, 4, 0] as [number, number, number, number]} />
+              <Bar dataKey="count" fill="#06b6d4" radius={BAR_RADIUS_HORIZONTAL} />
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
@@ -153,7 +156,7 @@ export default function AdminDashboard() {
               <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} tickLine={false} axisLine={false} />
               <YAxis type="category" dataKey="feature" tick={{ fill: '#64748b', fontSize: 11 }} tickLine={false} axisLine={false} width={70} />
               <Tooltip contentStyle={{ background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '8px', color: '#e2e8f0' }} />
-              <Bar dataKey="count" fill="#6366f1" radius={[0, 4, 4, 0] as [number, number, number, number]} />
+              <Bar dataKey="count" fill="#6366f1" radius={BAR_RADIUS_HORIZONTAL} />
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
