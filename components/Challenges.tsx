@@ -402,8 +402,23 @@ export default function Challenges() {
             isCompleted={progress.completed.includes(selectedChallenge.id)}
             onClose={() => setSelectedChallenge(null)}
             onComplete={() => {
+              if (progress.completed.includes(selectedChallenge.id)) return
+              const newCompleted = [...progress.completed, selectedChallenge.id]
+              const newXp = progress.xp + selectedChallenge.xpReward
+              const newByCategory = newCompleted.reduce<Record<string, number>>((acc, id) => {
+                const ch = challenges.find(c => c.id === id)
+                if (ch) acc[ch.category] = (acc[ch.category] ?? 0) + 1
+                return acc
+              }, {})
+              const newHasAdvanced = newCompleted.some(id => challenges.find(c => c.id === id)?.difficulty === 'Advanced')
+              const prevEarned = new Set(earnedBadges.map(b => b.id))
+              const newEarned = badges.filter(b => b.condition(newCompleted.length, newByCategory, newXp, newHasAdvanced) && !prevEarned.has(b.id))
               handleComplete(selectedChallenge)
-              setJustEarned(`+${selectedChallenge.xpReward} XP – ${selectedChallenge.title} complete!`)
+              if (newEarned.length > 0) {
+                setJustEarned(`🏆 Badge unlocked: ${newEarned[0].name}!`)
+              } else {
+                setJustEarned(`+${selectedChallenge.xpReward} XP – ${selectedChallenge.title} complete!`)
+              }
               setTimeout(() => setJustEarned(null), 3000)
             }}
           />

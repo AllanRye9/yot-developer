@@ -57,7 +57,7 @@ const browserObjects: PropertyNode[] = [
           { key: 'userAgent', type: 'string', value: '"Mozilla/5.0 ..."', description: 'Browser identification string. Avoid relying on it for feature detection.', snippet: `console.log(navigator.userAgent);` },
           { key: 'language', type: 'string', value: '"en-US"', description: 'Preferred language of the user.', snippet: `console.log(navigator.language);` },
           { key: 'onLine', type: 'boolean', value: 'true', description: 'Returns true if the browser is connected to the internet.', snippet: `console.log("Online?", navigator.onLine);` },
-          { key: 'platform', type: 'string', value: '"Win32"', description: 'Platform string for the browser\'s host environment.', snippet: `console.log(navigator.platform);` },
+          { key: 'platform', type: 'string', value: '"Win32"', description: '(Deprecated) Platform string for the browser\'s host environment. Use navigator.userAgentData.platform where available.', snippet: `// navigator.platform is deprecated — prefer navigator.userAgentData?.platform\nconsole.log(navigator.platform);` },
           { key: 'cookieEnabled', type: 'boolean', value: 'true', description: 'Whether cookies are enabled in the browser.', snippet: `console.log("Cookies enabled?", navigator.cookieEnabled);` },
           { key: 'hardwareConcurrency', type: 'number', value: '8', description: 'Number of logical processor cores available.', snippet: `console.log("CPU cores:", navigator.hardwareConcurrency);` },
         ],
