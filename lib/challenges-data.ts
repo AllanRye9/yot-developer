@@ -1,0 +1,185 @@
+export type DifficultyLevel = 'Beginner' | 'Intermediate' | 'Advanced'
+
+export interface Challenge {
+  id: string
+  title: string
+  description: string
+  category: string
+  difficulty: DifficultyLevel
+  xpReward: number
+  startingCode: string
+  hint: string
+  solution: string
+  expectedKeywords: string[]
+}
+
+export const challenges: Challenge[] = [
+  // Beginner
+  {
+    id: 'c1',
+    title: 'Hello, Console!',
+    description: 'Use console.log to print "Hello, DevTools!" to the console.',
+    category: 'console',
+    difficulty: 'Beginner',
+    xpReward: 50,
+    startingCode: `// Print "Hello, DevTools!" to the console\n`,
+    hint: 'Use console.log() with your message as a string argument.',
+    solution: `console.log("Hello, DevTools!");`,
+    expectedKeywords: ['console.log', 'Hello, DevTools!'],
+  },
+  {
+    id: 'c2',
+    title: 'Log a Warning',
+    description: 'Use console.warn to output a warning message about an insecure password.',
+    category: 'console',
+    difficulty: 'Beginner',
+    xpReward: 50,
+    startingCode: `// Warn the user that their password is too short\n`,
+    hint: 'Use console.warn() — it shows a yellow warning icon in real DevTools.',
+    solution: `console.warn("Password is too short!");`,
+    expectedKeywords: ['console.warn'],
+  },
+  {
+    id: 'c3',
+    title: 'Assert the Truth',
+    description: 'Use console.assert to verify that 2 + 2 equals 4. The assertion should pass silently.',
+    category: 'console',
+    difficulty: 'Beginner',
+    xpReward: 50,
+    startingCode: `// Assert that 2 + 2 === 4\n`,
+    hint: 'console.assert(condition, message) — only logs when condition is false.',
+    solution: `console.assert(2 + 2 === 4, "Math is broken!");`,
+    expectedKeywords: ['console.assert'],
+  },
+  {
+    id: 'c4',
+    title: 'Display a Table',
+    description: 'Use console.table to display an array of objects representing users.',
+    category: 'console',
+    difficulty: 'Beginner',
+    xpReward: 50,
+    startingCode: `const users = [\n  { name: "Alice", role: "Developer" },\n  { name: "Bob", role: "Designer" }\n];\n// Display the users array as a table\n`,
+    hint: 'Pass the array directly to console.table().',
+    solution: `const users = [\n  { name: "Alice", role: "Developer" },\n  { name: "Bob", role: "Designer" }\n];\nconsole.table(users);`,
+    expectedKeywords: ['console.table'],
+  },
+  {
+    id: 'c5',
+    title: 'Time Your Code',
+    description: 'Use console.time and console.timeEnd to measure how long a loop takes.',
+    category: 'console',
+    difficulty: 'Beginner',
+    xpReward: 50,
+    startingCode: `// Measure how long this loop takes\nlet sum = 0;\nfor (let i = 0; i < 100000; i++) {\n  sum += i;\n}\nconsole.log("Sum:", sum);\n`,
+    hint: 'Wrap the loop with console.time("label") before and console.timeEnd("label") after.',
+    solution: `console.time("loop");\nlet sum = 0;\nfor (let i = 0; i < 100000; i++) {\n  sum += i;\n}\nconsole.timeEnd("loop");\nconsole.log("Sum:", sum);`,
+    expectedKeywords: ['console.time', 'console.timeEnd'],
+  },
+  // Intermediate
+  {
+    id: 'c6',
+    title: 'Group Your Logs',
+    description: 'Use console.group and console.groupEnd to organise three related log messages under a "User Info" group.',
+    category: 'console',
+    difficulty: 'Intermediate',
+    xpReward: 100,
+    startingCode: `// Group these logs under "User Info"\nconsole.log("Name: Alice");\nconsole.log("Email: alice@example.com");\nconsole.log("Role: Developer");\n`,
+    hint: 'Wrap the logs with console.group("User Info") and console.groupEnd().',
+    solution: `console.group("User Info");\nconsole.log("Name: Alice");\nconsole.log("Email: alice@example.com");\nconsole.log("Role: Developer");\nconsole.groupEnd();`,
+    expectedKeywords: ['console.group', 'console.groupEnd'],
+  },
+  {
+    id: 'c7',
+    title: 'Style Your Log',
+    description: 'Use CSS formatting in console.log to print "DevTools are awesome!" in purple, bold text.',
+    category: 'console',
+    difficulty: 'Intermediate',
+    xpReward: 100,
+    startingCode: `// Print a styled message to the console\n`,
+    hint: 'Use the %c directive: console.log("%c text", "css styles here").',
+    solution: `console.log("%cDevTools are awesome!", "color: purple; font-weight: bold; font-size: 16px;");`,
+    expectedKeywords: ['console.log', '%c'],
+  },
+  {
+    id: 'c8',
+    title: 'Count Calls',
+    description: 'Use console.count to track how many times a function is called, then reset with console.countReset.',
+    category: 'console',
+    difficulty: 'Intermediate',
+    xpReward: 100,
+    startingCode: `function greet(name) {\n  // Count how many times greet is called\n  console.log("Hello, " + name);\n}\ngreet("Alice");\ngreet("Bob");\ngreet("Charlie");\n// Reset the count\n`,
+    hint: 'Add console.count("greet") inside the function, and console.countReset("greet") after the calls.',
+    solution: `function greet(name) {\n  console.count("greet");\n  console.log("Hello, " + name);\n}\ngreet("Alice");\ngreet("Bob");\ngreet("Charlie");\nconsole.countReset("greet");`,
+    expectedKeywords: ['console.count', 'console.countReset'],
+  },
+  {
+    id: 'c9',
+    title: 'Trace the Stack',
+    description: 'Call console.trace inside a nested function to print the call stack.',
+    category: 'debugging',
+    difficulty: 'Intermediate',
+    xpReward: 100,
+    startingCode: `function inner() {\n  // Print the call stack here\n}\nfunction middle() { inner(); }\nfunction outer() { middle(); }\nouter();\n`,
+    hint: 'Add console.trace() inside the inner function.',
+    solution: `function inner() {\n  console.trace("Call stack:");\n}\nfunction middle() { inner(); }\nfunction outer() { middle(); }\nouter();`,
+    expectedKeywords: ['console.trace'],
+  },
+  {
+    id: 'c10',
+    title: 'Performance Mark',
+    description: 'Use the Performance API to mark the start and end of an operation, then measure its duration.',
+    category: 'performance',
+    difficulty: 'Intermediate',
+    xpReward: 100,
+    startingCode: `// Mark start, do some work, mark end, then measure\nlet total = 0;\nfor (let i = 0; i < 500000; i++) total += i;\nconsole.log("Total:", total);\n`,
+    hint: 'Use performance.mark("start"), then performance.mark("end"), then performance.measure("myOp", "start", "end").',
+    solution: `performance.mark("start");\nlet total = 0;\nfor (let i = 0; i < 500000; i++) total += i;\nperformance.mark("end");\nperformance.measure("myOp", "start", "end");\nconsole.log("Total:", total);\nconsole.log("Measure created — check performance.getEntriesByName(\\"myOp\\")");`,
+    expectedKeywords: ['performance.mark', 'performance.measure'],
+  },
+  // Advanced
+  {
+    id: 'c11',
+    title: 'Find the Memory Leak',
+    description: 'The code below accumulates data indefinitely. Fix it by clearing the array after processing.',
+    category: 'debugging',
+    difficulty: 'Advanced',
+    xpReward: 200,
+    startingCode: `const dataStore = [];\nfunction processData(item) {\n  dataStore.push(item);\n  console.log("Processing:", item);\n  // BUG: dataStore grows forever — fix it!\n}\nprocessData("alpha");\nprocessData("beta");\nprocessData("gamma");\nconsole.log("Store size:", dataStore.length);\n`,
+    hint: 'After logging, clear the dataStore array with dataStore.length = 0.',
+    solution: `const dataStore = [];\nfunction processData(item) {\n  dataStore.push(item);\n  console.log("Processing:", item);\n  dataStore.length = 0; // Clear after processing\n}\nprocessData("alpha");\nprocessData("beta");\nprocessData("gamma");\nconsole.log("Store size:", dataStore.length);`,
+    expectedKeywords: ['dataStore.length = 0'],
+  },
+  {
+    id: 'c12',
+    title: 'Custom Error Logging',
+    description: 'Create a logger utility that prefixes messages with [INFO], [WARN], or [ERROR] tags and uses the appropriate console method.',
+    category: 'console',
+    difficulty: 'Advanced',
+    xpReward: 200,
+    startingCode: `// Build a logger object with info, warn and error methods\nconst logger = {\n  // implement info, warn, error\n};\nlogger.info("Server started");\nlogger.warn("High memory usage");\nlogger.error("Connection failed");\n`,
+    hint: 'Each method should prepend the tag and delegate to the matching console method.',
+    solution: `const logger = {\n  info: (msg) => console.log("[INFO]", msg),\n  warn: (msg) => console.warn("[WARN]", msg),\n  error: (msg) => console.error("[ERROR]", msg),\n};\nlogger.info("Server started");\nlogger.warn("High memory usage");\nlogger.error("Connection failed");`,
+    expectedKeywords: ['console.log', 'console.warn', 'console.error'],
+  },
+  {
+    id: 'c13',
+    title: 'Deep Object Inspection',
+    description: 'Use JSON.stringify with formatting to deeply inspect a nested configuration object, then log each top-level key separately.',
+    category: 'console',
+    difficulty: 'Advanced',
+    xpReward: 200,
+    startingCode: `const config = {\n  server: { host: "localhost", port: 3000 },\n  db: { url: "postgres://localhost/mydb", poolSize: 5 },\n  cache: { ttl: 3600, maxItems: 1000 }\n};\n// Log the full config formatted, then each top-level key\n`,
+    hint: 'Use JSON.stringify(config, null, 2) for pretty printing, then Object.keys(config).forEach(...) to iterate.',
+    solution: `const config = {\n  server: { host: "localhost", port: 3000 },\n  db: { url: "postgres://localhost/mydb", poolSize: 5 },\n  cache: { ttl: 3600, maxItems: 1000 }\n};\nconsole.log(JSON.stringify(config, null, 2));\nObject.keys(config).forEach(key => {\n  console.group(key);\n  console.log(JSON.stringify(config[key], null, 2));\n  console.groupEnd();\n});`,
+    expectedKeywords: ['JSON.stringify', 'console.group'],
+  },
+]
+
+export const badges = [
+  { id: 'b1', name: 'First Blood', description: 'Complete your first challenge', icon: '🩸', condition: (completed: number) => completed >= 1 },
+  { id: 'b2', name: 'Console Ninja', description: 'Complete 5 console challenges', icon: '🥷', condition: (_: number, byCategory: Record<string, number>) => (byCategory['console'] ?? 0) >= 5 },
+  { id: 'b3', name: 'Debugger', description: 'Solve 2 debugging challenges', icon: '🐛', condition: (_: number, byCategory: Record<string, number>) => (byCategory['debugging'] ?? 0) >= 2 },
+  { id: 'b4', name: 'Explorer', description: 'Complete 10 challenges', icon: '🗺️', condition: (completed: number) => completed >= 10 },
+  { id: 'b5', name: 'XP Hunter', description: 'Earn 500 XP', icon: '⚡', condition: (_: number, __: Record<string, number>, xp: number) => xp >= 500 },
+  { id: 'b6', name: 'Advanced Coder', description: 'Complete an Advanced challenge', icon: '🏆', condition: (_: number, __: Record<string, number>, ___: number, hasAdvanced: boolean) => hasAdvanced },
+]

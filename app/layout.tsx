@@ -1,8 +1,13 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import localFont from 'next/font/local'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const geist = localFont({
+  src: [
+    { path: './fonts/GeistVF.woff', weight: '100 900', style: 'normal' },
+  ],
+  variable: '--font-geist',
+})
 
 export const metadata: Metadata = {
   title: 'YOT Developer - Browser DevTools Platform',
@@ -12,7 +17,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-[#0a0a0f] text-[#e2e8f0] min-h-screen`}>
+      <body className={`${geist.variable} font-sans bg-[#0a0a0f] text-[#e2e8f0] min-h-screen`}>
         {children}
       </body>
     </html>
