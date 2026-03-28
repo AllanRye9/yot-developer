@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  Code2, LayoutDashboard, Play, Cpu, Trophy, User, Search,
-  Palette, FlaskConical,
+  Code2, Play, Cpu, Trophy, User, Search,
+  Palette, FlaskConical, Shield,
 } from 'lucide-react'
 import { themes, getThemeById, getThemeCSSVars, defaultTheme } from '@/lib/themes'
 
@@ -49,7 +49,7 @@ export default function Navigation() {
     { href: '/inspector', label: 'Inspector', icon: Search },
     { href: '/dashboard', label: 'Dashboard', icon: User },
     { href: '/devtools-test', label: 'DevTools Test', icon: FlaskConical },
-    { href: '/admin', label: 'Admin', icon: LayoutDashboard },
+    { href: '/site-tester', label: 'Site Tester', icon: Shield },
   ]
 
   return (
