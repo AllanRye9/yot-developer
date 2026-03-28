@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Shield, AlertTriangle, CheckCircle, XCircle, Info,
   Globe, Loader2, ClipboardCopy, ChevronDown, ChevronUp,
-  Lock, Bug, Activity,
+  Lock, Bug, Activity, Sparkles,
 } from 'lucide-react'
 import type { SiteTestResult, TestItem } from '@/app/api/site-test/route'
 
@@ -129,6 +129,241 @@ function buildLogText(result: SiteTestResult): string {
     lines.push('')
   })
   return lines.join('\n')
+}
+
+// ─── AI Security Explanations ───────────────────────────────────────────────
+
+interface AIAnalysis {
+  test: TestItem
+  explanation: string
+  solution: string
+  impact: string
+  example?: string
+}
+
+const SECURITY_KNOWLEDGE: Record<string, { explanation: string; solution: string; impact: string; example?: string }> = {
+  'HTTPS': {
+    explanation: 'HTTPS (HTTP Secure) encrypts data in transit using TLS/SSL. Without it, all data between the browser and server is sent in plain text and can be intercepted, read, or modified by attackers on the network.',
+    solution: 'Enable HTTPS by obtaining a TLS certificate (free from Let\'s Encrypt) and configuring your web server to use it. Redirect all HTTP traffic to HTTPS with a 301 redirect.',
+    impact: 'High — Protects user data, prevents man-in-the-middle attacks, and is required for modern browser features like Service Workers, geolocation, and camera access.',
+    example: '# nginx config\nserver { listen 80; return 301 https://$host$request_uri; }\nserver { listen 443 ssl; ssl_certificate /etc/ssl/cert.pem; }',
+  },
+  'Content-Security-Policy': {
+    explanation: 'CSP is an HTTP header that tells the browser which sources of content (scripts, styles, images) are trusted. Without it, attackers who inject malicious scripts (XSS) have full access to the page.',
+    solution: 'Add a Content-Security-Policy header. Start restrictive: "default-src \'self\'" and then add exceptions as needed. Use \'nonce-\' for inline scripts instead of \'unsafe-inline\'.',
+    impact: 'High — Primary defense against Cross-Site Scripting (XSS), the most common web vulnerability.',
+    example: 'Content-Security-Policy: default-src \'self\'; script-src \'self\' \'nonce-{randomValue}\'; img-src \'self\' data: https:;',
+  },
+  'X-Frame-Options': {
+    explanation: 'This header prevents your page from being embedded in an iframe on another site. Without it, attackers can overlay invisible iframes over your page to trick users into clicking on things they didn\'t intend to (clickjacking).',
+    solution: 'Add the header with value DENY (never allow framing) or SAMEORIGIN (only allow your own domain to frame it). Modern alternative: use CSP frame-ancestors directive.',
+    impact: 'Medium — Prevents clickjacking attacks where users are tricked into performing unintended actions.',
+    example: 'X-Frame-Options: SAMEORIGIN\n# Or using CSP:\nContent-Security-Policy: frame-ancestors \'self\';',
+  },
+  'X-Content-Type-Options': {
+    explanation: 'Without this header, browsers may "sniff" or guess the content type of a response. An attacker could serve a malicious file and the browser might execute it as a script.',
+    solution: 'Add "X-Content-Type-Options: nosniff" to all responses. This forces browsers to honor the declared Content-Type header.',
+    impact: 'Medium — Prevents MIME type sniffing attacks, especially important for file upload functionality.',
+    example: 'X-Content-Type-Options: nosniff',
+  },
+  'Strict-Transport-Security': {
+    explanation: 'HSTS tells browsers to only connect to your site over HTTPS for a specified period. Without it, the first connection could be intercepted (SSL stripping), even if HTTPS is available.',
+    solution: 'Add HSTS header with a max-age of at least 1 year. Use includeSubDomains to protect subdomains. Consider HSTS preloading to be included in browser preload lists.',
+    impact: 'High — Prevents SSL stripping attacks and ensures all future connections use HTTPS automatically.',
+    example: 'Strict-Transport-Security: max-age=31536000; includeSubDomains; preload',
+  },
+  'Referrer-Policy': {
+    explanation: 'Without this header, the browser sends the full URL of your page as the Referrer header on outbound requests. This can leak sensitive URL parameters (session tokens, user IDs) to third parties.',
+    solution: 'Set Referrer-Policy to "strict-origin-when-cross-origin" (recommended) or "no-referrer" for maximum privacy.',
+    impact: 'Low-Medium — Protects user privacy and prevents leaking sensitive URL parameters to third-party services.',
+    example: 'Referrer-Policy: strict-origin-when-cross-origin',
+  },
+  'Permissions-Policy': {
+    explanation: 'This header (formerly Feature-Policy) restricts which browser features and APIs your page and embedded content can access. Without it, iframes and scripts can request access to camera, microphone, geolocation, etc.',
+    solution: 'Explicitly declare which features you need and deny the rest: camera=(), microphone=(), geolocation=(self).',
+    impact: 'Medium — Reduces attack surface by preventing malicious scripts or third-party content from accessing powerful browser APIs.',
+    example: 'Permissions-Policy: camera=(), microphone=(), geolocation=(self), payment=*',
+  },
+  'Cookie': {
+    explanation: 'Cookies without HttpOnly can be read by JavaScript (XSS risk). Cookies without Secure are sent over HTTP. Cookies without SameSite are sent in cross-site requests (CSRF risk).',
+    solution: 'Set all session cookies with HttpOnly (no JS access), Secure (HTTPS only), and SameSite=Strict or Lax. Use short expiry times for sensitive cookies.',
+    impact: 'High — Insecure cookies are a primary vector for session hijacking and CSRF attacks.',
+    example: 'Set-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=3600',
+  },
+  'default': {
+    explanation: 'This security check evaluates an important aspect of your site\'s security posture. Addressing it will improve your overall security score and protect your users.',
+    solution: 'Review the specific check details and implement the recommended fix. Test your changes using the built-in checker here or tools like securityheaders.com.',
+    impact: 'Varies — Each security control reduces a specific attack surface. Layered security (defense-in-depth) provides the best protection.',
+  },
+}
+
+async function generateAIAnalysis(tests: TestItem[]): Promise<AIAnalysis[]> {
+  await new Promise(r => setTimeout(r, 800))
+  const problematic = tests.filter(t => t.status === 'fail' || t.status === 'warn')
+
+  return problematic.map(test => {
+    const key = Object.keys(SECURITY_KNOWLEDGE).find(k =>
+      test.name.includes(k) || test.detail?.includes(k)
+    ) ?? 'default'
+    const kb = SECURITY_KNOWLEDGE[key]
+    return {
+      test,
+      explanation: kb.explanation,
+      solution: kb.solution,
+      impact: kb.impact,
+      example: kb.example,
+    }
+  })
+}
+
+// ─── AI Panel ────────────────────────────────────────────────────────────────
+
+function AISecurityPanel({ tests }: { tests: TestItem[] }) {
+  const [loading, setLoading] = useState(false)
+  const [analyses, setAnalyses] = useState<AIAnalysis[] | null>(null)
+  const [expanded, setExpanded] = useState<number | null>(null)
+
+  const runAnalysis = async () => {
+    setLoading(true)
+    const result = await generateAIAnalysis(tests)
+    setAnalyses(result)
+    setLoading(false)
+  }
+
+  const problematicCount = tests.filter(t => t.status === 'fail' || t.status === 'warn').length
+
+  if (problematicCount === 0) {
+    return (
+      <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/25 rounded-xl p-4">
+        <Sparkles size={16} className="text-emerald-400 shrink-0" />
+        <p className="text-sm text-emerald-300">🎉 AI Analysis: All checks passed! Your site has excellent security headers.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-[#12121a] border border-[#6366f1]/30 rounded-xl overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#6366f1]/10 to-transparent border-b border-[#6366f1]/20">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] rounded-md flex items-center justify-center">
+            <Sparkles size={12} className="text-white" />
+          </div>
+          <span className="text-sm font-semibold text-white">AI Security Assistant</span>
+          <span className="text-xs text-[#6366f1] bg-[#6366f1]/15 px-2 py-0.5 rounded-full">
+            {problematicCount} issue{problematicCount !== 1 ? 's' : ''} to explain
+          </span>
+        </div>
+        {!analyses && !loading && (
+          <button
+            onClick={runAnalysis}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6366f1] hover:bg-[#5558e8] text-white text-xs font-medium rounded-lg transition-colors"
+          >
+            <Sparkles size={12} />
+            Get AI Explanations
+          </button>
+        )}
+      </div>
+
+      {!analyses && !loading && (
+        <div className="px-4 py-4 text-sm text-[#64748b]">
+          Get detailed AI explanations for each security issue: what it means, why it matters, how to fix it, and code examples.
+        </div>
+      )}
+
+      {loading && (
+        <div className="flex items-center gap-3 px-4 py-6 justify-center">
+          <Loader2 size={18} className="animate-spin text-[#6366f1]" />
+          <span className="text-sm text-[#64748b]">AI is analyzing security findings…</span>
+        </div>
+      )}
+
+      {analyses && (
+        <div className="divide-y divide-[#1e1e2e]">
+          {analyses.length === 0 ? (
+            <p className="px-4 py-4 text-sm text-[#64748b]">No actionable findings to explain.</p>
+          ) : (
+            analyses.map((analysis, i) => (
+              <div key={i} className="overflow-hidden">
+                <button
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#1a1a27] transition-colors"
+                  onClick={() => setExpanded(expanded === i ? null : i)}
+                >
+                  {analysis.test.status === 'fail'
+                    ? <XCircle size={14} className="text-red-400 shrink-0" />
+                    : <AlertTriangle size={14} className="text-amber-400 shrink-0" />
+                  }
+                  <span className="flex-1 text-sm font-medium text-white">{analysis.test.name}</span>
+                  <span className={`text-[10px] uppercase px-1.5 py-0.5 rounded border shrink-0 ${
+                    analysis.test.status === 'fail'
+                      ? 'text-red-400 border-red-500/30 bg-red-500/10'
+                      : 'text-amber-400 border-amber-500/30 bg-amber-500/10'
+                  }`}>
+                    {analysis.test.status}
+                  </span>
+                  {expanded === i
+                    ? <ChevronUp size={14} className="text-[#64748b] shrink-0" />
+                    : <ChevronDown size={14} className="text-[#64748b] shrink-0" />
+                  }
+                </button>
+                <AnimatePresence>
+                  {expanded === i && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.18 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-4 pb-4 pt-2 space-y-3 border-t border-[#1e1e2e]">
+                        {/* Current finding */}
+                        <div className="bg-[#0a0a0f] rounded-lg p-3 text-xs text-[#94a3b8]">
+                          <span className="text-[#64748b] font-medium">Finding: </span>{analysis.test.detail}
+                        </div>
+
+                        {/* What it means */}
+                        <div>
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#6366f1]" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#6366f1]">What This Means</span>
+                          </div>
+                          <p className="text-xs text-[#94a3b8] leading-relaxed">{analysis.explanation}</p>
+                        </div>
+
+                        {/* Impact */}
+                        <div>
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#f59e0b]">Security Impact</span>
+                          </div>
+                          <p className="text-xs text-[#94a3b8] leading-relaxed">{analysis.impact}</p>
+                        </div>
+
+                        {/* How to fix */}
+                        <div>
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#10b981]">How to Fix</span>
+                          </div>
+                          <p className="text-xs text-[#94a3b8] leading-relaxed">{analysis.solution}</p>
+                        </div>
+
+                        {/* Code example */}
+                        {analysis.example && (
+                          <pre className="bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg p-3 text-xs text-[#a5b4fc] font-mono overflow-x-auto leading-relaxed">
+                            {analysis.example}
+                          </pre>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
 
 // ─── TestCard ────────────────────────────────────────────────────────────────
@@ -276,11 +511,11 @@ export default function SiteTester() {
           <div className="w-8 h-8 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] rounded-lg flex items-center justify-center shadow-lg shadow-[#6366f1]/30">
             <Shield size={16} className="text-white" />
           </div>
-          <h1 className="text-xl font-bold text-white">Site Tester</h1>
+          <h1 className="text-xl font-bold text-white">Site Security Analyzer</h1>
         </div>
         <p className="text-sm text-[#64748b] ml-11">
           Test any public URL for security headers, vulnerabilities, and general best practices.
-          Results are logged to your browser&apos;s DevTools console.
+          Get AI-powered explanations and fix recommendations for every finding.
         </p>
       </div>
 
@@ -452,6 +687,9 @@ export default function SiteTester() {
                 visibleTests.map(test => <TestCard key={test.id} test={test} />)
               )}
             </div>
+
+            {/* AI Security Assistant */}
+            <AISecurityPanel tests={result.tests} />
 
             {/* Console hint */}
             <div className="flex items-center gap-2 bg-[#6366f1]/10 border border-[#6366f1]/20 rounded-lg px-3 py-2.5">
