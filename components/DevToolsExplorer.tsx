@@ -1,13 +1,13 @@
 'use client'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Terminal, Network, Gauge, Layout, Database, Bug, Cpu, Shield, ChevronRight } from 'lucide-react'
+import { Terminal, Network, Gauge, Layout, Database, Bug, Cpu, Shield, ChevronRight, type LucideIcon } from 'lucide-react'
 import { devToolsCategories } from '@/lib/devtools-data'
 import CodeBlock from './CodeBlock'
 import CodeRunner from './CodeRunner'
 import AIAssistant from './AIAssistant'
 
-const iconMap: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+const iconMap: Record<string, LucideIcon> = {
   Terminal, Network, Gauge, Layout, Database, Bug, Cpu, Shield
 }
 

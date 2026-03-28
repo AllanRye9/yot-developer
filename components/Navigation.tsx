@@ -2,13 +2,16 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Code2, LayoutDashboard, Play, Cpu } from 'lucide-react'
+import { Code2, LayoutDashboard, Play, Cpu, Trophy, User, Search } from 'lucide-react'
 
 export default function Navigation() {
   const pathname = usePathname()
   const links = [
     { href: '/', label: 'Explorer', icon: Code2 },
     { href: '/playground', label: 'Playground', icon: Play },
+    { href: '/challenges', label: 'Challenges', icon: Trophy },
+    { href: '/inspector', label: 'Inspector', icon: Search },
+    { href: '/dashboard', label: 'Dashboard', icon: User },
     { href: '/admin', label: 'Admin', icon: LayoutDashboard },
   ]
   return (
@@ -26,18 +29,18 @@ export default function Navigation() {
             <span className="font-bold text-lg text-white"><span className="text-[#6366f1]">YOT</span> Developer</span>
           </motion.div>
         </Link>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 overflow-x-auto">
           {links.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href}>
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                   pathname === href ? 'bg-[#6366f1] text-white' : 'text-[#64748b] hover:text-white hover:bg-[#1e1e2e]'
                 }`}
               >
                 <Icon size={16} />
-                {label}
+                <span className="hidden sm:inline">{label}</span>
               </motion.div>
             </Link>
           ))}

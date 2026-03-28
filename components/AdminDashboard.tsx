@@ -2,10 +2,10 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { Users, Activity, Brain, TrendingUp, TrendingDown } from 'lucide-react'
+import { Users, Activity, Brain, TrendingUp, TrendingDown, type LucideIcon } from 'lucide-react'
 import { dailyStats, featureUsage, experienceLevels, recentActivity, adminStats } from '@/lib/mock-data'
 
-const StatCard = ({ title, value, change, icon: Icon, color }: { title: string; value: string | number; change: number; icon: React.ComponentType<{ size?: number; className?: string }>; color: string }) => (
+const StatCard = ({ title, value, change, icon: Icon, color }: { title: string; value: string | number; change: number; icon: LucideIcon; color: string }) => (
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2 }} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6">
     <div className="flex items-center justify-between mb-4">
       <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: `${color}20`, border: `1px solid ${color}30` }}>
