@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   Code2, Play, Cpu, Trophy, User, Search,
-  Palette, FlaskConical, Shield,
+  Palette, FlaskConical, Shield, FileCode2,
 } from 'lucide-react'
 import { themes, getThemeById, getThemeCSSVars, defaultTheme } from '@/lib/themes'
 
@@ -48,31 +48,30 @@ export default function Navigation() {
     { href: '/challenges', label: 'Challenges', icon: Trophy },
     { href: '/inspector', label: 'Inspector', icon: Search },
     { href: '/dashboard', label: 'Dashboard', icon: User },
-    { href: '/devtools-test', label: 'DevTools Test', icon: FlaskConical },
-    { href: '/site-tester', label: 'Site Tester', icon: Shield },
+    { href: '/devtools-test', label: 'DevTools', icon: FlaskConical },
+    { href: '/code-analyzer', label: 'Analyzer', icon: FileCode2 },
+    { href: '/site-tester', label: 'Security', icon: Shield },
   ]
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0f]/80 backdrop-blur-md border-b border-[#1e1e2e]">
-      <div className="max-w-7xl mx-auto px-4 h-12 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 h-12 flex items-center justify-between gap-2">
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <motion.div whileHover={{ scale: 1.05 }} className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <div className="w-7 h-7 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] rounded-lg flex items-center justify-center shadow-lg shadow-[#6366f1]/30">
               <Cpu size={15} className="text-white" />
             </div>
-            <span className="font-bold text-base text-white hidden sm:inline">
+            <span className="font-bold text-base text-white hidden lg:inline">
               <span className="text-[#6366f1]">YOT</span> Developer
             </span>
-          </motion.div>
+          </div>
         </Link>
 
-        <div className="flex items-center gap-0.5 overflow-x-auto">
+        <div className="flex items-center gap-0.5 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {links.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href}>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
+            <Link key={href} href={href} className="shrink-0">
+              <div
+                className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors duration-150 whitespace-nowrap ${
                   pathname === href
                     ? 'bg-[#6366f1] text-white'
                     : 'text-[#64748b] hover:text-white hover:bg-[#1e1e2e]'
@@ -80,24 +79,22 @@ export default function Navigation() {
               >
                 <Icon size={14} />
                 <span className="hidden sm:inline">{label}</span>
-              </motion.div>
+              </div>
             </Link>
           ))}
 
           {/* Theme picker */}
-          <div ref={paletteRef} className="relative ml-1">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+          <div ref={paletteRef} className="relative ml-1 shrink-0">
+            <button
               onClick={() => setThemeOpen(o => !o)}
-              className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium text-[#64748b] hover:text-white hover:bg-[#1e1e2e] transition-colors"
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium text-[#64748b] hover:text-white hover:bg-[#1e1e2e] transition-colors duration-150"
               title="Change theme"
               aria-label="Change color theme"
               aria-expanded={themeOpen}
             >
               <Palette size={14} />
               <span className="hidden sm:inline">Theme</span>
-            </motion.button>
+            </button>
 
             <AnimatePresence>
               {themeOpen && (

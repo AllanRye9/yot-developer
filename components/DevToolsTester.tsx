@@ -1,9 +1,10 @@
 'use client'
 import { useState, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Play, CheckCircle, XCircle, Clock, Terminal, Gauge, Database, Globe,
   Network, Layout, Eye, Activity, HardDrive, MapPin, FlaskConical,
+  BookOpen, ChevronDown, ChevronUp,
 } from 'lucide-react'
 
 interface TestResult {
@@ -12,12 +13,20 @@ interface TestResult {
   duration?: number
 }
 
+interface LearnContent {
+  what: string
+  why: string
+  how: string
+  devtoolsTip: string
+}
+
 interface Test {
   id: string
   name: string
   description: string
   icon: React.ElementType
   color: string
+  learn: LearnContent
   run: () => Promise<string[]>
 }
 
@@ -28,6 +37,12 @@ const tests: Test[] = [
     description: 'Runs console.log, warn, error, table, group',
     icon: Terminal,
     color: '#6366f1',
+    learn: {
+      what: 'The Console API lets you print messages, warnings, errors, tables, and grouped logs directly to the browser\'s DevTools Console panel.',
+      why: 'It\'s the most common debugging tool — instantly shows variable values, errors, and execution flow without stopping your app.',
+      how: 'Use console.log() for general info, console.warn() for potential issues, console.error() for actual errors, console.table() for tabular data, and console.group() to collapse related logs.',
+      devtoolsTip: 'Open DevTools (F12) → Console tab. Filter by level (Verbose/Info/Warnings/Errors). Use the Console drawer while on any panel.',
+    },
     run: async () => {
       const out: string[] = []
       console.log('[YOT Test] console.log works')
@@ -52,6 +67,12 @@ const tests: Test[] = [
     description: 'Uses performance.mark(), measure(), getEntriesByName()',
     icon: Gauge,
     color: '#06b6d4',
+    learn: {
+      what: 'The Performance API (User Timing API) lets you create precise timestamps (marks) and measure time between them (measures) in microseconds.',
+      why: 'Essential for profiling real code — identifies bottlenecks by measuring exactly how long specific operations take in the actual browser environment.',
+      how: 'Call performance.mark("start") before your code, performance.mark("end") after, then performance.measure("label", "start", "end") to record the duration. Retrieve with getEntriesByName().',
+      devtoolsTip: 'Open DevTools → Performance tab → Record → Run your test → Stop. Your named marks appear as orange diamonds in the timeline.',
+    },
     run: async () => {
       const out: string[] = []
       performance.clearMarks()
@@ -82,6 +103,12 @@ const tests: Test[] = [
     description: 'Tests localStorage, sessionStorage, cookies',
     icon: Database,
     color: '#10b981',
+    learn: {
+      what: 'The Web Storage API provides localStorage (persists until cleared) and sessionStorage (cleared when tab closes) for storing key-value string data up to ~5MB each.',
+      why: 'Client-side storage enables offline-capable apps, user preferences, shopping carts, and caching without a server round-trip.',
+      how: 'Use setItem(key, value) to write, getItem(key) to read, removeItem(key) to delete. Always store JSON.stringify() for objects and parse on retrieval.',
+      devtoolsTip: 'Open DevTools → Application tab → Storage section. You can read, edit, and delete entries directly from the panel.',
+    },
     run: async () => {
       const out: string[] = []
       // localStorage
@@ -109,6 +136,12 @@ const tests: Test[] = [
     description: 'Shows userAgent, language, onLine, hardwareConcurrency',
     icon: Globe,
     color: '#8b5cf6',
+    learn: {
+      what: 'The Navigator API exposes information about the browser and device: user agent string, preferred languages, online status, CPU core count, geolocation, clipboard, and more.',
+      why: 'Used to detect browser capabilities, adapt UI for different devices/languages, implement offline detection, and access hardware features like geolocation or camera.',
+      how: 'Access via the global navigator object: navigator.userAgent, navigator.language, navigator.onLine, navigator.hardwareConcurrency. Always feature-detect before using experimental properties.',
+      devtoolsTip: 'Use DevTools Console: type navigator and press Enter to explore all available properties. DevTools → Network → Throttle to test offline behavior.',
+    },
     run: async () => {
       const out: string[] = []
       out.push(`✓ userAgent: ${navigator.userAgent.slice(0, 60)}…`)
@@ -131,6 +164,12 @@ const tests: Test[] = [
     description: 'Fetches a URL and shows status, headers, timing',
     icon: Network,
     color: '#f59e0b',
+    learn: {
+      what: 'The Fetch API provides a modern, Promise-based interface for making HTTP requests. It replaces XMLHttpRequest with a cleaner API that integrates with async/await.',
+      why: 'Every web app communicates with servers — Fetch is the standard way to GET data, POST forms, upload files, and receive streaming responses in modern browsers.',
+      how: 'Use fetch(url, options) which returns a Promise<Response>. Always check response.ok before parsing. Use AbortController for cancellation and response.json() / response.text() to read the body.',
+      devtoolsTip: 'Open DevTools → Network tab. Filter by "Fetch/XHR". Click any request to see headers, payload, response, and timing waterfall.',
+    },
     run: async () => {
       const out: string[] = []
       const url = 'https://httpbin.org/get'
@@ -158,6 +197,12 @@ const tests: Test[] = [
     description: 'Creates elements, queries, mutates, removes them',
     icon: Layout,
     color: '#ec4899',
+    learn: {
+      what: 'The DOM (Document Object Model) API represents the HTML document as a tree of objects. You can create, query, modify, and delete elements programmatically with JavaScript.',
+      why: 'The DOM is the foundation of all interactivity on the web — every button click, form validation, and dynamic content update uses the DOM API.',
+      how: 'Create elements with document.createElement(), find them with querySelector() / getElementById(), modify with textContent / innerHTML / style / setAttribute(), and remove with element.remove().',
+      devtoolsTip: 'Open DevTools → Elements tab. Right-click any element → "Break on" to pause execution on DOM changes. Use the live DOM tree to inspect and edit HTML/CSS in real time.',
+    },
     run: async () => {
       const out: string[] = []
       // Create
@@ -194,6 +239,12 @@ const tests: Test[] = [
     description: 'Creates observer and detects element visibility',
     icon: Eye,
     color: '#14b8a6',
+    learn: {
+      what: 'IntersectionObserver asynchronously watches whether an element enters or leaves the browser\'s viewport (or a specified container element).',
+      why: 'The most efficient way to implement lazy loading images, infinite scroll, "animate on scroll" effects, and ad visibility tracking — far better than listening to scroll events.',
+      how: 'Create an observer with a callback and options (threshold: 0-1 for what % of the element must be visible). Call observer.observe(element) to start watching. Always call observer.disconnect() when done.',
+      devtoolsTip: 'Open DevTools → Performance tab → Record while scrolling. IntersectionObserver callbacks appear as tasks in the timeline. No dedicated panel — it\'s a background API.',
+    },
     run: async () => {
       const out: string[] = []
       return new Promise<string[]>(resolve => {
@@ -236,6 +287,12 @@ const tests: Test[] = [
     description: 'Observes real performance entries',
     icon: Activity,
     color: '#f97316',
+    learn: {
+      what: 'PerformanceObserver subscribes to performance timeline events in real time — resource loads, paint events, long tasks, layout shifts, and custom measures.',
+      why: 'Enables monitoring of Core Web Vitals (LCP, FID, CLS) and other real-user performance metrics programmatically without polling the performance buffer.',
+      how: 'Create a PerformanceObserver with a callback, then call observe({ entryTypes: [...] }) with the entry types you want: "paint", "resource", "measure", "longtask", "layout-shift".',
+      devtoolsTip: 'Open DevTools → Performance tab → Timings section shows paint events. In the Console, PerformanceObserver entries stream in real time as the page loads.',
+    },
     run: async () => {
       const out: string[] = []
       return new Promise<string[]>(resolve => {
@@ -281,6 +338,12 @@ const tests: Test[] = [
     description: 'Shows performance.memory (Chrome only)',
     icon: HardDrive,
     color: '#64748b',
+    learn: {
+      what: 'The performance.memory API (Chrome-only, non-standard) exposes JavaScript heap usage: how much memory is currently used, total allocated, and the maximum limit.',
+      why: 'Detecting memory leaks early prevents apps from becoming slow or crashing. Heap growth over time (measure repeatedly) is a sign of a memory leak.',
+      how: 'Read performance.memory.usedJSHeapSize before and after an operation. A consistently growing value means something is holding references — common causes are uncleaned event listeners or growing arrays.',
+      devtoolsTip: 'Open DevTools → Memory tab. Take heap snapshots before/after a suspected leak. Use "Allocation instrumentation on timeline" to find what\'s growing.',
+    },
     run: async () => {
       const out: string[] = []
       const perf = performance as Performance & {
@@ -308,6 +371,12 @@ const tests: Test[] = [
     description: 'Requests location with user permission',
     icon: MapPin,
     color: '#ef4444',
+    learn: {
+      what: 'The Geolocation API allows web pages to request the user\'s physical location (latitude, longitude, altitude, and accuracy) with explicit user permission.',
+      why: 'Powers location-aware features: nearby search, maps, weather apps, delivery tracking, and location-based content personalization.',
+      how: 'Call navigator.geolocation.getCurrentPosition(success, error, options) for a one-time read, or watchPosition() for continuous updates. Always handle the error callback — users often deny permission.',
+      devtoolsTip: 'Open DevTools → More tools → Sensors → Location. Override coordinates to test different locations without physically moving. Also set "Location unavailable" to test the error path.',
+    },
     run: async () => {
       const out: string[] = []
       if (!('geolocation' in navigator)) {
@@ -347,10 +416,37 @@ function StatusIcon({ status }: { status: TestResult['status'] }) {
   return <div className="w-4 h-4 rounded-full border-2 border-[#1e1e2e]" />
 }
 
+function LearnPanel({ learn, color }: { learn: LearnContent; color: string }) {
+  return (
+    <div className="mt-3 rounded-lg overflow-hidden border" style={{ borderColor: `${color}30` }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 divide-y sm:divide-y-0 sm:divide-x" style={{ borderColor: `${color}20` }}>
+        {[
+          { label: 'What', content: learn.what },
+          { label: 'Why', content: learn.why },
+          { label: 'How', content: learn.how },
+          { label: '🛠 DevTools', content: learn.devtoolsTip },
+        ].map(({ label, content }) => (
+          <div key={label} className="p-3" style={{ background: `${color}08` }}>
+            <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color }}>
+              {label}
+            </div>
+            <p className="text-xs text-[#94a3b8] leading-relaxed">{content}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function DevToolsTester() {
   const [results, setResults] = useState<Record<string, TestResult>>(
     Object.fromEntries(tests.map(t => [t.id, { status: 'idle', output: [] }]))
   )
+  const [learnOpen, setLearnOpen] = useState<Record<string, boolean>>({})
+
+  const toggleLearn = useCallback((id: string) => {
+    setLearnOpen(prev => ({ ...prev, [id]: !prev[id] }))
+  }, [])
 
   const runTest = useCallback(async (test: Test) => {
     setResults(prev => ({ ...prev, [test.id]: { status: 'running', output: [] } }))
@@ -387,7 +483,7 @@ export default function DevToolsTester() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white">DevTools Tester</h1>
-            <p className="text-sm text-[#64748b]">Run real browser API tests and inspect output in DevTools</p>
+            <p className="text-sm text-[#64748b]">Run real Web API tests — learn what each API does, why it exists, and how to use it</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -410,6 +506,7 @@ export default function DevToolsTester() {
       {/* Info banner */}
       <div className="bg-[#6366f1]/10 border border-[#6366f1]/20 rounded-xl p-4 text-sm text-[#a5b4fc]">
         💡 Open your browser DevTools (<kbd className="bg-[#1e1e2e] px-1 rounded">F12</kbd>) before running tests to see full output in Console, Network, Performance tabs.
+        Click <strong>Learn</strong> on any card to understand What, Why, How, and DevTools tips for each API.
       </div>
 
       {/* Tests grid */}
@@ -417,6 +514,7 @@ export default function DevToolsTester() {
         {tests.map((test, i) => {
           const result = results[test.id]
           const Icon = test.icon
+          const isLearnOpen = !!learnOpen[test.id]
           return (
             <motion.div
               key={test.id}
@@ -428,7 +526,7 @@ export default function DevToolsTester() {
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center"
+                    className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
                     style={{ background: `${test.color}20`, border: `1px solid ${test.color}30` }}
                   >
                     <Icon size={18} style={{ color: test.color }} />
@@ -441,13 +539,22 @@ export default function DevToolsTester() {
                     <p className="text-xs text-[#64748b]">{test.description}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 shrink-0">
                   {result.duration !== undefined && (
                     <span className="flex items-center gap-1 text-xs text-[#64748b]">
                       <Clock size={10} />
                       {result.duration.toFixed(0)}ms
                     </span>
                   )}
+                  <button
+                    onClick={() => toggleLearn(test.id)}
+                    className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors text-[#64748b] hover:text-white hover:bg-[#1e1e2e]"
+                    title="Learn about this API"
+                  >
+                    <BookOpen size={12} />
+                    <span className="hidden sm:inline">Learn</span>
+                    {isLearnOpen ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
+                  </button>
                   <button
                     onClick={() => runTest(test)}
                     disabled={result.status === 'running'}
@@ -463,6 +570,20 @@ export default function DevToolsTester() {
                   </button>
                 </div>
               </div>
+
+              <AnimatePresence>
+                {isLearnOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <LearnPanel learn={test.learn} color={test.color} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {result.output.length > 0 && (
                 <div className="mt-3 bg-[#0a0a0f] rounded-lg p-3 font-mono text-xs space-y-1 max-h-48 overflow-y-auto border border-[#1e1e2e]">
