@@ -20,6 +20,14 @@ const runCode = (code: string): string[] => {
     assert: (condition: boolean, ...args: unknown[]) => { if (!condition) outputs.push('Assertion failed: ' + args.join(' ')) },
     clear: () => outputs.push('[Console cleared]'),
     info: (...args: unknown[]) => outputs.push('INFO: ' + args.map(a => String(a)).join(' ')),
+    dir: (obj: unknown) => outputs.push('DIR: ' + JSON.stringify(obj, null, 2)),
+    trace: (...args: unknown[]) => {
+      const label = args.length > 0 ? args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ') : 'console.trace'
+      const rawStack = new Error().stack ?? ''
+      const stackLines = rawStack.split('\n').slice(2).map(l => l.trim()).filter(Boolean)
+      const stack = stackLines.length > 0 ? stackLines.join('\n') : '  at <anonymous>'
+      outputs.push(`Trace: ${label}\n${stack}`)
+    },
   }
   try {
     const fn = new Function('console', code)
