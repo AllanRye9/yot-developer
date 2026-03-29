@@ -59,7 +59,11 @@ interface AnalysisResult {
 function checkSyntax(code: string, lang: 'javascript' | 'typescript'): SyntaxIssue[] {
   const issues: SyntaxIssue[] = []
 
-  // For JS, try actual parsing via Function constructor
+  // For JS, use the Function constructor for real syntax checking.
+  // This is intentional: the code is user-supplied and runs entirely client-side
+  // (the user controls their own browser context), so there is no server-side risk.
+  // The Function constructor only parses/compiles; when wrapped in try/catch it does
+  // NOT execute the body — it throws a SyntaxError before any execution.
   if (lang === 'javascript') {
     try {
       // eslint-disable-next-line no-new-func
@@ -162,11 +166,11 @@ function analyzeEfficiency(code: string): EfficiencyIssue[] {
     loopRanges.push(inLoop ? 1 : 0)
   })
 
-  // Missing async/await error handling
+  // Missing async/await error handling — check surrounding context using line index
   lines.forEach((line, i) => {
-    if (/\bawait\b/.test(line) && !/try\b/.test(code.substring(0, code.indexOf(line)))) {
-      // Rough check — look for try block nearby
-      const surroundingCode = lines.slice(Math.max(0, i - 5), i + 1).join('\n')
+    if (/\bawait\b/.test(line)) {
+      // Look for a try block in the preceding 10 lines
+      const surroundingCode = lines.slice(Math.max(0, i - 10), i + 1).join('\n')
       if (!/\btry\b/.test(surroundingCode)) {
         issues.push({
           severity: 'warning',
@@ -435,10 +439,16 @@ function generateAIRecommendations(code: string, lang: 'javascript' | 'typescrip
 
 function computeComplexity(code: string): 'Low' | 'Medium' | 'High' {
   const lines = code.split('\n').filter(l => l.trim()).length
-  const nestingLevel = Math.max(...code.split('\n').map(l => (l.match(/^(\s+)/)?.[1]?.length ?? 0) / 2))
   const conditions = (code.match(/\b(if|else|switch|case|while|for)\b/g) || []).length
-  if (lines > 100 || conditions > 10 || nestingLevel > 5) return 'High'
-  if (lines > 30 || conditions > 4 || nestingLevel > 3) return 'Medium'
+  // Count max brace nesting depth using a stack counter
+  let depth = 0
+  let maxDepth = 0
+  for (const ch of code) {
+    if (ch === '{') { depth++; if (depth > maxDepth) maxDepth = depth }
+    else if (ch === '}') depth = Math.max(0, depth - 1)
+  }
+  if (lines > 100 || conditions > 10 || maxDepth > 5) return 'High'
+  if (lines > 30 || conditions > 4 || maxDepth > 3) return 'Medium'
   return 'Low'
 }
 
@@ -803,6 +813,9 @@ export default function CodeAnalyzer() {
                   {/* ── Syntax Tab ── */}
                   {activeTab === 'syntax' && (
                     <div className="space-y-2">
+                      <p className="text-xs text-[#64748b] mb-1">
+                        JS uses real browser parsing; TS uses heuristic pattern checks. These are educational hints, not a full compiler.
+                      </p>
                       {result.syntaxIssues.length === 0 ? (
                         <div className="flex items-center gap-2 text-[#10b981] text-sm">
                           <CheckCircle size={16} />

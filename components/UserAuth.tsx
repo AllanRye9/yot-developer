@@ -22,7 +22,7 @@ export default function UserAuth({ children }: UserAuthProps) {
   const [tab, setTab] = useState<'login' | 'register'>('login')
 
   // Login form state
-  const [loginUser2, setLoginUser2] = useState('')
+  const [loginUsername, setLoginUsername] = useState('')
   const [loginPass, setLoginPass] = useState('')
   const [loginShowPass, setLoginShowPass] = useState(false)
   const [loginError, setLoginError] = useState('')
@@ -53,11 +53,11 @@ export default function UserAuth({ children }: UserAuthProps) {
     setLoginError('')
     setLoginLoading(true)
     await new Promise(r => setTimeout(r, 300))
-    if (loginUser(loginUser2.trim(), loginPass)) {
-      const user = getUserByUsername(loginUser2.trim())
-      setUserSession(loginUser2.trim())
-      setSession(loginUser2.trim())
-      setDisplayName(user?.displayName ?? loginUser2.trim())
+    if (loginUser(loginUsername.trim(), loginPass)) {
+      const user = getUserByUsername(loginUsername.trim())
+      setUserSession(loginUsername.trim())
+      setSession(loginUsername.trim())
+      setDisplayName(user?.displayName ?? loginUsername.trim())
     } else {
       setLoginError('Invalid username or password')
     }
@@ -168,8 +168,8 @@ export default function UserAuth({ children }: UserAuthProps) {
                 <label className="block text-xs font-medium text-[#64748b] mb-1.5">Username</label>
                 <input
                   type="text"
-                  value={loginUser2}
-                  onChange={e => setLoginUser2(e.target.value)}
+                  value={loginUsername}
+                  onChange={e => setLoginUsername(e.target.value)}
                   placeholder="your_username"
                   required
                   className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
