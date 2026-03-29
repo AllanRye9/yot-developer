@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Play, Trash2, Copy, Check, Code, Terminal, ChevronDown } from 'lucide-react'
+import { copyToClipboard } from '@/lib/clipboard'
 
 const runCode = (code: string): Array<{ type: string; content: string }> => {
   const outputs: Array<{ type: string; content: string }> = []
@@ -47,7 +48,12 @@ export default function Playground() {
     setOutputs(runCode(code)); setIsRunning(false)
   }, [code])
 
-  const handleCopy = () => { navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 2000) }
+  const handleCopy = () => {
+    copyToClipboard(code).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }).catch(() => { /* copy failed — leave button in default state */ })
+  }
 
   const outputColors: Record<string, string> = { log: 'text-[#e2e8f0]', error: 'text-[#ef4444]', warn: 'text-yellow-400', info: 'text-[#06b6d4]', table: 'text-[#06b6d4]', group: 'text-[#8b5cf6]', clear: 'text-[#64748b] italic' }
 

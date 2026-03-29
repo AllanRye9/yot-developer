@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
 import './globals.css'
 import Navigation from '@/components/Navigation'
@@ -17,10 +17,16 @@ export const metadata: Metadata = {
   description: 'Explore, experiment and learn browser dev-tools functionalities',
 }
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#0a0a0f',
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${geist.variable} font-sans bg-[#0a0a0f] text-[#e2e8f0] min-h-screen`}>
+      <body className={`${geist.variable} font-sans bg-[var(--color-bg)] text-[#e2e8f0] min-h-screen`}>
         <ThemeProvider>
           <Navigation />
           <AnalyticsTracker />

@@ -146,7 +146,7 @@ const tests: Test[] = [
       const out: string[] = []
       out.push(`✓ userAgent: ${navigator.userAgent.slice(0, 60)}…`)
       out.push(`✓ language: ${navigator.language}`)
-      out.push(`✓ languages: [${navigator.languages.slice(0, 3).join(', ')}]`)
+      out.push(`✓ languages: [${(navigator.languages ?? [navigator.language]).slice(0, 3).join(', ')}]`)
       out.push(`✓ onLine: ${navigator.onLine}`)
       out.push(`✓ hardwareConcurrency: ${navigator.hardwareConcurrency} CPU cores`)
       out.push(`✓ cookieEnabled: ${navigator.cookieEnabled}`)
@@ -176,7 +176,8 @@ const tests: Test[] = [
       out.push(`→ Fetching ${url} …`)
       try {
         const t0 = performance.now()
-        const res = await fetch(url, { signal: AbortSignal.timeout(8000) })
+        const signal = typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(8000) : undefined
+        const res = await fetch(url, signal ? { signal } : {})
         const t1 = performance.now()
         const body = await res.json()
         out.push(`✓ Status: ${res.status} ${res.statusText}`)

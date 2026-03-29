@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Copy, Check } from 'lucide-react'
+import { copyToClipboard } from '@/lib/clipboard'
 
 interface CodeBlockProps {
   code: string
@@ -12,9 +13,10 @@ export default function CodeBlock({ code, language = 'javascript' }: CodeBlockPr
   const [copied, setCopied] = useState(false)
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(code)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    copyToClipboard(code).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }).catch(() => { /* copy failed — leave button in default state */ })
   }
 
   const highlight = (src: string) => {
