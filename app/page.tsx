@@ -1,9 +1,11 @@
 import DevToolsExplorer from '@/components/DevToolsExplorer'
+import AnimatedBackground from '@/components/AnimatedBackground'
 
 export default function Home() {
   return (
-    <main className="pt-12 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 py-6">
+    <main className="pt-12 min-h-screen relative overflow-x-hidden">
+      <AnimatedBackground />
+      <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <DevToolsExplorer />
       </div>
     </main>

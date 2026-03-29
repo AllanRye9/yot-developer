@@ -140,29 +140,28 @@ function ChallengeModal({ challenge, isCompleted, onClose, onComplete }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/60 backdrop-blur-sm">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-4xl bg-[#0a0a0f] border border-[#1e1e2e] rounded-2xl overflow-hidden max-h-[90vh] flex flex-col"
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 40 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+        className="w-full max-w-4xl bg-[#0a0a0f] border border-[#1e1e2e] rounded-t-2xl sm:rounded-2xl overflow-hidden max-h-[92vh] sm:max-h-[90vh] flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1e1e2e] bg-[#12121a]">
-          <div className="flex items-center gap-3">
-            <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${difficultyColors[challenge.difficulty]}`}>
-              {challenge.difficulty}
-            </span>
-            <h2 className="text-lg font-bold text-white">{challenge.title}</h2>
-          </div>
-          <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 border-b border-[#1e1e2e] bg-[#12121a]">
+          <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${difficultyColors[challenge.difficulty]}`}>
+            {challenge.difficulty}
+          </span>
+          <h2 className="text-sm sm:text-lg font-bold text-white flex-1 min-w-0 truncate">{challenge.title}</h2>
+          <div className="flex items-center gap-3 ml-auto shrink-0">
             <span className="flex items-center gap-1 text-sm text-[#f59e0b]"><Zap size={12} />{challenge.xpReward} XP</span>
-            <button onClick={onClose} className="text-[#64748b] hover:text-white text-xl leading-none">×</button>
+            <button onClick={onClose} className="text-[#64748b] hover:text-white text-xl leading-none w-7 h-7 flex items-center justify-center">×</button>
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          <div className="p-6 space-y-4">
+          <div className="p-4 sm:p-6 space-y-4">
             {/* Description */}
             <p className="text-[#94a3b8] text-sm leading-relaxed">{challenge.description}</p>
 
@@ -387,9 +386,14 @@ export default function Challenges() {
       {/* Toast notification */}
       <AnimatePresence>
         {justEarned && (
-          <motion.div initial={{ opacity: 0, y: 20, x: '-50%' }} animate={{ opacity: 1, y: 0, x: '-50%' }} exit={{ opacity: 0, y: 20, x: '-50%' }}
-            className="fixed bottom-6 left-1/2 bg-[#6366f1] text-white px-5 py-3 rounded-xl shadow-xl text-sm font-medium flex items-center gap-2 z-50">
-            <Trophy size={16} />{justEarned}
+          <motion.div
+            initial={{ opacity: 0, y: 60, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            transition={{ type: 'spring', damping: 18, stiffness: 200 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white px-5 py-3 rounded-2xl shadow-2xl shadow-[#6366f1]/40 text-sm font-semibold flex items-center gap-2 z-50 animate-pulse-glow"
+          >
+            <Trophy size={18} />{justEarned}
           </motion.div>
         )}
       </AnimatePresence>
