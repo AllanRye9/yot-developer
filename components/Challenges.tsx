@@ -73,10 +73,10 @@ function ChallengeCard({ challenge, isCompleted, isLocked, onSelect }: {
     <motion.div
       whileHover={!isLocked ? { y: -2, scale: 1.01 } : {}}
       onClick={!isLocked ? onSelect : undefined}
-      className={`relative bg-[#12121a] border rounded-xl p-5 cursor-pointer transition-colors ${
-        isLocked ? 'opacity-50 cursor-not-allowed border-[#1e1e2e]' :
+      className={`relative bg-[var(--color-card)] border rounded-xl p-5 cursor-pointer transition-colors ${
+        isLocked ? 'opacity-50 cursor-not-allowed border-[var(--color-border)]' :
         isCompleted ? 'border-[#10b981]/40 hover:border-[#10b981]/70' :
-        'border-[#1e1e2e] hover:border-[#6366f1]/50'
+        'border-[var(--color-border)] hover:border-[#6366f1]/50'
       }`}
     >
       {isCompleted && (
@@ -86,7 +86,7 @@ function ChallengeCard({ challenge, isCompleted, isLocked, onSelect }: {
       )}
       {isLocked && (
         <div className="absolute top-3 right-3">
-          <Lock size={16} className="text-[#64748b]" />
+          <Lock size={16} className="text-[var(--foreground-muted)]" />
         </div>
       )}
       <div className="flex items-start gap-3 mb-3">
@@ -96,8 +96,8 @@ function ChallengeCard({ challenge, isCompleted, isLocked, onSelect }: {
           {isCompleted ? <Star size={16} className="text-[#10b981]" /> : <Target size={16} className="text-[#6366f1]" />}
         </div>
         <div className="min-w-0">
-          <h3 className="font-semibold text-white text-sm leading-snug">{challenge.title}</h3>
-          <p className="text-xs text-[#64748b] mt-0.5 line-clamp-2">{challenge.description}</p>
+          <h3 className="font-semibold text-[var(--foreground)] text-sm leading-snug">{challenge.title}</h3>
+          <p className="text-xs text-[var(--foreground-muted)] mt-0.5 line-clamp-2">{challenge.description}</p>
         </div>
       </div>
       <div className="flex items-center gap-2 flex-wrap">
@@ -107,7 +107,7 @@ function ChallengeCard({ challenge, isCompleted, isLocked, onSelect }: {
         <span className="flex items-center gap-1 text-xs text-[#f59e0b]">
           <Zap size={10} />{challenge.xpReward} XP
         </span>
-        <span className="text-xs text-[#64748b] capitalize">{challenge.category}</span>
+        <span className="text-xs text-[var(--foreground-muted)] capitalize">{challenge.category}</span>
       </div>
     </motion.div>
   )
@@ -146,17 +146,17 @@ function ChallengeModal({ challenge, isCompleted, onClose, onComplete }: {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 40 }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="w-full max-w-4xl bg-[#0a0a0f] border border-[#1e1e2e] rounded-t-2xl sm:rounded-2xl overflow-hidden max-h-[92vh] sm:max-h-[90vh] flex flex-col"
+        className="w-full max-w-4xl bg-[var(--color-bg)] border border-[var(--color-border)] rounded-t-2xl sm:rounded-2xl overflow-hidden max-h-[92vh] sm:max-h-[90vh] flex flex-col"
       >
         {/* Header */}
-        <div className="flex flex-wrap items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 border-b border-[#1e1e2e] bg-[#12121a]">
+        <div className="flex flex-wrap items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--color-border)] bg-[var(--color-card)]">
           <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${difficultyColors[challenge.difficulty]}`}>
             {challenge.difficulty}
           </span>
-          <h2 className="text-sm sm:text-lg font-bold text-white flex-1 min-w-0 truncate">{challenge.title}</h2>
+          <h2 className="text-sm sm:text-lg font-bold text-[var(--foreground)] flex-1 min-w-0 truncate">{challenge.title}</h2>
           <div className="flex items-center gap-3 ml-auto shrink-0">
             <span className="flex items-center gap-1 text-sm text-[#f59e0b]"><Zap size={12} />{challenge.xpReward} XP</span>
-            <button onClick={onClose} className="text-[#64748b] hover:text-white text-xl leading-none w-7 h-7 flex items-center justify-center">×</button>
+            <button onClick={onClose} className="text-[var(--foreground-muted)] hover:text-[var(--foreground)] text-xl leading-none w-7 h-7 flex items-center justify-center">×</button>
           </div>
         </div>
 
@@ -169,14 +169,14 @@ function ChallengeModal({ challenge, isCompleted, onClose, onComplete }: {
             <div className="flex gap-2">
               <button
                 onClick={() => setShowHint(!showHint)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1e1e2e] hover:bg-[#2e2e3e] text-[#64748b] hover:text-[#e2e8f0] text-xs rounded-lg transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1e1e2e] hover:brightness-125 text-[var(--foreground-muted)] hover:text-[var(--foreground)] text-xs rounded-lg transition-colors"
               >
                 <Lightbulb size={12} />{showHint ? 'Hide Hint' : 'Show Hint'}
               </button>
               {(attempted || isCompleted) && (
                 <button
                   onClick={() => setShowSolution(!showSolution)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1e1e2e] hover:bg-[#2e2e3e] text-[#64748b] hover:text-[#e2e8f0] text-xs rounded-lg transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1e1e2e] hover:brightness-125 text-[var(--foreground-muted)] hover:text-[var(--foreground)] text-xs rounded-lg transition-colors"
                 >
                   <Eye size={12} />{showSolution ? 'Hide Solution' : 'View Solution'}
                 </button>
@@ -199,9 +199,9 @@ function ChallengeModal({ challenge, isCompleted, onClose, onComplete }: {
 
             {/* Editor */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="flex flex-col bg-[#12121a] rounded-xl border border-[#1e1e2e] overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2 border-b border-[#1e1e2e] bg-[#0a0a0f]">
-                  <span className="text-xs text-[#64748b] font-mono">editor.js</span>
+              <div className="flex flex-col bg-[var(--color-card)] rounded-xl border border-[var(--color-border)] overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--color-border)] bg-[var(--color-bg)]">
+                  <span className="text-xs text-[var(--foreground-muted)] font-mono">editor.js</span>
                 </div>
                 <textarea
                   value={code}
@@ -215,12 +215,12 @@ function ChallengeModal({ challenge, isCompleted, onClose, onComplete }: {
                       requestAnimationFrame(() => { e.currentTarget.selectionStart = e.currentTarget.selectionEnd = s + 2 })
                     }
                   }}
-                  className="flex-1 resize-none p-4 bg-[#0a0a0f] text-[#e2e8f0] font-mono text-sm leading-relaxed focus:outline-none min-h-[200px]"
+                  className="flex-1 resize-none p-4 bg-[var(--color-bg)] text-[var(--foreground)] font-mono text-sm leading-relaxed focus:outline-none min-h-[200px]"
                 />
               </div>
-              <div className="flex flex-col bg-[#12121a] rounded-xl border border-[#1e1e2e] overflow-hidden">
-                <div className="flex items-center gap-2 px-4 py-2 border-b border-[#1e1e2e] bg-[#0a0a0f]">
-                  <span className="text-xs text-[#64748b] font-mono">Output</span>
+              <div className="flex flex-col bg-[var(--color-card)] rounded-xl border border-[var(--color-border)] overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-2 border-b border-[var(--color-border)] bg-[var(--color-bg)]">
+                  <span className="text-xs text-[var(--foreground-muted)] font-mono">Output</span>
                   {attempted && (
                     <span className={`ml-auto text-xs font-medium ${passed ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>
                       {passed ? '✓ Passed!' : '✗ Not quite…'}
@@ -236,10 +236,10 @@ function ChallengeModal({ challenge, isCompleted, onClose, onComplete }: {
                           line.startsWith('ERROR:') ? 'text-[#ef4444]' :
                           line.startsWith('WARN:') ? 'text-yellow-400' :
                           line.startsWith('TABLE:') ? 'text-[#06b6d4]' :
-                          line.startsWith('Trace:') ? 'text-[#8b5cf6]' : 'text-[#e2e8f0]'
+                          line.startsWith('Trace:') ? 'text-[#8b5cf6]' : 'text-[var(--foreground)]'
                         }`}>{line}</div>
                       ))
-                      : <div className="text-[#64748b]">Run your code to see output</div>
+                      : <div className="text-[var(--foreground-muted)]">Run your code to see output</div>
                   }
                 </div>
               </div>
@@ -250,7 +250,7 @@ function ChallengeModal({ challenge, isCompleted, onClose, onComplete }: {
               <motion.button
                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 onClick={handleRun} disabled={isRunning}
-                className="flex items-center gap-2 px-5 py-2.5 bg-[#6366f1] hover:bg-[#5457e5] disabled:opacity-50 text-white rounded-lg font-medium transition-colors text-sm"
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#6366f1] hover:bg-[#5457e5] disabled:opacity-50 text-[var(--foreground)] rounded-lg font-medium transition-colors text-sm"
               >
                 <Play size={14} />{isRunning ? 'Running…' : 'Run & Check'}
               </motion.button>
@@ -313,19 +313,19 @@ export default function Challenges({ username: _username, displayName: _displayN
           { label: 'Badges', value: `${earnedBadges.length}/${badges.length}`, icon: '🏆', color: '#8b5cf6' },
         ].map(({ label, value, icon, color }) => (
           <motion.div key={label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-4">
+            className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-4">
             <div className="text-2xl mb-1">{icon}</div>
-            <div className="text-xl font-bold text-white" style={{ color }}>{value}</div>
-            <div className="text-xs text-[#64748b]">{label}</div>
+            <div className="text-xl font-bold text-[var(--foreground)]" style={{ color }}>{value}</div>
+            <div className="text-xs text-[var(--foreground-muted)]">{label}</div>
           </motion.div>
         ))}
       </div>
 
       {/* XP Progress */}
-      <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-4">
+      <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-4">
         <div className="flex justify-between text-sm mb-2">
-          <span className="text-[#64748b]">Level {level} Progress</span>
-          <span className="text-[#64748b]">{xpToNext} XP to Level {level + 1}</span>
+          <span className="text-[var(--foreground-muted)]">Level {level} Progress</span>
+          <span className="text-[var(--foreground-muted)]">{xpToNext} XP to Level {level + 1}</span>
         </div>
         <div className="h-2 bg-[#1e1e2e] rounded-full overflow-hidden">
           <motion.div
@@ -338,15 +338,15 @@ export default function Challenges({ username: _username, displayName: _displayN
       </div>
 
       {/* Badges */}
-      <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
-        <h3 className="font-semibold text-white mb-4 flex items-center gap-2"><Trophy size={16} className="text-[#f59e0b]" />Badges</h3>
+      <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-5">
+        <h3 className="font-semibold text-[var(--foreground)] mb-4 flex items-center gap-2"><Trophy size={16} className="text-[#f59e0b]" />Badges</h3>
         <div className="flex flex-wrap gap-3">
           {badges.map(badge => {
             const earned = earnedBadges.some(b => b.id === badge.id)
             return (
               <motion.div key={badge.id} whileHover={{ scale: 1.05 }}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-all ${
-                  earned ? 'bg-[#6366f1]/10 border-[#6366f1]/40 text-white' : 'bg-[#1e1e2e]/50 border-[#1e1e2e] text-[#64748b] opacity-50'
+                  earned ? 'bg-[#6366f1]/10 border-[#6366f1]/40 text-[var(--foreground)]' : 'bg-[#1e1e2e]/50 border-[var(--color-border)] text-[var(--foreground-muted)] opacity-50'
                 }`}>
                 <span className={earned ? '' : 'grayscale'}>{badge.icon}</span>
                 <div>
@@ -363,11 +363,11 @@ export default function Challenges({ username: _username, displayName: _displayN
       {/* Filter + Challenges grid */}
       <div>
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-sm text-[#64748b]">Filter:</span>
+          <span className="text-sm text-[var(--foreground-muted)]">Filter:</span>
           {(['All', 'Beginner', 'Intermediate', 'Advanced'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                filter === f ? 'bg-[#6366f1] text-white' : 'bg-[#12121a] border border-[#1e1e2e] text-[#64748b] hover:text-white'
+                filter === f ? 'bg-[#6366f1] text-[var(--foreground)]' : 'bg-[var(--color-card)] border border-[var(--color-border)] text-[var(--foreground-muted)] hover:text-[var(--foreground)]'
               }`}>{f}</button>
           ))}
         </div>
@@ -393,7 +393,7 @@ export default function Challenges({ username: _username, displayName: _displayN
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             transition={{ type: 'spring', damping: 18, stiffness: 200 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white px-5 py-3 rounded-2xl shadow-2xl shadow-[#6366f1]/40 text-sm font-semibold flex items-center gap-2 z-50 animate-pulse-glow"
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-[var(--foreground)] px-5 py-3 rounded-2xl shadow-2xl shadow-[#6366f1]/40 text-sm font-semibold flex items-center gap-2 z-50 animate-pulse-glow"
           >
             <Trophy size={18} />{justEarned}
           </motion.div>

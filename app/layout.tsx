@@ -26,7 +26,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${geist.variable} font-sans bg-[var(--color-bg)] text-[#e2e8f0] min-h-screen`}>
+      <body className={`${geist.variable} font-sans bg-[var(--color-bg)] text-[var(--foreground)] min-h-screen`}>
         <ThemeProvider>
           <Navigation />
           <AnalyticsTracker />

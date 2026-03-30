@@ -1196,7 +1196,7 @@ export default function CodeAnalyzer() {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handleLanguageSwitch(lang)}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  language === lang ? 'bg-[var(--color-accent)] text-white' : 'hover:opacity-80'
+                  language === lang ? 'bg-[var(--color-accent)] text-[var(--foreground)]' : 'hover:opacity-80'
                 }`}
                 style={language !== lang ? { color: 'var(--foreground-muted)' } : {}}
               >
@@ -1211,7 +1211,7 @@ export default function CodeAnalyzer() {
             onClick={() => setShowConvert(s => !s)}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-colors ${
               showConvert
-                ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-white'
+                ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-[var(--foreground)]'
                 : 'bg-[var(--color-card)] border-[var(--color-border)] hover:opacity-80'
             }`}
             style={!showConvert ? { color: 'var(--foreground-muted)' } : {}}
@@ -1223,7 +1223,7 @@ export default function CodeAnalyzer() {
             whileTap={{ scale: 0.96 }}
             onClick={analyze}
             disabled={analyzing}
-            className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] hover:opacity-90 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-opacity"
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] hover:opacity-90 disabled:opacity-60 text-[var(--foreground)] text-sm font-medium rounded-lg transition-opacity"
           >
             {analyzing ? (
               <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
@@ -1482,7 +1482,7 @@ export default function CodeAnalyzer() {
                                                 : line.startsWith('WARN:') ? 'text-[#f59e0b]'
                                                 : line.startsWith('✓') ? 'text-[#10b981]'
                                                 : line.startsWith('✗') ? 'text-[#ef4444]'
-                                                : 'text-[#e2e8f0]'
+                                                : 'text-[var(--foreground)]'
                                               }`}
                                             >
                                               {line}
@@ -1693,7 +1693,7 @@ export default function CodeAnalyzer() {
               </div>
               <button
                 onClick={handleConvert}
-                className="ml-auto flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium text-white transition-opacity hover:opacity-90"
+                className="ml-auto flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium text-[var(--foreground)] transition-opacity hover:opacity-90"
                 style={{ background: 'var(--color-accent)' }}
               >
                 <Play size={12} />Convert

@@ -242,13 +242,13 @@ function AISecurityPanel({ tests }: { tests: TestItem[] }) {
   }
 
   return (
-    <div className="bg-[#12121a] border border-[#6366f1]/30 rounded-xl overflow-hidden">
+    <div className="bg-[var(--color-card)] border border-[#6366f1]/30 rounded-xl overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#6366f1]/10 to-transparent border-b border-[#6366f1]/20">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] rounded-md flex items-center justify-center">
             <Sparkles size={12} className="text-white" />
           </div>
-          <span className="text-sm font-semibold text-white">AI Security Assistant</span>
+          <span className="text-sm font-semibold text-[var(--foreground)]">AI Security Assistant</span>
           <span className="text-xs text-[#6366f1] bg-[#6366f1]/15 px-2 py-0.5 rounded-full">
             {problematicCount} issue{problematicCount !== 1 ? 's' : ''} to explain
           </span>
@@ -256,7 +256,7 @@ function AISecurityPanel({ tests }: { tests: TestItem[] }) {
         {!analyses && !loading && (
           <button
             onClick={runAnalysis}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6366f1] hover:bg-[#5558e8] text-white text-xs font-medium rounded-lg transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6366f1] hover:bg-[#5558e8] text-[var(--foreground)] text-xs font-medium rounded-lg transition-colors"
           >
             <Sparkles size={12} />
             Get AI Explanations
@@ -265,7 +265,7 @@ function AISecurityPanel({ tests }: { tests: TestItem[] }) {
       </div>
 
       {!analyses && !loading && (
-        <div className="px-4 py-4 text-sm text-[#64748b]">
+        <div className="px-4 py-4 text-sm text-[var(--foreground-muted)]">
           Get detailed AI explanations for each security issue: what it means, why it matters, how to fix it, and code examples.
         </div>
       )}
@@ -273,14 +273,14 @@ function AISecurityPanel({ tests }: { tests: TestItem[] }) {
       {loading && (
         <div className="flex items-center gap-3 px-4 py-6 justify-center">
           <Loader2 size={18} className="animate-spin text-[#6366f1]" />
-          <span className="text-sm text-[#64748b]">AI is analyzing security findings…</span>
+          <span className="text-sm text-[var(--foreground-muted)]">AI is analyzing security findings…</span>
         </div>
       )}
 
       {analyses && (
         <div className="divide-y divide-[#1e1e2e]">
           {analyses.length === 0 ? (
-            <p className="px-4 py-4 text-sm text-[#64748b]">No actionable findings to explain.</p>
+            <p className="px-4 py-4 text-sm text-[var(--foreground-muted)]">No actionable findings to explain.</p>
           ) : (
             analyses.map((analysis, i) => (
               <div key={i} className="overflow-hidden">
@@ -292,7 +292,7 @@ function AISecurityPanel({ tests }: { tests: TestItem[] }) {
                     ? <XCircle size={14} className="text-red-400 shrink-0" />
                     : <AlertTriangle size={14} className="text-amber-400 shrink-0" />
                   }
-                  <span className="flex-1 text-sm font-medium text-white">{analysis.test.name}</span>
+                  <span className="flex-1 text-sm font-medium text-[var(--foreground)]">{analysis.test.name}</span>
                   <span className={`text-[10px] uppercase px-1.5 py-0.5 rounded border shrink-0 ${
                     analysis.test.status === 'fail'
                       ? 'text-red-400 border-red-500/30 bg-red-500/10'
@@ -301,8 +301,8 @@ function AISecurityPanel({ tests }: { tests: TestItem[] }) {
                     {analysis.test.status}
                   </span>
                   {expanded === i
-                    ? <ChevronUp size={14} className="text-[#64748b] shrink-0" />
-                    : <ChevronDown size={14} className="text-[#64748b] shrink-0" />
+                    ? <ChevronUp size={14} className="text-[var(--foreground-muted)] shrink-0" />
+                    : <ChevronDown size={14} className="text-[var(--foreground-muted)] shrink-0" />
                   }
                 </button>
                 <AnimatePresence>
@@ -314,10 +314,10 @@ function AISecurityPanel({ tests }: { tests: TestItem[] }) {
                       transition={{ duration: 0.18 }}
                       className="overflow-hidden"
                     >
-                      <div className="px-4 pb-4 pt-2 space-y-3 border-t border-[#1e1e2e]">
+                      <div className="px-4 pb-4 pt-2 space-y-3 border-t border-[var(--color-border)]">
                         {/* Current finding */}
-                        <div className="bg-[#0a0a0f] rounded-lg p-3 text-xs text-[#94a3b8]">
-                          <span className="text-[#64748b] font-medium">Finding: </span>{analysis.test.detail}
+                        <div className="bg-[var(--color-bg)] rounded-lg p-3 text-xs text-[#94a3b8]">
+                          <span className="text-[var(--foreground-muted)] font-medium">Finding: </span>{analysis.test.detail}
                         </div>
 
                         {/* What it means */}
@@ -349,7 +349,7 @@ function AISecurityPanel({ tests }: { tests: TestItem[] }) {
 
                         {/* Code example */}
                         {analysis.example && (
-                          <pre className="bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg p-3 text-xs text-[#a5b4fc] font-mono overflow-x-auto leading-relaxed">
+                          <pre className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg p-3 text-xs text-[#a5b4fc] font-mono overflow-x-auto leading-relaxed">
                             {analysis.example}
                           </pre>
                         )}
@@ -376,7 +376,7 @@ function TestCard({ test }: { test: TestItem }) {
     <motion.div
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-[#12121a] border border-[#1e1e2e] rounded-lg overflow-hidden"
+      className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg overflow-hidden"
     >
       <button
         className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#1a1a27] transition-colors"
@@ -384,12 +384,12 @@ function TestCard({ test }: { test: TestItem }) {
         aria-expanded={expanded}
       >
         {statusIcon(test.status)}
-        <span className="flex-1 text-sm font-medium text-white">{test.name}</span>
+        <span className="flex-1 text-sm font-medium text-[var(--foreground)]">{test.name}</span>
         <div className="flex items-center gap-2">
           {categoryIcon(test.category)}
           {statusBadge(test.status)}
           {hasTip ? (
-            expanded ? <ChevronUp size={14} className="text-[#64748b]" /> : <ChevronDown size={14} className="text-[#64748b]" />
+            expanded ? <ChevronUp size={14} className="text-[var(--foreground-muted)]" /> : <ChevronDown size={14} className="text-[var(--foreground-muted)]" />
           ) : null}
         </div>
       </button>
@@ -403,7 +403,7 @@ function TestCard({ test }: { test: TestItem }) {
             transition={{ duration: 0.18 }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-3 pt-1 border-t border-[#1e1e2e] space-y-2">
+            <div className="px-4 pb-3 pt-1 border-t border-[var(--color-border)] space-y-2">
               <p className="text-xs text-[#94a3b8] leading-relaxed">{test.detail}</p>
               {test.tip && (
                 <div className="flex items-start gap-2 bg-[#6366f1]/10 border border-[#6366f1]/20 rounded-lg p-2.5">
@@ -511,22 +511,22 @@ export default function SiteTester() {
           <div className="w-8 h-8 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] rounded-lg flex items-center justify-center shadow-lg shadow-[#6366f1]/30">
             <Shield size={16} className="text-white" />
           </div>
-          <h1 className="text-xl font-bold text-white">Site Security Analyzer</h1>
+          <h1 className="text-xl font-bold text-[var(--foreground)]">Site Security Analyzer</h1>
         </div>
-        <p className="text-sm text-[#64748b] ml-11">
+        <p className="text-sm text-[var(--foreground-muted)] ml-11">
           Test any public URL for security headers, vulnerabilities, and general best practices.
           Get AI-powered explanations and fix recommendations for every finding.
         </p>
       </div>
 
       {/* URL Input */}
-      <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-4 space-y-3">
-        <label htmlFor="site-url" className="text-xs font-semibold text-[#64748b] uppercase tracking-wider">
+      <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-4 space-y-3">
+        <label htmlFor="site-url" className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider">
           Target URL
         </label>
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Globe size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" />
+            <Globe size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--foreground-muted)]" />
             <input
               id="site-url"
               ref={inputRef}
@@ -535,7 +535,7 @@ export default function SiteTester() {
               onChange={e => setUrl(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="https://example.com"
-              className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg pl-8 pr-4 py-2.5 text-sm text-white placeholder-[#3d3d52] focus:outline-none focus:border-[#6366f1] transition-colors"
+              className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg pl-8 pr-4 py-2.5 text-sm text-[var(--foreground)] placeholder-[#3d3d52] focus:outline-none focus:border-[#6366f1] transition-colors"
               disabled={loading}
             />
           </div>
@@ -544,7 +544,7 @@ export default function SiteTester() {
             whileTap={{ scale: 0.98 }}
             onClick={runTests}
             disabled={loading || !url.trim()}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition-colors shadow-lg shadow-[#6366f1]/25"
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-50 disabled:cursor-not-allowed text-[var(--foreground)] text-sm font-semibold rounded-lg transition-colors shadow-lg shadow-[#6366f1]/25"
           >
             {loading ? (
               <>
@@ -571,7 +571,7 @@ export default function SiteTester() {
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
-            className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 flex flex-col items-center gap-3"
+            className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-6 flex flex-col items-center gap-3"
           >
             <Loader2 size={28} className="animate-spin text-[#6366f1]" />
             <p className="text-sm text-[#94a3b8] font-medium">Running security, vulnerability &amp; general tests…</p>
@@ -610,15 +610,15 @@ export default function SiteTester() {
             {(() => {
               const { pass, fail, warn, total, score } = scoreSummary(result.tests)
               return (
-                <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-4">
+                <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-4">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                      <p className="text-[11px] text-[#64748b] uppercase tracking-wider font-semibold mb-1">Site Score</p>
+                      <p className="text-[11px] text-[var(--foreground-muted)] uppercase tracking-wider font-semibold mb-1">Site Score</p>
                       <div className="flex items-baseline gap-1.5">
                         <span className={`text-3xl font-bold ${scoreColor(score)}`}>{score}</span>
-                        <span className="text-sm text-[#64748b]">/ 100</span>
+                        <span className="text-sm text-[var(--foreground-muted)]">/ 100</span>
                       </div>
-                      <p className="text-xs text-[#64748b] mt-0.5">
+                      <p className="text-xs text-[var(--foreground-muted)] mt-0.5">
                         {result.finalUrl !== result.url && (
                           <span>Redirected to <span className="text-[#94a3b8]">{result.finalUrl}</span> · </span>
                         )}
@@ -634,7 +634,7 @@ export default function SiteTester() {
                       ].map(({ label, count, color }) => (
                         <div key={label} className="text-center">
                           <p className={`text-xl font-bold ${color}`}>{count}</p>
-                          <p className="text-[10px] text-[#64748b] uppercase">{label}</p>
+                          <p className="text-[10px] text-[var(--foreground-muted)] uppercase">{label}</p>
                         </div>
                       ))}
                     </div>
@@ -642,7 +642,7 @@ export default function SiteTester() {
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}
                       onClick={copyLogs}
-                      className="flex items-center gap-1.5 px-3 py-2 bg-[#1e1e2e] hover:bg-[#2a2a3e] text-[#94a3b8] hover:text-white text-xs font-medium rounded-lg transition-colors border border-[#2a2a3e]"
+                      className="flex items-center gap-1.5 px-3 py-2 bg-[#1e1e2e] hover:bg-[#2a2a3e] text-[#94a3b8] hover:text-[var(--foreground)] text-xs font-medium rounded-lg transition-colors border border-[#2a2a3e]"
                       title="Copy logs to clipboard"
                     >
                       <ClipboardCopy size={13} />
@@ -654,7 +654,7 @@ export default function SiteTester() {
             })()}
 
             {/* Tabs */}
-            <div className="flex gap-1 bg-[#12121a] border border-[#1e1e2e] rounded-xl p-1">
+            <div className="flex gap-1 bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-1">
               {tabs.map(tab => {
                 const count = tab.id === 'all'
                   ? result.tests.length
@@ -665,8 +665,8 @@ export default function SiteTester() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center gap-1.5 flex-1 justify-center px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                       activeTab === tab.id
-                        ? 'bg-[#6366f1] text-white'
-                        : 'text-[#64748b] hover:text-white hover:bg-[#1e1e2e]'
+                        ? 'bg-[#6366f1] text-[var(--foreground)]'
+                        : 'text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:brightness-110'
                     }`}
                   >
                     {tab.icon}
@@ -682,7 +682,7 @@ export default function SiteTester() {
             {/* Test cards */}
             <div className="space-y-2">
               {visibleTests.length === 0 ? (
-                <p className="text-sm text-[#64748b] text-center py-8">No tests in this category.</p>
+                <p className="text-sm text-[var(--foreground-muted)] text-center py-8">No tests in this category.</p>
               ) : (
                 visibleTests.map(test => <TestCard key={test.id} test={test} />)
               )}
@@ -717,22 +717,22 @@ export default function SiteTester() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={e => e.stopPropagation()}
-              className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-4 w-full max-w-2xl max-h-[70vh] flex flex-col gap-3 shadow-2xl"
+              className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-4 w-full max-w-2xl max-h-[70vh] flex flex-col gap-3 shadow-2xl"
             >
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-white">Copy Logs</p>
+                <p className="text-sm font-semibold text-[var(--foreground)]">Copy Logs</p>
                 <button
                   onClick={() => setCopyFallbackText(null)}
-                  className="text-xs text-[#64748b] hover:text-white transition-colors"
+                  className="text-xs text-[var(--foreground-muted)] hover:text-[var(--foreground)] transition-colors"
                 >
                   ✕ Close
                 </button>
               </div>
-              <p className="text-xs text-[#64748b]">Select all text below and copy it manually (Ctrl+A, Ctrl+C).</p>
+              <p className="text-xs text-[var(--foreground-muted)]">Select all text below and copy it manually (Ctrl+A, Ctrl+C).</p>
               <textarea
                 readOnly
                 value={copyFallbackText}
-                className="flex-1 min-h-[40vh] bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg p-3 text-xs text-[#94a3b8] font-mono resize-none focus:outline-none focus:border-[#6366f1]"
+                className="flex-1 min-h-[40vh] bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg p-3 text-xs text-[#94a3b8] font-mono resize-none focus:outline-none focus:border-[#6366f1]"
                 onFocus={e => e.target.select()}
               />
             </motion.div>

@@ -17,7 +17,7 @@ const StatCard = ({
 }: {
   title: string; value: string | number; change: number; icon: LucideIcon; color: string
 }) => (
-  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2 }} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6">
+  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2 }} className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-6">
     <div className="flex items-center justify-between mb-4">
       <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: `${color}20`, border: `1px solid ${color}30` }}>
         <Icon size={20} style={{ color }} />
@@ -26,8 +26,8 @@ const StatCard = ({
         {change >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}{Math.abs(change)}%
       </div>
     </div>
-    <div className="text-2xl font-bold text-white mb-1">{typeof value === 'number' ? value.toLocaleString() : value}</div>
-    <div className="text-sm text-[#64748b]">{title}</div>
+    <div className="text-2xl font-bold text-[var(--foreground)] mb-1">{typeof value === 'number' ? value.toLocaleString() : value}</div>
+    <div className="text-sm text-[var(--foreground-muted)]">{title}</div>
   </motion.div>
 )
 
@@ -58,38 +58,38 @@ export default function AdminDashboard() {
       </div>
 
       {/* Visitor Stats */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6">
-        <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-6">
+        <h3 className="font-semibold text-[var(--foreground)] mb-4 flex items-center gap-2">
           <Globe size={16} className="text-[#6366f1]" />
           Visitor Stats (Real Analytics)
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-          <div className="bg-[#0a0a0f] rounded-lg p-4 border border-[#1e1e2e]">
-            <p className="text-xs text-[#64748b] mb-1">Total Visits</p>
-            <p className="text-2xl font-bold text-white">{visitorStats.totalVisits}</p>
+          <div className="bg-[var(--color-bg)] rounded-lg p-4 border border-[var(--color-border)]">
+            <p className="text-xs text-[var(--foreground-muted)] mb-1">Total Visits</p>
+            <p className="text-2xl font-bold text-[var(--foreground)]">{visitorStats.totalVisits}</p>
           </div>
-          <div className="bg-[#0a0a0f] rounded-lg p-4 border border-[#1e1e2e]">
-            <p className="text-xs text-[#64748b] mb-2">Top Pages</p>
+          <div className="bg-[var(--color-bg)] rounded-lg p-4 border border-[var(--color-border)]">
+            <p className="text-xs text-[var(--foreground-muted)] mb-2">Top Pages</p>
             {visitorStats.topPages.length > 0 ? visitorStats.topPages.slice(0, 3).map(p => (
               <div key={p.path} className="flex justify-between text-xs mb-1">
-                <span className="text-[#e2e8f0] truncate max-w-[120px]">{p.path}</span>
+                <span className="text-[var(--foreground)] truncate max-w-[120px]">{p.path}</span>
                 <span className="text-[#6366f1] font-medium">{p.count}</span>
               </div>
-            )) : <p className="text-xs text-[#64748b]">No data yet</p>}
+            )) : <p className="text-xs text-[var(--foreground-muted)]">No data yet</p>}
           </div>
-          <div className="bg-[#0a0a0f] rounded-lg p-4 border border-[#1e1e2e]">
-            <p className="text-xs text-[#64748b] mb-2">Languages</p>
+          <div className="bg-[var(--color-bg)] rounded-lg p-4 border border-[var(--color-border)]">
+            <p className="text-xs text-[var(--foreground-muted)] mb-2">Languages</p>
             {visitorStats.uniqueLanguages.length > 0 ? visitorStats.uniqueLanguages.slice(0, 3).map(l => (
               <div key={l.language} className="flex justify-between text-xs mb-1">
-                <span className="text-[#e2e8f0]">{l.language}</span>
+                <span className="text-[var(--foreground)]">{l.language}</span>
                 <span className="text-[#06b6d4] font-medium">{l.count}</span>
               </div>
-            )) : <p className="text-xs text-[#64748b]">No data yet</p>}
+            )) : <p className="text-xs text-[var(--foreground-muted)]">No data yet</p>}
           </div>
         </div>
         {visitorStats.visitsPerDay.length > 0 && (
           <>
-            <p className="text-xs text-[#64748b] mb-2">Visits Per Day (last 14 days)</p>
+            <p className="text-xs text-[var(--foreground-muted)] mb-2">Visits Per Day (last 14 days)</p>
             <ResponsiveContainer width="100%" height={120}>
               <BarChart data={visitorStats.visitsPerDay}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" vertical={false} />
@@ -105,8 +105,8 @@ export default function AdminDashboard() {
 
       {/* Languages / Regions */}
       {visitorStats.uniqueLanguages.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6">
-          <h3 className="font-semibold text-white mb-4">Languages / Regions</h3>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-6">
+          <h3 className="font-semibold text-[var(--foreground)] mb-4">Languages / Regions</h3>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={visitorStats.uniqueLanguages} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" horizontal={false} />
@@ -120,13 +120,13 @@ export default function AdminDashboard() {
       )}
 
       {/* Activity Over Time */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="font-semibold text-white">Activity Over Time (30 Days)</h3>
+          <h3 className="font-semibold text-[var(--foreground)]">Activity Over Time (30 Days)</h3>
           <div className="flex gap-2">
             {(['users', 'experiments', 'queries'] as const).map(t => (
               <button key={t} onClick={() => setActiveChart(t)}
-                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${activeChart === t ? 'bg-[#6366f1] text-white' : 'text-[#64748b] hover:text-white'}`}>
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${activeChart === t ? 'bg-[#6366f1] text-[var(--foreground)]' : 'text-[var(--foreground-muted)] hover:text-white'}`}>
                 {t === 'users' ? 'Users' : t === 'experiments' ? 'Experiments' : 'AI Queries'}
               </button>
             ))}
@@ -145,8 +145,8 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Feature Usage */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6">
-          <h3 className="font-semibold text-white mb-2">Feature Usage</h3>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-6">
+          <h3 className="font-semibold text-[var(--foreground)] mb-2">Feature Usage</h3>
           {realFeatures.length > 0 && (
             <p className="text-xs text-[#10b981] mb-4">● Live data from your session</p>
           )}
@@ -162,8 +162,8 @@ export default function AdminDashboard() {
         </motion.div>
 
         {/* User Experience Levels */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6">
-          <h3 className="font-semibold text-white mb-6">User Experience Levels</h3>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-6">
+          <h3 className="font-semibold text-[var(--foreground)] mb-6">User Experience Levels</h3>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie data={experienceLevels} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3} dataKey="count">
@@ -177,16 +177,16 @@ export default function AdminDashboard() {
       </div>
 
       {/* Recent Activity */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6">
-        <h3 className="font-semibold text-white mb-4">Recent Activity</h3>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-6">
+        <h3 className="font-semibold text-[var(--foreground)] mb-4">Recent Activity</h3>
         <div className="space-y-3">
           {recentActivity.map((activity, i) => (
-            <div key={i} className="flex items-center justify-between py-3 border-b border-[#1e1e2e] last:border-0">
+            <div key={i} className="flex items-center justify-between py-3 border-b border-[var(--color-border)] last:border-0">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-[#1e1e2e] rounded-full flex items-center justify-center text-xs font-bold text-[#6366f1]">{activity.user[0]}</div>
-                <div><p className="text-sm font-medium text-[#e2e8f0]">{activity.user}</p><p className="text-xs text-[#64748b]">{activity.action}</p></div>
+                <div><p className="text-sm font-medium text-[var(--foreground)]">{activity.user}</p><p className="text-xs text-[var(--foreground-muted)]">{activity.action}</p></div>
               </div>
-              <span className="text-xs text-[#64748b]">{activity.time}</span>
+              <span className="text-xs text-[var(--foreground-muted)]">{activity.time}</span>
             </div>
           ))}
         </div>

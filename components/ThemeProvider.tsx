@@ -13,6 +13,10 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
     const vars = getThemeCSSVars(theme)
     const root = document.documentElement
     Object.entries(vars).forEach(([key, value]) => root.style.setProperty(key, value))
+    // Apply bg/fg to both html and body for full-page coverage
+    document.documentElement.style.background = theme.bg
+    document.body.style.background = theme.bg
+    document.body.style.color = theme.foreground
     setMounted(true)
 
     const handler = (e: StorageEvent) => {
@@ -20,6 +24,9 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
         const t = getThemeById(e.newValue)
         const v = getThemeCSSVars(t)
         Object.entries(v).forEach(([k, val]) => root.style.setProperty(k, val))
+        document.documentElement.style.background = t.bg
+        document.body.style.background = t.bg
+        document.body.style.color = t.foreground
       }
     }
     window.addEventListener('storage', handler)

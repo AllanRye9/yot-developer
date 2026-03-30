@@ -53,13 +53,15 @@ export default function CodeRunner({ code }: CodeRunnerProps) {
     <div className="space-y-2">
       <div className="flex gap-2">
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleRun} disabled={isRunning}
-          className="flex items-center gap-2 px-4 py-2 bg-[#6366f1] hover:bg-[#5457e5] disabled:opacity-50 text-white text-sm rounded-lg font-medium transition-colors">
+          className="flex items-center gap-2 px-4 py-2 disabled:opacity-50 text-white text-sm rounded-lg font-medium transition-colors"
+          style={{ background: 'var(--color-accent)' }}>
           <Play size={14} />{isRunning ? 'Running...' : 'Try It'}
         </motion.button>
         {hasRun && (
           <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
             onClick={() => { setOutputs([]); setHasRun(false) }}
-            className="flex items-center gap-2 px-4 py-2 bg-[#1e1e2e] hover:bg-[#2e2e3e] text-[#64748b] text-sm rounded-lg transition-colors">
+            className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg transition-colors"
+            style={{ background: 'var(--color-border)', color: 'var(--foreground-muted)' }}>
             <X size={14} />Clear
           </motion.button>
         )}
@@ -67,19 +69,21 @@ export default function CodeRunner({ code }: CodeRunnerProps) {
       <AnimatePresence>
         {hasRun && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-            className="rounded-lg border border-[#1e1e2e] bg-[#0a0a0f] overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-2 border-b border-[#1e1e2e]">
-              <Terminal size={14} className="text-[#64748b]" />
-              <span className="text-xs text-[#64748b] font-mono">Output</span>
+            className="rounded-lg border overflow-hidden"
+            style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg)' }}>
+            <div className="flex items-center gap-2 px-4 py-2 border-b" style={{ borderColor: 'var(--color-border)' }}>
+              <Terminal size={14} style={{ color: 'var(--foreground-muted)' }} />
+              <span className="text-xs font-mono" style={{ color: 'var(--foreground-muted)' }}>Output</span>
             </div>
             <div className="p-4 font-mono text-sm space-y-1 max-h-64 overflow-y-auto">
-              {isRunning ? <div className="text-[#64748b] animate-pulse">Executing...</div>
+              {isRunning ? <div className="animate-pulse" style={{ color: 'var(--foreground-muted)' }}>Executing...</div>
                 : outputs.length > 0 ? outputs.map((line, i) => (
                   <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-                    className={`${line.startsWith('ERROR:') ? 'text-[#ef4444]' : line.startsWith('WARN:') ? 'text-yellow-400' : line.startsWith('TABLE:') ? 'text-[#06b6d4]' : 'text-[#e2e8f0]'} whitespace-pre-wrap break-all`}>
+                    className={`${line.startsWith('ERROR:') ? 'text-[#ef4444]' : line.startsWith('WARN:') ? 'text-yellow-400' : line.startsWith('TABLE:') ? 'text-[#06b6d4]' : ''} whitespace-pre-wrap break-all`}
+                    style={!line.startsWith('ERROR:') && !line.startsWith('WARN:') && !line.startsWith('TABLE:') ? { color: 'var(--foreground)' } : {}}>
                     {line}
                   </motion.div>
-                )) : <div className="text-[#64748b]">No output</div>}
+                )) : <div style={{ color: 'var(--foreground-muted)' }}>No output</div>}
             </div>
           </motion.div>
         )}
