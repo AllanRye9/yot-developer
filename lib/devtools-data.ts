@@ -362,4 +362,325 @@ for (const [directive, sources] of Object.entries(cspDirectives)) {
       },
     ],
   },
+  {
+    id: 'js-reference',
+    name: 'JS Reference',
+    icon: 'Database',
+    description: 'All major JavaScript built-in functions, objects, and classes — with clear explanations and live examples you can run directly in the browser.',
+    examples: [
+      {
+        title: 'Array Methods',
+        description: 'JavaScript arrays come with powerful built-in methods for transforming, searching, and iterating over data without writing manual loops.',
+        code: `// map — transform every element, returns new array
+const prices = [10, 20, 30];
+const withTax = prices.map(p => p * 1.2);
+console.log("With tax:", withTax); // [12, 24, 36]
+
+// filter — keep elements that pass a test
+const expensive = prices.filter(p => p > 15);
+console.log("Expensive:", expensive); // [20, 30]
+
+// reduce — collapse array to a single value
+const total = prices.reduce((sum, p) => sum + p, 0);
+console.log("Total:", total); // 60
+
+// find — first element that matches
+const first = prices.find(p => p > 15);
+console.log("First >15:", first); // 20
+
+// some / every — boolean checks
+console.log("Any > 25?", prices.some(p => p > 25));  // true
+console.log("All > 5?",  prices.every(p => p > 5));   // true
+
+// flat / flatMap — flatten nested arrays
+const nested = [[1, 2], [3, 4]];
+console.log("Flat:", nested.flat()); // [1, 2, 3, 4]
+
+// Array.from — create array from iterable/length
+const range = Array.from({ length: 5 }, (_, i) => i + 1);
+console.log("Range:", range); // [1, 2, 3, 4, 5]`,
+      },
+      {
+        title: 'Object Methods',
+        description: 'Object static methods let you inspect, transform, merge, and freeze plain JavaScript objects with a clean API.',
+        code: `const user = { name: "Alice", age: 30, role: "admin" };
+
+// Object.keys / values / entries — iterate an object
+console.log("Keys:",    Object.keys(user));    // ["name","age","role"]
+console.log("Values:",  Object.values(user));  // ["Alice",30,"admin"]
+console.log("Entries:", Object.entries(user)); // [["name","Alice"],...]
+
+// Object.assign — shallow merge objects
+const defaults = { theme: "dark", lang: "en" };
+const settings = Object.assign({}, defaults, { lang: "fr" });
+console.log("Settings:", settings); // {theme:"dark", lang:"fr"}
+
+// Spread (modern alternative to assign)
+const updated = { ...user, age: 31 };
+console.log("Updated:", updated);
+
+// Object.freeze — make object immutable
+const config = Object.freeze({ maxRetries: 3 });
+config.maxRetries = 99; // silently ignored
+console.log("Config:", config.maxRetries); // 3
+
+// Object.fromEntries — build object from key/value pairs
+const pairs = [["x", 1], ["y", 2]];
+console.log("From entries:", Object.fromEntries(pairs)); // {x:1,y:2}
+
+// Destructuring with defaults
+const { name, score = 0 } = { name: "Bob" };
+console.log(name, score); // Bob 0`,
+      },
+      {
+        title: 'String Methods',
+        description: 'String methods cover everything from searching and replacing text to splitting, trimming, and formatting output.',
+        code: `const text = "  Hello, World!  ";
+
+// Trim whitespace
+console.log(text.trim());         // "Hello, World!"
+console.log(text.trimStart());    // "Hello, World!  "
+
+// Case conversion
+console.log(text.trim().toLowerCase()); // "hello, world!"
+console.log(text.trim().toUpperCase()); // "HELLO, WORLD!"
+
+// Search and test
+console.log(text.includes("World")); // true
+console.log(text.startsWith("  H")); // true
+console.log(text.indexOf("o"));      // 5 (first occurrence)
+
+// Replace
+const clean = text.trim().replace("World", "JS");
+console.log(clean); // "Hello, JS!"
+
+// Split and join
+const csv = "alice,bob,carol";
+const names = csv.split(",");
+console.log(names);           // ["alice","bob","carol"]
+console.log(names.join(" | ")); // "alice | bob | carol"
+
+// Slice and substring
+const code = "JS/TS/React";
+console.log(code.slice(0, 2));    // "JS"
+console.log(code.slice(-5));      // "React"
+
+// Repeat and padStart
+console.log("ab".repeat(3));       // "ababab"
+console.log("7".padStart(3, "0")); // "007"
+
+// Template literal
+const name = "World";
+console.log(\`Hello, \${name}! Today is \${new Date().toDateString()}\`);`,
+      },
+      {
+        title: 'Math & Number',
+        description: 'The Math object provides mathematical constants and functions. Number methods help parse, format, and validate numeric values.',
+        code: `// Math constants
+console.log("π:", Math.PI);           // 3.14159...
+console.log("e:", Math.E);            // 2.71828...
+
+// Rounding
+console.log(Math.round(4.6));  // 5
+console.log(Math.floor(4.9));  // 4
+console.log(Math.ceil(4.1));   // 5
+console.log(Math.trunc(-4.9)); // -4
+
+// Min / Max / Abs
+console.log(Math.max(3, 1, 4, 1, 5)); // 5
+console.log(Math.min(3, 1, 4, 1, 5)); // 1
+console.log(Math.abs(-42));            // 42
+
+// Powers and roots
+console.log(Math.pow(2, 10));  // 1024
+console.log(Math.sqrt(144));   // 12
+console.log(Math.cbrt(27));    // 3
+
+// Random
+const rand = Math.random();               // 0 <= x < 1
+const randInt = Math.floor(Math.random() * 100); // 0..99
+console.log("Random 0-1:", rand.toFixed(4));
+console.log("Random int:", randInt);
+
+// Number methods
+const n = 3.14159;
+console.log(n.toFixed(2));       // "3.14"
+console.log(n.toPrecision(4));   // "3.142"
+console.log((1234567).toLocaleString()); // "1,234,567"
+
+// Checking special values
+console.log(Number.isNaN(NaN));         // true
+console.log(Number.isFinite(Infinity)); // false
+console.log(Number.isInteger(4.0));     // true
+console.log(Number.parseInt("42px"));   // 42`,
+      },
+      {
+        title: 'Promise & async/await',
+        description: 'Promises represent future values. async/await is syntactic sugar that makes asynchronous code read like synchronous code while keeping it non-blocking.',
+        code: `// Creating a Promise
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// async function — always returns a Promise
+async function fetchUser(id) {
+  await delay(100); // simulated network wait
+  if (id <= 0) throw new Error("Invalid ID");
+  return { id, name: \`User \${id}\`, active: true };
+}
+
+// await — pauses until the Promise resolves
+async function main() {
+  try {
+    const user = await fetchUser(1);
+    console.log("Got user:", JSON.stringify(user));
+  } catch (err) {
+    console.error("Error:", err.message);
+  }
+}
+main();
+
+// Promise.all — run multiple async ops in parallel
+async function loadAll() {
+  const [a, b] = await Promise.all([fetchUser(2), fetchUser(3)]);
+  console.log("Parallel:", a.name, "&", b.name);
+}
+loadAll();
+
+// Promise.allSettled — never rejects, shows each outcome
+Promise.allSettled([fetchUser(4), fetchUser(-1)])
+  .then(results => results.forEach((r, i) =>
+    console.log(\`Result \${i}:\`, r.status, r.status === "fulfilled" ? r.value.name : r.reason.message)
+  ));`,
+      },
+      {
+        title: 'Map & Set',
+        description: 'Map and Set are modern data structures that improve on plain objects and arrays for use-cases requiring unique values or key-value pairs with any key type.',
+        code: `// Set — unique values only (like a mathematical set)
+const set = new Set([1, 2, 3, 2, 1]);
+console.log("Set size:", set.size);           // 3
+console.log("Has 2?", set.has(2));           // true
+set.add(4);
+set.delete(1);
+console.log("Set values:", [...set]);         // [2, 3, 4]
+
+// Deduplicate an array
+const arr = [1, 1, 2, 3, 2, 4];
+const unique = [...new Set(arr)];
+console.log("Unique:", unique);               // [1, 2, 3, 4]
+
+// Map — key/value store with any key type (not just strings)
+const map = new Map();
+map.set("name", "Alice");
+map.set(42, "answer");
+map.set(true, "flag");
+
+console.log("Map get name:", map.get("name")); // "Alice"
+console.log("Map size:", map.size);            // 3
+
+// Iterate a Map
+for (const [key, value] of map) {
+  console.log(\`  \${String(key)} → \${value}\`);
+}
+
+// Convert between Map and Array
+const entries = [["a", 1], ["b", 2]];
+const m = new Map(entries);
+console.log("From array:", [...m.entries()]);`,
+      },
+      {
+        title: 'Classes',
+        description: 'JavaScript classes provide a cleaner syntax for creating objects and implementing inheritance. Under the hood they use prototypes.',
+        code: `// Base class
+class Animal {
+  #name; // private field (ES2022)
+
+  constructor(name, sound) {
+    this.#name = name;
+    this.sound = sound;
+  }
+
+  // Getter
+  get name() { return this.#name; }
+
+  // Method
+  speak() {
+    return \`\${this.#name} says \${this.sound}!\`;
+  }
+
+  // Static method — called on the class, not an instance
+  static create(name, sound) {
+    return new Animal(name, sound);
+  }
+}
+
+// Subclass — inherits from Animal
+class Dog extends Animal {
+  constructor(name) {
+    super(name, "woof"); // call parent constructor
+  }
+
+  fetch(item) {
+    return \`\${this.name} fetches the \${item}!\`;
+  }
+}
+
+const dog = new Dog("Rex");
+console.log(dog.speak());        // Rex says woof!
+console.log(dog.fetch("ball")); // Rex fetches the ball!
+console.log(dog instanceof Dog);    // true
+console.log(dog instanceof Animal); // true
+
+const cat = Animal.create("Whiskers", "meow");
+console.log(cat.speak());`,
+      },
+      {
+        title: 'Error Handling & Types',
+        description: 'JavaScript has several built-in error types. Creating custom errors and handling them precisely helps build robust, debuggable applications.',
+        code: `// Built-in error types
+try { null.property }
+catch (e) { console.log("TypeError:", e.constructor.name); }
+
+try { undeclaredVar }
+catch (e) { console.log("ReferenceError:", e.constructor.name); }
+
+try { JSON.parse("{bad}") }
+catch (e) { console.log("SyntaxError:", e.constructor.name); }
+
+// Custom error class
+class ValidationError extends Error {
+  constructor(field, message) {
+    super(message);
+    this.name = "ValidationError";
+    this.field = field;
+  }
+}
+
+class NotFoundError extends Error {
+  constructor(resource) {
+    super(\`\${resource} not found\`);
+    this.name = "NotFoundError";
+    this.statusCode = 404;
+  }
+}
+
+// Discriminated error handling
+function processUser(user) {
+  if (!user) throw new NotFoundError("User");
+  if (!user.email) throw new ValidationError("email", "Email is required");
+  return \`Processing \${user.email}\`;
+}
+
+for (const input of [null, { name: "Bob" }, { email: "alice@x.com" }]) {
+  try {
+    console.log(processUser(input));
+  } catch (e) {
+    if (e instanceof NotFoundError) console.log("404:", e.message);
+    else if (e instanceof ValidationError) console.log("Validation on", e.field + ":", e.message);
+    else throw e;
+  }
+}`,
+      },
+    ],
+  },
 ]

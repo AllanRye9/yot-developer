@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   FileCode2, Zap, Layers, GitBranch, AlertTriangle, Sparkles,
   Play, CheckCircle, XCircle, Info, ChevronDown, ChevronUp,
+  BookOpen, FlaskConical, Terminal, Lightbulb,
 } from 'lucide-react'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -450,6 +451,174 @@ function computeComplexity(code: string): 'Low' | 'Medium' | 'High' {
   if (lines > 100 || conditions > 10 || maxDepth > 5) return 'High'
   if (lines > 30 || conditions > 4 || maxDepth > 3) return 'Medium'
   return 'Low'
+}
+
+// ─── Code Explanation ────────────────────────────────────────────────────────
+
+interface CodeExplanation {
+  summary: string
+  purpose: string
+  patterns: Array<{ icon: string; text: string }>
+}
+
+function explainCode(code: string, lang: 'javascript' | 'typescript'): CodeExplanation {
+  const hasFetch    = /\bfetch\s*\(/.test(code)
+  const hasClass    = /\bclass\s+\w+/.test(code)
+  const hasAsync    = /\basync\s/.test(code)
+  const hasLoop     = /\b(for|while|forEach|map|filter|reduce)\b/.test(code)
+  const hasDom      = /\bdocument\.\w+/.test(code)
+  const hasStorage  = /\blocalStorage|sessionStorage/.test(code)
+  const hasExport   = /\bexport\b/.test(code)
+  const hasImport   = /\bimport\b/.test(code)
+
+  const funcNames = [...code.matchAll(/(?:function\s+(\w+)|(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?(?:function|\(.*?\)\s*=>))/g)]
+    .map(m => m[1] || m[2]).filter(Boolean)
+  const classNames = [...code.matchAll(/class\s+(\w+)/g)].map(m => m[1])
+
+  let purpose = 'General JavaScript'
+  if (hasClass && classNames.length > 0)    purpose = 'Object-oriented design — uses classes and inheritance'
+  else if (hasFetch)                          purpose = 'Data fetching — retrieves resources from APIs or servers'
+  else if (hasDom)                            purpose = 'DOM manipulation — dynamically updates the user interface'
+  else if (hasStorage)                        purpose = 'Data persistence — stores and retrieves data from browser storage'
+  else if (hasAsync)                          purpose = 'Async programming — handles operations that take time (network, timers)'
+  else if (hasLoop && funcNames.length > 2)   purpose = 'Data processing — transforms and analyzes collections'
+  else if (funcNames.length > 0)              purpose = 'Utility functions — reusable helper logic'
+
+  const parts: string[] = []
+  if (hasClass)            parts.push(`defines ${classNames.length > 0 ? classNames.join(', ') : 'a class'}`)
+  if (funcNames.length > 0) parts.push(`contains ${funcNames.length} function${funcNames.length > 1 ? 's' : ''} (${funcNames.slice(0, 3).join(', ')}${funcNames.length > 3 ? '…' : ''})`)
+  if (hasFetch)            parts.push('makes network requests')
+  if (hasAsync)            parts.push('runs asynchronously')
+  if (hasLoop)             parts.push('iterates over data')
+  if (hasDom)              parts.push('updates the DOM')
+  const summary = parts.length > 0
+    ? `This code ${parts.join(', ')}.`
+    : 'This code contains JavaScript statements.'
+
+  const patterns: Array<{ icon: string; text: string }> = []
+  if (hasAsync)              patterns.push({ icon: '⟳', text: 'Async/await — uses Promises; await pauses execution until the Promise resolves, then resumes without blocking the UI thread' })
+  if (hasFetch)              patterns.push({ icon: '🌐', text: 'Fetch API — makes HTTP requests to retrieve data from external URLs; returns a Promise that resolves to a Response object' })
+  if (hasClass)              patterns.push({ icon: '◈', text: 'Classes — blueprint for creating objects; groups related state (properties) and behaviour (methods) together; supports inheritance via extends' })
+  if (hasLoop)               patterns.push({ icon: '↻', text: 'Loops/Iteration — repeatedly applies logic to each element in a collection; map/filter/reduce return new arrays without mutating the original' })
+  if (hasDom)                patterns.push({ icon: '🔲', text: 'DOM API — reads and writes the live HTML document; querySelector finds elements, and setting properties like textContent updates what users see' })
+  if (hasStorage)            patterns.push({ icon: '💾', text: 'Web Storage — localStorage persists across sessions; sessionStorage lasts only for the current tab; both store strings, so JSON.stringify/parse is used for objects' })
+  if (hasExport || hasImport) patterns.push({ icon: '📦', text: 'ES Modules — import/export statements split code into separate files; enables tree-shaking and organised, maintainable codebases' })
+  if (lang === 'typescript') patterns.push({ icon: '🔷', text: 'TypeScript — adds static types to JavaScript; type annotations are checked at compile time and stripped from the final JavaScript output' })
+
+  return { summary, purpose, patterns }
+}
+
+// ─── Block Test Generator ─────────────────────────────────────────────────────
+
+function generateBlockTestCode(block: LogicBlock, fullCode: string): string {
+  const lines = fullCode.split('\n')
+  const lineMatch = block.lines.match(/\d+/)
+  const startLine = lineMatch ? parseInt(lineMatch[0]) - 1 : 0
+
+  if (block.type === 'function') {
+    const funcName = block.name.replace(' (arrow)', '').trim()
+    // Extract function/arrow body until balanced braces close
+    let funcCode = ''
+    let depth = 0
+    let started = false
+    for (let i = startLine; i < lines.length; i++) {
+      funcCode += lines[i] + '\n'
+      for (const ch of lines[i]) {
+        if (ch === '{') { depth++; started = true }
+        if (ch === '}') depth--
+      }
+      if (started && depth <= 0) break
+    }
+    // Detect param names from signature
+    const paramRe = new RegExp(`(?:function\\s+${funcName}|const\\s+${funcName}\\s*=\\s*(?:async\\s+)?\\()([^)]*?)\\)`)
+    const paramMatch = fullCode.match(paramRe)
+    const rawParams = paramMatch ? paramMatch[1] : ''
+    const params = rawParams.split(',').map((p: string) => p.trim().replace(/[=:][\s\S]*/, '').trim()).filter(Boolean)
+    const testArgs = params.map((p: string) => {
+      const lower = p.toLowerCase()
+      if (/id|count|num|age|size|len|index/.test(lower)) return '42'
+      if (/name|str|text|label|title|msg/.test(lower)) return '"test"'
+      if (/url|uri|href|path/.test(lower)) return '"https://example.com"'
+      if (/arr|list|items|data/.test(lower)) return '[1, 2, 3]'
+      if (/obj|config|options|opts/.test(lower)) return '{}'
+      if (/flag|enabled|active/.test(lower)) return 'true'
+      return '42'
+    })
+    const callLine = `${funcName}(${testArgs.join(', ')})`
+    return `${funcCode}
+// ─── Automated test ───────────────────────────────────────
+try {
+  const result = ${callLine};
+  console.log("✓ ${funcName}() returned:", result !== undefined ? JSON.stringify(result) : "undefined");
+} catch (e) {
+  console.error("✗ ${funcName}() threw:", e.message);
+}`
+  }
+
+  if (block.type === 'class') {
+    const className = block.name
+    let classCode = ''
+    let depth = 0
+    let started = false
+    for (let i = startLine; i < lines.length; i++) {
+      classCode += lines[i] + '\n'
+      for (const ch of lines[i]) {
+        if (ch === '{') { depth++; started = true }
+        if (ch === '}') depth--
+      }
+      if (started && depth === 0) break
+    }
+    return `${classCode}
+// ─── Automated test ───────────────────────────────────────
+try {
+  const instance = new ${className}();
+  console.log("✓ ${className} instance created successfully");
+  const methods = Object.getOwnPropertyNames(${className}.prototype).filter(m => m !== "constructor");
+  console.log("  Methods:", methods.join(", ") || "none");
+} catch (e) {
+  console.error("✗ Could not instantiate ${className}:", e.message);
+}`
+  }
+
+  // For other block types run context around the line
+  const ctxStart = Math.max(0, startLine - 2)
+  const ctxEnd   = Math.min(lines.length, startLine + 6)
+  const snippet  = lines.slice(ctxStart, ctxEnd).join('\n')
+  return `// Context around ${block.type} at line ${startLine + 1}
+${snippet}
+console.log("✓ Block executed without errors");`
+}
+
+function runBlockCode(code: string): string[] {
+  const outputs: string[] = []
+  const mockConsole = {
+    log:   (...a: unknown[]) => outputs.push(a.map(x => typeof x === 'object' ? JSON.stringify(x, null, 2) : String(x)).join(' ')),
+    error: (...a: unknown[]) => outputs.push('ERROR: ' + a.map(x => typeof x === 'object' ? JSON.stringify(x) : String(x)).join(' ')),
+    warn:  (...a: unknown[]) => outputs.push('WARN: ' + a.map(x => String(x)).join(' ')),
+    info:  (...a: unknown[]) => outputs.push('INFO: ' + a.map(x => String(x)).join(' ')),
+    table: (d: unknown)      => outputs.push('TABLE:\n' + JSON.stringify(d, null, 2)),
+    dir:   (o: unknown)      => outputs.push('DIR: ' + JSON.stringify(o, null, 2)),
+    time:  (l: string)       => outputs.push(`timer "${l}" started`),
+    timeEnd:(l: string)      => outputs.push(`timer "${l}": ~2ms`),
+    group: (l: string)       => outputs.push(`▶ ${l}`),
+    groupCollapsed: (l: string) => outputs.push(`▶ ${l}`),
+    groupEnd: ()             => outputs.push('◀ end'),
+    assert: (c: boolean, ...a: unknown[]) => { if (!c) outputs.push('Assertion failed: ' + a.join(' ')) },
+    clear: ()                => outputs.push('[Console cleared]'),
+    trace: (...a: unknown[]) => outputs.push('Trace: ' + a.join(' ')),
+  }
+  try {
+    // The code executed here is the user's own code, pasted into this client-side tool.
+    // It runs entirely in the user's own browser context — there is no server involved.
+    // The mock console intercepts output; all other browser APIs remain accessible,
+    // which is intentional so users can test real browser APIs in their snippets.
+    // eslint-disable-next-line no-new-func
+    const fn = new Function('console', code)
+    fn(mockConsole)
+  } catch (e) {
+    outputs.push('Error: ' + (e as Error).message)
+  }
+  return outputs
 }
 
 async function performAnalysis(code: string, lang: 'javascript' | 'typescript'): Promise<AnalysisResult> {
@@ -920,7 +1089,7 @@ function LinedCodeEditor({
 export default function CodeAnalyzer() {
   const [code, setCode] = useState(JS_SAMPLE)
   const [language, setLanguage] = useState<'javascript' | 'typescript'>('javascript')
-  const [activeTab, setActiveTab] = useState<'efficiency' | 'stack' | 'logic' | 'syntax' | 'ai'>('efficiency')
+  const [activeTab, setActiveTab] = useState<'efficiency' | 'stack' | 'logic' | 'syntax' | 'ai' | 'explain'>('efficiency')
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [expandedRec, setExpandedRec] = useState<number | null>(null)
@@ -929,6 +1098,11 @@ export default function CodeAnalyzer() {
   const [convertTo, setConvertTo] = useState<ConvertLang>('python')
   const [convertedCode, setConvertedCode] = useState('')
   const [convertCopied, setConvertCopied] = useState(false)
+  // Block test state
+  const [activeBlockTest, setActiveBlockTest] = useState<number | null>(null)
+  const [blockTestOutputs, setBlockTestOutputs] = useState<Record<number, string[]>>({})
+  const [runningBlockTest, setRunningBlockTest] = useState<number | null>(null)
+
 
   const handleLanguageSwitch = useCallback((lang: 'javascript' | 'typescript') => {
     setLanguage(lang)
@@ -964,12 +1138,23 @@ export default function CodeAnalyzer() {
     setConvertedCode(converted)
   }, [code, language, convertTo])
 
+  const handleRunBlockTest = useCallback(async (blockIndex: number, block: LogicBlock) => {
+    setRunningBlockTest(blockIndex)
+    setActiveBlockTest(blockIndex)
+    await new Promise(r => setTimeout(r, 250))
+    const testCode = generateBlockTestCode(block, code)
+    const outputs = runBlockCode(testCode)
+    setBlockTestOutputs(prev => ({ ...prev, [blockIndex]: outputs }))
+    setRunningBlockTest(null)
+  }, [code])
+
   const tabs = [
     { id: 'efficiency' as const, label: 'Efficiency', icon: Zap },
     { id: 'stack' as const, label: 'Execution Stack', icon: Layers },
     { id: 'logic' as const, label: 'Logic', icon: GitBranch },
     { id: 'syntax' as const, label: 'Syntax', icon: AlertTriangle },
     { id: 'ai' as const, label: 'AI Tips', icon: Sparkles },
+    { id: 'explain' as const, label: 'Explain', icon: BookOpen },
   ]
 
   const complexityColor = result ? {
@@ -977,13 +1162,26 @@ export default function CodeAnalyzer() {
   }[result.complexity] : ''
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      className="space-y-6"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <motion.div
+        className="flex items-center justify-between flex-wrap gap-3"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.05 }}
+      >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] rounded-xl flex items-center justify-center shadow-lg shadow-[#6366f1]/30">
+          <motion.div
+            whileHover={{ scale: 1.08, rotate: 3 }}
+            className="w-10 h-10 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] rounded-xl flex items-center justify-center shadow-lg shadow-[#6366f1]/30"
+          >
             <FileCode2 size={20} className="text-white" />
-          </div>
+          </motion.div>
           <div>
             <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>Code Analyzer</h1>
             <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Analyze efficiency, execution, logic, syntax & get AI recommendations</p>
@@ -993,8 +1191,9 @@ export default function CodeAnalyzer() {
           {/* Language selector */}
           <div className="flex gap-1 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg p-1">
             {(['javascript', 'typescript'] as const).map(lang => (
-              <button
+              <motion.button
                 key={lang}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => handleLanguageSwitch(lang)}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                   language === lang ? 'bg-[var(--color-accent)] text-white' : 'hover:opacity-80'
@@ -1002,11 +1201,13 @@ export default function CodeAnalyzer() {
                 style={language !== lang ? { color: 'var(--foreground-muted)' } : {}}
               >
                 {lang === 'javascript' ? 'JS' : 'TS'}
-              </button>
+              </motion.button>
             ))}
           </div>
           {/* Convert toggle */}
-          <button
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
             onClick={() => setShowConvert(s => !s)}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-colors ${
               showConvert
@@ -1016,8 +1217,10 @@ export default function CodeAnalyzer() {
             style={!showConvert ? { color: 'var(--foreground-muted)' } : {}}
           >
             <FileCode2 size={12} />Convert
-          </button>
-          <button
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
             onClick={analyze}
             disabled={analyzing}
             className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] hover:opacity-90 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-opacity"
@@ -1028,13 +1231,18 @@ export default function CodeAnalyzer() {
               <Play size={14} />
             )}
             {analyzing ? 'Analyzing…' : 'Analyze'}
-          </button>
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {/* Code Editor with line numbers */}
-        <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl overflow-hidden flex flex-col">
+        <motion.div
+          className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl overflow-hidden flex flex-col"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--color-border)] bg-[var(--color-bg)]">
             <div className="flex items-center gap-2">
               <div className="flex gap-1.5">
@@ -1054,10 +1262,15 @@ export default function CodeAnalyzer() {
             highlightLine={highlightLine}
             placeholder="Paste your JavaScript or TypeScript code here…"
           />
-        </div>
+        </motion.div>
 
         {/* Analysis Panel */}
-        <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl overflow-hidden flex flex-col">
+        <motion.div
+          className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl overflow-hidden flex flex-col"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4, delay: 0.15 }}
+        >
           {/* Tabs */}
           <div className="flex overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden border-b border-[var(--color-border)] bg-[var(--color-bg)]">
             {tabs.map(({ id, label, icon: Icon }) => (
@@ -1169,7 +1382,9 @@ export default function CodeAnalyzer() {
                   {/* ── Logic Tab ── */}
                   {activeTab === 'logic' && (
                     <div className="space-y-2">
-                      <p className="text-xs mb-3" style={{ color: 'var(--foreground-muted)' }}>Structural elements detected in your code.</p>
+                      <p className="text-xs mb-3" style={{ color: 'var(--foreground-muted)' }}>
+                        Structural elements detected in your code. Click any block to jump to it in the editor, or click <strong style={{ color: 'var(--foreground)' }}>Test</strong> to run automated tests with sample data.
+                      </p>
                       {result.logicBlocks.length === 0 ? (
                         <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>No named structures found — try adding functions, classes, or control flow.</p>
                       ) : (
@@ -1178,30 +1393,110 @@ export default function CodeAnalyzer() {
                           const icon = BLOCK_ICONS[block.type]
                           const lineMatch = block.lines.match(/\d+/)
                           const lineNum = lineMatch ? parseInt(lineMatch[0]) : undefined
+                          const canTest = block.type === 'function' || block.type === 'class'
+                          const isTestOpen = activeBlockTest === i
+                          const testOut = blockTestOutputs[i]
                           return (
-                            <div
+                            <motion.div
                               key={i}
-                              className="flex items-center gap-3 border rounded-lg p-3 cursor-pointer hover:opacity-80 transition-opacity"
+                              initial={{ opacity: 0, y: 4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: i * 0.04 }}
+                              className="border rounded-lg overflow-hidden"
                               style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}
-                              onClick={() => lineNum && handleJumpToLine(lineNum)}
-                              title={lineNum ? `Click to jump to line ${lineNum}` : undefined}
                             >
-                              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0"
-                                style={{ background: `${color}20`, color }}>
-                                {icon}
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs font-medium truncate" style={{ color: 'var(--foreground)' }}>{block.name}</span>
-                                  <span className="text-[10px] shrink-0" style={{ color: 'var(--foreground-muted)' }}>{block.lines}</span>
+                              <div
+                                className="flex items-center gap-3 p-3 cursor-pointer hover:opacity-80 transition-opacity"
+                                onClick={() => lineNum && handleJumpToLine(lineNum)}
+                                title={lineNum ? `Click to jump to line ${lineNum}` : undefined}
+                              >
+                                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0"
+                                  style={{ background: `${color}20`, color }}>
+                                  {icon}
                                 </div>
-                                <p className="text-xs truncate" style={{ color: 'var(--foreground-muted)' }}>{block.detail}</p>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-medium truncate" style={{ color: 'var(--foreground)' }}>{block.name}</span>
+                                    <span className="text-[10px] shrink-0" style={{ color: 'var(--foreground-muted)' }}>{block.lines}</span>
+                                  </div>
+                                  <p className="text-xs truncate" style={{ color: 'var(--foreground-muted)' }}>{block.detail}</p>
+                                </div>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded border shrink-0 capitalize"
+                                  style={{ color, borderColor: `${color}40`, background: `${color}15` }}>
+                                  {block.type}
+                                </span>
+                                {canTest && (
+                                  <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={e => { e.stopPropagation(); handleRunBlockTest(i, block) }}
+                                    disabled={runningBlockTest === i}
+                                    className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-md font-medium border shrink-0 transition-colors"
+                                    style={{ background: 'color-mix(in srgb, #6366f1 12%, transparent)', borderColor: '#6366f140', color: '#6366f1' }}
+                                    title={`Run automated test for ${block.name}`}
+                                  >
+                                    {runningBlockTest === i ? (
+                                      <div className="w-2.5 h-2.5 rounded-full border border-t-transparent animate-spin" style={{ borderColor: '#6366f1', borderTopColor: 'transparent' }} />
+                                    ) : (
+                                      <FlaskConical size={10} />
+                                    )}
+                                    Test
+                                  </motion.button>
+                                )}
                               </div>
-                              <span className="text-[10px] px-1.5 py-0.5 rounded border shrink-0 ml-auto capitalize"
-                                style={{ color, borderColor: `${color}40`, background: `${color}15` }}>
-                                {block.type}
-                              </span>
-                            </div>
+                              {/* Inline test output */}
+                              <AnimatePresence>
+                                {isTestOpen && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="overflow-hidden"
+                                  >
+                                    <div className="border-t" style={{ borderColor: 'var(--color-border)' }}>
+                                      <div className="flex items-center gap-2 px-3 py-1.5 border-b" style={{ background: 'color-mix(in srgb, #0a0a0f 60%, var(--color-card))', borderColor: 'var(--color-border)' }}>
+                                        <Terminal size={11} style={{ color: '#6366f1' }} />
+                                        <span className="text-[10px] font-mono font-semibold" style={{ color: '#6366f1' }}>Test Output — {block.name}</span>
+                                        <button
+                                          onClick={() => { setActiveBlockTest(null); setBlockTestOutputs(p => { const n = { ...p }; delete n[i]; return n }) }}
+                                          className="ml-auto text-[10px] px-1.5 py-0.5 rounded hover:opacity-70"
+                                          style={{ color: 'var(--foreground-muted)' }}
+                                        >✕</button>
+                                      </div>
+                                      <div className="p-3 font-mono text-xs space-y-1 max-h-48 overflow-y-auto" style={{ background: 'color-mix(in srgb, #0a0a0f 80%, transparent)' }}>
+                                        {runningBlockTest === i ? (
+                                          <div className="flex items-center gap-2" style={{ color: '#64748b' }}>
+                                            <div className="w-3 h-3 rounded-full border border-t-transparent animate-spin" style={{ borderColor: '#6366f1', borderTopColor: 'transparent' }} />
+                                            Running tests…
+                                          </div>
+                                        ) : testOut && testOut.length > 0 ? (
+                                          testOut.map((line, li) => (
+                                            <motion.div
+                                              key={li}
+                                              initial={{ opacity: 0, x: -8 }}
+                                              animate={{ opacity: 1, x: 0 }}
+                                              transition={{ delay: li * 0.04 }}
+                                              className={`whitespace-pre-wrap break-all ${
+                                                line.startsWith('ERROR:') ? 'text-[#ef4444]'
+                                                : line.startsWith('WARN:') ? 'text-[#f59e0b]'
+                                                : line.startsWith('✓') ? 'text-[#10b981]'
+                                                : line.startsWith('✗') ? 'text-[#ef4444]'
+                                                : 'text-[#e2e8f0]'
+                                              }`}
+                                            >
+                                              {line}
+                                            </motion.div>
+                                          ))
+                                        ) : (
+                                          <div style={{ color: '#64748b' }}>No output</div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </motion.div>
                           )
                         })
                       )}
@@ -1298,11 +1593,66 @@ export default function CodeAnalyzer() {
                       ))}
                     </div>
                   )}
+                  {/* ── Explain Tab ── */}
+                  {activeTab === 'explain' && (() => {
+                    const explanation = explainCode(code, language)
+                    return (
+                      <div className="space-y-4">
+                        {/* Purpose badge */}
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="flex items-start gap-3 rounded-xl p-4 border"
+                          style={{ background: 'color-mix(in srgb, var(--color-accent) 8%, var(--color-bg))', borderColor: 'color-mix(in srgb, var(--color-accent) 25%, transparent)' }}
+                        >
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'color-mix(in srgb, var(--color-accent) 20%, transparent)' }}>
+                            <Lightbulb size={16} style={{ color: 'var(--color-accent)' }} />
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--color-accent)' }}>
+                              {explanation.purpose}
+                            </p>
+                            <p className="text-sm leading-relaxed" style={{ color: 'var(--foreground)' }}>
+                              {explanation.summary}
+                            </p>
+                          </div>
+                        </motion.div>
+
+                        {/* Pattern explanations */}
+                        {explanation.patterns.length > 0 && (
+                          <div>
+                            <p className="text-xs font-medium mb-2" style={{ color: 'var(--foreground-muted)' }}>Key patterns & concepts used:</p>
+                            <div className="space-y-2">
+                              {explanation.patterns.map((p, pi) => (
+                                <motion.div
+                                  key={pi}
+                                  initial={{ opacity: 0, x: -6 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: pi * 0.06 }}
+                                  className="flex items-start gap-3 rounded-lg p-3 border"
+                                  style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}
+                                >
+                                  <span className="text-lg leading-none shrink-0">{p.icon}</span>
+                                  <p className="text-xs leading-relaxed" style={{ color: 'var(--foreground-muted)' }}>{p.text}</p>
+                                </motion.div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {explanation.patterns.length === 0 && (
+                          <div className="text-sm text-center py-4" style={{ color: 'var(--foreground-muted)' }}>
+                            No specific patterns detected. Try pasting more complex code.
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* ─── Code Conversion Panel ─── */}
@@ -1393,13 +1743,23 @@ export default function CodeAnalyzer() {
       </AnimatePresence>
 
       {/* Educational Footer */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <motion.div
+        className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.25 }}
+      >
         {[
           { icon: Zap, title: 'Efficiency', color: '#6366f1', desc: 'Identifies algorithmic complexity issues (O(n²) loops, DOM queries in loops, missing memoization) that slow down your app.' },
           { icon: Layers, title: 'Execution Stack', color: '#8b5cf6', desc: 'Visualizes how JavaScript executes your code: call stack → microtasks (Promises) → macrotasks (timers). Essential for debugging async bugs.' },
-          { icon: Sparkles, title: 'AI Recommendations', color: '#10b981', desc: 'Pattern-based suggestions for modern JavaScript/TypeScript best practices: avoid var, use types, prefer async/await, document your code.' },
+          { icon: BookOpen, title: 'Explain & Test', color: '#10b981', desc: 'Explains what your code is trying to achieve in plain English, and lets you run automated tests on each detected function or class.' },
         ].map(({ icon: Icon, title, color, desc }) => (
-          <div key={title} className="border rounded-xl p-4 flex items-start gap-3" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
+          <motion.div
+            key={title}
+            whileHover={{ y: -2 }}
+            className="border rounded-xl p-4 flex items-start gap-3"
+            style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}
+          >
             <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${color}20` }}>
               <Icon size={16} style={{ color }} />
             </div>
@@ -1407,9 +1767,9 @@ export default function CodeAnalyzer() {
               <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--foreground)' }}>{title}</h3>
               <p className="text-xs leading-relaxed" style={{ color: 'var(--foreground-muted)' }}>{desc}</p>
             </div>
-          </div>
+          </motion.div>
         ))}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }

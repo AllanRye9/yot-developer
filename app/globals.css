@@ -15,16 +15,24 @@
 
 html {
   background: var(--color-bg);
-  transition: background 0.3s ease;
+  transition: background 0.35s ease, color 0.35s ease;
 }
 
 body {
   color: var(--foreground);
   background: var(--color-bg);
   font-family: 'Inter', system-ui, sans-serif;
-  transition: background 0.3s ease;
+  transition: background 0.35s ease, color 0.35s ease;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+}
+
+/* Smooth theme variable transitions on key elements */
+nav, main, aside, header, footer,
+div, section, article, button, a, input, textarea, pre, code, span, p, h1, h2, h3, h4, h5, h6 {
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.25s;
+  transition-timing-function: ease;
 }
 
 * {

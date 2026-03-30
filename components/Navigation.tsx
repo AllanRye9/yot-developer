@@ -48,6 +48,9 @@ export default function Navigation() {
     const vars = getThemeCSSVars(theme)
     const root = document.documentElement
     Object.entries(vars).forEach(([key, value]) => root.style.setProperty(key, value))
+    // Also update body background directly for instant feedback
+    document.body.style.background = theme.bg
+    document.body.style.color = theme.foreground
     localStorage.setItem(STORAGE_KEY, id)
     setActiveThemeId(id)
     setThemeOpen(false)
