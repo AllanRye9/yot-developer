@@ -2,7 +2,7 @@ import SiteTester from '@/components/SiteTester'
 
 export const metadata = {
   title: 'Site Tester | YOT Developer',
-  description: 'Test any public URL for security headers, vulnerabilities, and general best practices.',
+  description: 'Test any public URL for performance (load time, compression, caching, CDN), security headers, vulnerabilities, and general best practices.',
 }
 
 export default function SiteTesterPage() {

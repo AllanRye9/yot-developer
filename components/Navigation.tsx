@@ -48,7 +48,8 @@ export default function Navigation() {
     const vars = getThemeCSSVars(theme)
     const root = document.documentElement
     Object.entries(vars).forEach(([key, value]) => root.style.setProperty(key, value))
-    // Also update body background directly for instant feedback
+    // Update both html and body backgrounds for instant full-page feedback
+    document.documentElement.style.background = theme.bg
     document.body.style.background = theme.bg
     document.body.style.color = theme.foreground
     localStorage.setItem(STORAGE_KEY, id)
@@ -64,7 +65,7 @@ export default function Navigation() {
     { href: '/dashboard', label: 'Dashboard', icon: User },
     { href: '/devtools-test', label: 'DevTools', icon: FlaskConical },
     { href: '/code-analyzer', label: 'Analyzer', icon: FileCode2 },
-    { href: '/site-tester', label: 'Security', icon: Shield },
+    { href: '/site-tester', label: 'Site Tester', icon: Shield },
   ]
 
   return (

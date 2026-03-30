@@ -4,13 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Shield, AlertTriangle, CheckCircle, XCircle, Info,
   Globe, Loader2, ClipboardCopy, ChevronDown, ChevronUp,
-  Lock, Bug, Activity, Sparkles,
+  Lock, Bug, Activity, Sparkles, Gauge,
 } from 'lucide-react'
 import type { SiteTestResult, TestItem } from '@/app/api/site-test/route'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type Category = 'security' | 'vulnerability' | 'general'
+type Category = 'security' | 'vulnerability' | 'general' | 'performance'
 type ActiveTab = 'all' | Category
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -40,6 +40,7 @@ function statusBadge(status: TestItem['status']) {
 function categoryIcon(cat: Category, size = 14) {
   if (cat === 'security') return <Lock size={size} className="text-[#6366f1]" />
   if (cat === 'vulnerability') return <Bug size={size} className="text-amber-400" />
+  if (cat === 'performance') return <Gauge size={size} className="text-emerald-400" />
   return <Activity size={size} className="text-sky-400" />
 }
 
@@ -76,7 +77,7 @@ function logResultsToConsole(result: SiteTestResult) {
     score, pass, fail, warn,
   )
 
-  const categories: Category[] = ['security', 'vulnerability', 'general']
+  const categories: Category[] = ['security', 'vulnerability', 'performance', 'general']
   categories.forEach(cat => {
     const catTests = tests.filter(t => t.category === cat)
     if (catTests.length === 0) return
@@ -115,7 +116,7 @@ function buildLogText(result: SiteTestResult): string {
     `Score:         ${score}/100  ✅ ${pass}  ❌ ${fail}  ⚠️ ${warn}`,
     '',
   ]
-  const categories: Category[] = ['security', 'vulnerability', 'general']
+  const categories: Category[] = ['security', 'vulnerability', 'performance', 'general']
   categories.forEach(cat => {
     const catTests = tests.filter(t => t.category === cat)
     if (catTests.length === 0) return
@@ -445,7 +446,7 @@ export default function SiteTester() {
 
     // Log start to console
     console.group('%c[YOT Site Tester] Starting tests for: ' + trimmed, 'color:#6366f1;font-weight:bold')
-    console.log('%cRunning security, vulnerability, and general checks…', 'color:#94a3b8')
+    console.log('%cRunning performance, security, vulnerability, and general checks…', 'color:#94a3b8')
     console.groupEnd()
 
     try {
@@ -493,7 +494,8 @@ export default function SiteTester() {
   const tabs: { id: ActiveTab; label: string; icon: React.ReactNode }[] = [
     { id: 'all', label: 'All', icon: <Globe size={13} /> },
     { id: 'security', label: 'Security', icon: <Lock size={13} /> },
-    { id: 'vulnerability', label: 'Vulnerability', icon: <Bug size={13} /> },
+    { id: 'vulnerability', label: 'Vulnerabilities', icon: <Bug size={13} /> },
+    { id: 'performance', label: 'Performance', icon: <Gauge size={13} /> },
     { id: 'general', label: 'General', icon: <Activity size={13} /> },
   ]
 
@@ -511,11 +513,11 @@ export default function SiteTester() {
           <div className="w-8 h-8 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] rounded-lg flex items-center justify-center shadow-lg shadow-[#6366f1]/30">
             <Shield size={16} className="text-white" />
           </div>
-          <h1 className="text-xl font-bold text-[var(--foreground)]">Site Security Analyzer</h1>
+          <h1 className="text-xl font-bold text-[var(--foreground)]">Site Performance &amp; Security Analyzer</h1>
         </div>
         <p className="text-sm text-[var(--foreground-muted)] ml-11">
-          Test any public URL for security headers, vulnerabilities, and general best practices.
-          Get AI-powered explanations and fix recommendations for every finding.
+          Test any public URL for performance (load time, compression, caching, CDN), security headers, vulnerabilities, and general best practices.
+          Results are printed to the browser DevTools console.
         </p>
       </div>
 
@@ -574,7 +576,7 @@ export default function SiteTester() {
             className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-6 flex flex-col items-center gap-3"
           >
             <Loader2 size={28} className="animate-spin text-[#6366f1]" />
-            <p className="text-sm text-[#94a3b8] font-medium">Running security, vulnerability &amp; general tests…</p>
+            <p className="text-sm text-[#94a3b8] font-medium">Running performance, security, vulnerability &amp; general tests…</p>
             <p className="text-xs text-[#3d3d52]">This may take up to 15 seconds depending on the target site.</p>
           </motion.div>
         )}
