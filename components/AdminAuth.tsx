@@ -88,13 +88,13 @@ export default function AdminAuth({ children }: AdminAuthProps) {
     return (
       <div className="relative">
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2 text-sm text-[#64748b]">
+          <div className="flex items-center gap-2 text-sm text-[var(--foreground-muted)]">
             <ShieldCheck size={14} className="text-[#6366f1]" />
-            <span>Logged in as <span className="text-[#e2e8f0] font-medium">{session}</span></span>
+            <span>Logged in as <span className="text-[var(--foreground)] font-medium">{session}</span></span>
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-[#64748b] hover:text-white hover:bg-[#1e1e2e] transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--foreground-muted)] hover:text-white hover:bg-[#1e1e2e] transition-colors"
           >
             <LogOut size={14} />
             Logout
@@ -110,26 +110,26 @@ export default function AdminAuth({ children }: AdminAuthProps) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-[#12121a] border border-[#1e1e2e] rounded-2xl p-8"
+        className="w-full max-w-md bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-8"
       >
         <div className="flex items-center justify-center gap-3 mb-8">
           <div className="w-10 h-10 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] rounded-xl flex items-center justify-center shadow-lg shadow-[#6366f1]/30">
             <Lock size={20} className="text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">Admin Access</h1>
-            <p className="text-xs text-[#64748b]">YOT Developer Platform</p>
+            <h1 className="text-xl font-bold text-[var(--foreground)]">Admin Access</h1>
+            <p className="text-xs text-[var(--foreground-muted)]">YOT Developer Platform</p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-[#0a0a0f] rounded-lg p-1 mb-6">
+        <div className="flex gap-1 bg-[var(--color-bg)] rounded-lg p-1 mb-6">
           {(['login', 'register'] as const).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-colors ${
-                tab === t ? 'bg-[#6366f1] text-white' : 'text-[#64748b] hover:text-white'
+                tab === t ? 'bg-[#6366f1] text-[var(--foreground)]' : 'text-[var(--foreground-muted)] hover:text-white'
               }`}
             >
               {t === 'login' ? <User size={14} /> : <UserPlus size={14} />}
@@ -149,18 +149,18 @@ export default function AdminAuth({ children }: AdminAuthProps) {
               className="space-y-4"
             >
               <div>
-                <label className="block text-xs font-medium text-[#64748b] mb-1.5">Username</label>
+                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">Username</label>
                 <input
                   type="text"
                   value={loginUser}
                   onChange={e => setLoginUser(e.target.value)}
                   placeholder="admin"
                   required
-                  className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
+                  className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--foreground)] placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#64748b] mb-1.5">Password</label>
+                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">Password</label>
                 <div className="relative">
                   <input
                     type={loginShowPass ? 'text' : 'password'}
@@ -168,12 +168,12 @@ export default function AdminAuth({ children }: AdminAuthProps) {
                     onChange={e => setLoginPass(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2.5 pr-10 text-sm text-white placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
+                    className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 pr-10 text-sm text-[var(--foreground)] placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
                   />
                   <button
                     type="button"
                     onClick={() => setLoginShowPass(p => !p)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] hover:text-white transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--foreground-muted)] hover:text-white transition-colors"
                   >
                     {loginShowPass ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
@@ -187,11 +187,11 @@ export default function AdminAuth({ children }: AdminAuthProps) {
               <button
                 type="submit"
                 disabled={loginLoading}
-                className="w-full bg-[#6366f1] hover:bg-[#5558e8] disabled:opacity-50 text-white font-medium py-2.5 rounded-lg text-sm transition-colors"
+                className="w-full bg-[#6366f1] hover:bg-[#5558e8] disabled:opacity-50 text-[var(--foreground)] font-medium py-2.5 rounded-lg text-sm transition-colors"
               >
                 {loginLoading ? 'Signing in…' : 'Sign In'}
               </button>
-              <p className="text-xs text-center text-[#64748b]">
+              <p className="text-xs text-center text-[var(--foreground-muted)]">
                 First login: use the credentials shown in the username/password placeholders.
               </p>
             </motion.form>
@@ -205,18 +205,18 @@ export default function AdminAuth({ children }: AdminAuthProps) {
               className="space-y-4"
             >
               <div>
-                <label className="block text-xs font-medium text-[#64748b] mb-1.5">Username</label>
+                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">Username</label>
                 <input
                   type="text"
                   value={regUser}
                   onChange={e => setRegUser(e.target.value)}
                   placeholder="new_admin"
                   required
-                  className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
+                  className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--foreground)] placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#64748b] mb-1.5">Password</label>
+                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">Password</label>
                 <div className="relative">
                   <input
                     type={regShowPass ? 'text' : 'password'}
@@ -224,26 +224,26 @@ export default function AdminAuth({ children }: AdminAuthProps) {
                     onChange={e => setRegPass(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2.5 pr-10 text-sm text-white placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
+                    className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 pr-10 text-sm text-[var(--foreground)] placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
                   />
                   <button
                     type="button"
                     onClick={() => setRegShowPass(p => !p)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] hover:text-white transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--foreground-muted)] hover:text-white transition-colors"
                   >
                     {regShowPass ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#64748b] mb-1.5">Confirm Password</label>
+                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">Confirm Password</label>
                 <input
                   type="password"
                   value={regConfirm}
                   onChange={e => setRegConfirm(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
+                  className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--foreground)] placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
                 />
               </div>
               {regError && (
@@ -259,7 +259,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
               <button
                 type="submit"
                 disabled={regLoading}
-                className="w-full bg-[#6366f1] hover:bg-[#5558e8] disabled:opacity-50 text-white font-medium py-2.5 rounded-lg text-sm transition-colors"
+                className="w-full bg-[#6366f1] hover:bg-[#5558e8] disabled:opacity-50 text-[var(--foreground)] font-medium py-2.5 rounded-lg text-sm transition-colors"
               >
                 {regLoading ? 'Creating…' : 'Create Account'}
               </button>

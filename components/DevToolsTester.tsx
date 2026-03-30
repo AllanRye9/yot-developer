@@ -414,7 +414,7 @@ function StatusIcon({ status }: { status: TestResult['status'] }) {
   if (status === 'pass') return <CheckCircle size={16} className="text-[#10b981]" />
   if (status === 'fail') return <XCircle size={16} className="text-[#ef4444]" />
   if (status === 'running') return <div className="w-4 h-4 rounded-full border-2 border-[#6366f1] border-t-transparent animate-spin" />
-  return <div className="w-4 h-4 rounded-full border-2 border-[#1e1e2e]" />
+  return <div className="w-4 h-4 rounded-full border-2 border-[var(--color-border)]" />
 }
 
 function LearnPanel({ learn, color }: { learn: LearnContent; color: string }) {
@@ -483,8 +483,8 @@ export default function DevToolsTester() {
             <FlaskConical size={20} className="text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">DevTools Tester</h1>
-            <p className="text-sm text-[#64748b]">Run real Web API tests — learn what each API does, why it exists, and how to use it</p>
+            <h1 className="text-2xl font-bold text-[var(--foreground)]">DevTools Tester</h1>
+            <p className="text-sm text-[var(--foreground-muted)]">Run real Web API tests — learn what each API does, why it exists, and how to use it</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -496,7 +496,7 @@ export default function DevToolsTester() {
           )}
           <button
             onClick={runAll}
-            className="flex items-center gap-2 px-4 py-2 bg-[#6366f1] hover:bg-[#5558e8] text-white text-sm font-medium rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[#6366f1] hover:bg-[#5558e8] text-[var(--foreground)] text-sm font-medium rounded-lg transition-colors"
           >
             <Play size={14} />
             Run All
@@ -522,7 +522,7 @@ export default function DevToolsTester() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5"
+              className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-5"
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
@@ -534,22 +534,22 @@ export default function DevToolsTester() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-semibold text-white">{test.name}</h3>
+                      <h3 className="text-sm font-semibold text-[var(--foreground)]">{test.name}</h3>
                       <StatusIcon status={result.status} />
                     </div>
-                    <p className="text-xs text-[#64748b]">{test.description}</p>
+                    <p className="text-xs text-[var(--foreground-muted)]">{test.description}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {result.duration !== undefined && (
-                    <span className="flex items-center gap-1 text-xs text-[#64748b]">
+                    <span className="flex items-center gap-1 text-xs text-[var(--foreground-muted)]">
                       <Clock size={10} />
                       {result.duration.toFixed(0)}ms
                     </span>
                   )}
                   <button
                     onClick={() => toggleLearn(test.id)}
-                    className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors text-[#64748b] hover:text-white hover:bg-[#1e1e2e]"
+                    className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:brightness-110"
                     title="Learn about this API"
                   >
                     <BookOpen size={12} />
@@ -587,16 +587,16 @@ export default function DevToolsTester() {
               </AnimatePresence>
 
               {result.output.length > 0 && (
-                <div className="mt-3 bg-[#0a0a0f] rounded-lg p-3 font-mono text-xs space-y-1 max-h-48 overflow-y-auto border border-[#1e1e2e]">
+                <div className="mt-3 bg-[var(--color-bg)] rounded-lg p-3 font-mono text-xs space-y-1 max-h-48 overflow-y-auto border border-[var(--color-border)]">
                   {result.output.map((line, j) => (
                     <div
                       key={j}
                       className={
                         line.startsWith('✓') ? 'text-[#10b981]' :
                         line.startsWith('⚠') ? 'text-[#f59e0b]' :
-                        line.startsWith('→') ? 'text-[#64748b]' :
+                        line.startsWith('→') ? 'text-[var(--foreground-muted)]' :
                         line.startsWith('Error') ? 'text-[#ef4444]' :
-                        'text-[#e2e8f0]'
+                        'text-[var(--foreground)]'
                       }
                     >
                       {line}

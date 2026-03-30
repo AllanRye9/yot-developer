@@ -100,13 +100,13 @@ export default function UserAuth({ children }: UserAuthProps) {
     return (
       <div className="relative">
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2 text-sm text-[#64748b]">
+          <div className="flex items-center gap-2 text-sm text-[var(--foreground-muted)]">
             <GraduationCap size={14} className="text-[#6366f1]" />
-            <span>Welcome back, <span className="text-[#e2e8f0] font-medium">{displayName}</span></span>
+            <span>Welcome back, <span className="text-[var(--foreground)] font-medium">{displayName}</span></span>
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-[#64748b] hover:text-white hover:bg-[#1e1e2e] transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--foreground-muted)] hover:text-white hover:bg-[#1e1e2e] transition-colors"
           >
             <LogOut size={14} />
             Logout
@@ -122,15 +122,15 @@ export default function UserAuth({ children }: UserAuthProps) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-[#12121a] border border-[#1e1e2e] rounded-2xl p-8"
+        className="w-full max-w-md bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-8"
       >
         <div className="flex items-center justify-center gap-3 mb-6">
           <div className="w-10 h-10 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] rounded-xl flex items-center justify-center shadow-lg shadow-[#6366f1]/30">
             <GraduationCap size={20} className="text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">Learning Dashboard</h1>
-            <p className="text-xs text-[#64748b]">Sign in to track your progress</p>
+            <h1 className="text-xl font-bold text-[var(--foreground)]">Learning Dashboard</h1>
+            <p className="text-xs text-[var(--foreground-muted)]">Sign in to track your progress</p>
           </div>
         </div>
 
@@ -139,13 +139,13 @@ export default function UserAuth({ children }: UserAuthProps) {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-[#0a0a0f] rounded-lg p-1 mb-6">
+        <div className="flex gap-1 bg-[var(--color-bg)] rounded-lg p-1 mb-6">
           {(['login', 'register'] as const).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-colors ${
-                tab === t ? 'bg-[#6366f1] text-white' : 'text-[#64748b] hover:text-white'
+                tab === t ? 'bg-[#6366f1] text-[var(--foreground)]' : 'text-[var(--foreground-muted)] hover:text-white'
               }`}
             >
               {t === 'login' ? <User size={14} /> : <UserPlus size={14} />}
@@ -165,18 +165,18 @@ export default function UserAuth({ children }: UserAuthProps) {
               className="space-y-4"
             >
               <div>
-                <label className="block text-xs font-medium text-[#64748b] mb-1.5">Username</label>
+                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">Username</label>
                 <input
                   type="text"
                   value={loginUsername}
                   onChange={e => setLoginUsername(e.target.value)}
                   placeholder="your_username"
                   required
-                  className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
+                  className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--foreground)] placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#64748b] mb-1.5">Password</label>
+                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">Password</label>
                 <div className="relative">
                   <input
                     type={loginShowPass ? 'text' : 'password'}
@@ -184,12 +184,12 @@ export default function UserAuth({ children }: UserAuthProps) {
                     onChange={e => setLoginPass(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2.5 pr-10 text-sm text-white placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
+                    className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 pr-10 text-sm text-[var(--foreground)] placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
                   />
                   <button
                     type="button"
                     onClick={() => setLoginShowPass(p => !p)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] hover:text-white transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--foreground-muted)] hover:text-white transition-colors"
                   >
                     {loginShowPass ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
@@ -203,11 +203,11 @@ export default function UserAuth({ children }: UserAuthProps) {
               <button
                 type="submit"
                 disabled={loginLoading}
-                className="w-full bg-[#6366f1] hover:bg-[#5558e8] disabled:opacity-50 text-white font-medium py-2.5 rounded-lg text-sm transition-colors"
+                className="w-full bg-[#6366f1] hover:bg-[#5558e8] disabled:opacity-50 text-[var(--foreground)] font-medium py-2.5 rounded-lg text-sm transition-colors"
               >
                 {loginLoading ? 'Signing in…' : 'Sign In'}
               </button>
-              <p className="text-xs text-center text-[#64748b]">
+              <p className="text-xs text-center text-[var(--foreground-muted)]">
                 Don&apos;t have an account?{' '}
                 <button type="button" onClick={() => setTab('register')} className="text-[#6366f1] hover:underline">
                   Register here
@@ -224,29 +224,29 @@ export default function UserAuth({ children }: UserAuthProps) {
               className="space-y-4"
             >
               <div>
-                <label className="block text-xs font-medium text-[#64748b] mb-1.5">Display Name</label>
+                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">Display Name</label>
                 <input
                   type="text"
                   value={regDisplay}
                   onChange={e => setRegDisplay(e.target.value)}
                   placeholder="Your Name"
                   required
-                  className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
+                  className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--foreground)] placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#64748b] mb-1.5">Username</label>
+                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">Username</label>
                 <input
                   type="text"
                   value={regUser}
                   onChange={e => setRegUser(e.target.value)}
                   placeholder="unique_username"
                   required
-                  className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
+                  className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--foreground)] placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#64748b] mb-1.5">Password</label>
+                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">Password</label>
                 <div className="relative">
                   <input
                     type={regShowPass ? 'text' : 'password'}
@@ -254,26 +254,26 @@ export default function UserAuth({ children }: UserAuthProps) {
                     onChange={e => setRegPass(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2.5 pr-10 text-sm text-white placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
+                    className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 pr-10 text-sm text-[var(--foreground)] placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
                   />
                   <button
                     type="button"
                     onClick={() => setRegShowPass(p => !p)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] hover:text-white transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--foreground-muted)] hover:text-white transition-colors"
                   >
                     {regShowPass ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#64748b] mb-1.5">Confirm Password</label>
+                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">Confirm Password</label>
                 <input
                   type="password"
                   value={regConfirm}
                   onChange={e => setRegConfirm(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
+                  className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--foreground)] placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
                 />
               </div>
               {regError && (
@@ -289,11 +289,11 @@ export default function UserAuth({ children }: UserAuthProps) {
               <button
                 type="submit"
                 disabled={regLoading}
-                className="w-full bg-[#6366f1] hover:bg-[#5558e8] disabled:opacity-50 text-white font-medium py-2.5 rounded-lg text-sm transition-colors"
+                className="w-full bg-[#6366f1] hover:bg-[#5558e8] disabled:opacity-50 text-[var(--foreground)] font-medium py-2.5 rounded-lg text-sm transition-colors"
               >
                 {regLoading ? 'Creating account…' : 'Create Account'}
               </button>
-              <p className="text-xs text-center text-[#64748b]">
+              <p className="text-xs text-center text-[var(--foreground-muted)]">
                 Already have an account?{' '}
                 <button type="button" onClick={() => setTab('login')} className="text-[#6366f1] hover:underline">
                   Sign in

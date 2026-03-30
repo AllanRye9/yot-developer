@@ -125,12 +125,12 @@ const browserObjects: PropertyNode[] = [
   },
 ]
 
-const typeColors: Record<string, string> = {
-  string: 'text-[#c3e88d]',
-  number: 'text-[#f78c6c]',
-  boolean: 'text-[#c792ea]',
-  function: 'text-[#82aaff]',
-  object: 'text-[#06b6d4]',
+const typeColorStyles: Record<string, string> = {
+  string: '#c3e88d',
+  number: '#f78c6c',
+  boolean: '#c792ea',
+  function: '#82aaff',
+  object: '#06b6d4',
 }
 
 const runSnippet = (code: string): string[] => {
@@ -175,18 +175,19 @@ function TreeNode({ node, depth = 0 }: { node: PropertyNode; depth?: number }) {
   }
 
   return (
-    <div className={`${depth > 0 ? 'ml-5 border-l border-[#1e1e2e] pl-3' : ''}`}>
+    <div className={`${depth > 0 ? 'ml-5 border-l pl-3' : ''}`} style={depth > 0 ? { borderColor: 'var(--color-border)' } : {}}>
       <motion.div
         onClick={handleClick}
-        whileHover={{ backgroundColor: 'rgba(99,102,241,0.05)' }}
-        className={`flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer transition-colors ${selected ? 'bg-[#6366f1]/10' : ''}`}
+        className={`flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer transition-colors`}
+        style={{ backgroundColor: selected ? 'color-mix(in srgb, var(--color-accent) 10%, transparent)' : undefined }}
+        whileHover={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 5%, transparent)' } as Record<string, string>}
       >
-        <span className="text-[#64748b] w-4">
+        <span className="w-4" style={{ color: 'var(--foreground-muted)' }}>
           {hasChildren ? (expanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />) : <span className="w-3 inline-block" />}
         </span>
-        <span className="font-mono text-sm text-[#e2e8f0] font-medium">{node.key}</span>
-        <span className={`font-mono text-xs ${typeColors[node.type] ?? 'text-[#64748b]'}`}>{node.type}</span>
-        <span className="font-mono text-xs text-[#64748b] truncate max-w-[200px]">{node.value}</span>
+        <span className="font-mono text-sm font-medium" style={{ color: 'var(--foreground)' }}>{node.key}</span>
+        <span className="font-mono text-xs" style={{ color: typeColorStyles[node.type] ?? 'var(--foreground-muted)' }}>{node.type}</span>
+        <span className="font-mono text-xs truncate max-w-[200px]" style={{ color: 'var(--foreground-muted)' }}>{node.value}</span>
       </motion.div>
 
       <AnimatePresence>
@@ -197,27 +198,29 @@ function TreeNode({ node, depth = 0 }: { node: PropertyNode; depth?: number }) {
             exit={{ opacity: 0, height: 0 }}
             className={`${depth > 0 ? 'ml-5 pl-3' : 'ml-6'} mb-2`}
           >
-            <div className="bg-[#0a0a0f] border border-[#1e1e2e] rounded-xl p-4 text-sm space-y-3">
+            <div className="border rounded-xl p-4 text-sm space-y-3" style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}>
               <div className="flex items-start gap-2">
-                <Info size={14} className="text-[#6366f1] mt-0.5 flex-shrink-0" />
-                <p className="text-[#94a3b8] leading-relaxed">{node.description}</p>
+                <Info size={14} className="mt-0.5 flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
+                <p className="leading-relaxed" style={{ color: 'var(--foreground-muted)' }}>{node.description}</p>
               </div>
               {node.snippet && (
                 <div>
-                  <div className="font-mono text-xs bg-[#12121a] border border-[#1e1e2e] rounded-lg p-3 text-[#c3e88d] whitespace-pre overflow-x-auto">
+                  <div className="font-mono text-xs border rounded-lg p-3 whitespace-pre overflow-x-auto" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)', color: '#c3e88d' }}>
                     {node.snippet}
                   </div>
                   <motion.button
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     onClick={e => { e.stopPropagation(); handleRun() }}
-                    className="mt-2 flex items-center gap-1.5 px-3 py-1.5 bg-[#6366f1] hover:bg-[#5457e5] text-white text-xs rounded-lg font-medium"
+                    className="mt-2 flex items-center gap-1.5 px-3 py-1.5 text-white text-xs rounded-lg font-medium transition-colors"
+                    style={{ background: 'var(--color-accent)' }}
                   >
                     <Play size={11} />Try It
                   </motion.button>
                   {output.length > 0 && (
-                    <div className="mt-2 bg-[#12121a] border border-[#1e1e2e] rounded-lg p-3 font-mono text-xs space-y-0.5">
+                    <div className="mt-2 border rounded-lg p-3 font-mono text-xs space-y-0.5" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
                       {output.map((line, i) => (
-                        <div key={i} className={`${line.startsWith('ERROR:') ? 'text-[#ef4444]' : line.startsWith('WARN:') ? 'text-yellow-400' : line.startsWith('TABLE:') ? 'text-[#06b6d4]' : 'text-[#e2e8f0]'} whitespace-pre-wrap`}>
+                        <div key={i} className={`${line.startsWith('ERROR:') ? 'text-[#ef4444]' : line.startsWith('WARN:') ? 'text-yellow-400' : line.startsWith('TABLE:') ? 'text-[#06b6d4]' : ''} whitespace-pre-wrap`}
+                          style={!line.startsWith('ERROR:') && !line.startsWith('WARN:') && !line.startsWith('TABLE:') ? { color: 'var(--foreground)' } : {}}>
                           {line}
                         </div>
                       ))}
@@ -262,9 +265,9 @@ export default function Inspector() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-5">
-        <h2 className="text-xl font-bold text-white mb-1">Object / Property Inspector</h2>
-        <p className="text-[#64748b] text-sm">
+      <div className="border rounded-xl p-5" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
+        <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--foreground)' }}>Object / Property Inspector</h2>
+        <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
           Browse the browser object tree. Click any property to see a description and a live &quot;Try It&quot; snippet.
         </p>
       </div>
@@ -274,13 +277,14 @@ export default function Inspector() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search properties…"
-          className="w-full bg-[#12121a] border border-[#1e1e2e] rounded-xl px-4 py-3 text-sm text-[#e2e8f0] placeholder-[#64748b] focus:outline-none focus:border-[#6366f1] transition-colors"
+          className="w-full border rounded-xl px-4 py-3 text-sm focus:outline-none transition-colors"
+          style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)', color: 'var(--foreground)' }}
         />
       </div>
 
-      <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-4 overflow-x-auto">
+      <div className="border rounded-xl p-4 overflow-x-auto" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
         {filtered.length === 0 ? (
-          <p className="text-[#64748b] text-sm py-4 text-center">No properties match &ldquo;{search}&rdquo;</p>
+          <p className="text-sm py-4 text-center" style={{ color: 'var(--foreground-muted)' }}>No properties match &ldquo;{search}&rdquo;</p>
         ) : (
           filtered.map(node => <TreeNode key={node.key} node={node} depth={0} />)
         )}

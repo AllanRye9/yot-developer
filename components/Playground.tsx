@@ -190,7 +190,7 @@ function McpPanel({ code, onCodeChange }: { code: string; onCodeChange: (code: s
             <div className="max-w-[85%] space-y-1.5">
               <div className={`rounded-xl px-3 py-2 text-xs leading-relaxed ${
                 msg.role === 'user'
-                  ? 'bg-[var(--color-accent)] text-white rounded-tr-sm'
+                  ? 'bg-[var(--color-accent)] text-[var(--foreground)] rounded-tr-sm'
                   : 'bg-[var(--color-border)] rounded-tl-sm'
               }`} style={msg.role === 'assistant' ? { color: 'var(--foreground)' } : {}}>
                 {msg.content}
@@ -286,7 +286,7 @@ export default function Playground() {
     <div className="h-full flex flex-col gap-4">
       <div className="flex items-center gap-3 flex-wrap">
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleRun} disabled={isRunning}
-          className="flex items-center gap-2 px-5 py-2.5 bg-[var(--color-accent)] hover:opacity-90 disabled:opacity-50 text-white rounded-lg font-medium transition-opacity">
+          className="flex items-center gap-2 px-5 py-2.5 bg-[var(--color-accent)] hover:opacity-90 disabled:opacity-50 text-[var(--foreground)] rounded-lg font-medium transition-opacity">
           <Play size={16} />{isRunning ? 'Running...' : 'Run Code'}
         </motion.button>
         <div className="relative">
@@ -319,7 +319,7 @@ export default function Playground() {
         <motion.button whileHover={{ scale: 1.02 }} onClick={() => setShowAI(!showAI)}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm border transition-colors ${
             showAI
-              ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-white'
+              ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-[var(--foreground)]'
               : 'bg-[var(--color-card)] border-[var(--color-border)]'
           }`}
           style={!showAI ? { color: 'var(--foreground)' } : {}}>
@@ -328,7 +328,7 @@ export default function Playground() {
         <div className="flex bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg p-1 ml-auto lg:hidden">
           {(['editor', 'output'] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
-              className={`px-3 py-1 rounded-md text-sm capitalize ${activeTab === tab ? 'bg-[var(--color-accent)] text-white' : ''}`}
+              className={`px-3 py-1 rounded-md text-sm capitalize ${activeTab === tab ? 'bg-[var(--color-accent)] text-[var(--foreground)]' : ''}`}
               style={activeTab !== tab ? { color: 'var(--foreground-muted)' } : {}}>{tab}</button>
           ))}
         </div>
