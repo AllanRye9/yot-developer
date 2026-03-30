@@ -1,5 +1,5 @@
 'use client'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FileCode2, Zap, Layers, GitBranch, AlertTriangle, Sparkles,
@@ -578,6 +578,345 @@ const BLOCK_ICONS: Record<LogicBlock['type'], string> = {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+// ─── Code Conversion ─────────────────────────────────────────────────────────
+
+type ConvertLang = 'typescript' | 'python' | 'java' | 'csharp' | 'go' | 'rust' | 'cpp' | 'php' | 'ruby' | 'swift'
+
+const CONVERT_LANG_LABELS: Record<ConvertLang, string> = {
+  typescript: 'TypeScript',
+  python: 'Python',
+  java: 'Java',
+  csharp: 'C#',
+  go: 'Go',
+  rust: 'Rust',
+  cpp: 'C++',
+  php: 'PHP',
+  ruby: 'Ruby',
+  swift: 'Swift',
+}
+
+function convertCode(code: string, from: 'javascript' | 'typescript', to: ConvertLang): string {
+  const lines = code.split('\n')
+
+  if (to === 'typescript' && from === 'javascript') {
+    // JS → TS: add type annotations
+    return lines.map(line => {
+      let l = line
+      // const/let without type
+      l = l.replace(/^(\s*)(const|let)\s+(\w+)\s*=\s*(\d+\.?\d*)\s*;?/, '$1$2 $3: number = $4;')
+      l = l.replace(/^(\s*)(const|let)\s+(\w+)\s*=\s*(['"`].*['"`])\s*;?/, '$1$2 $3: string = $4;')
+      l = l.replace(/^(\s*)(const|let)\s+(\w+)\s*=\s*(true|false)\s*;?/, '$1$2 $3: boolean = $4;')
+      l = l.replace(/^(\s*)(const|let)\s+(\w+)\s*=\s*\[\s*\]\s*;?/, '$1$2 $3: unknown[] = [];')
+      l = l.replace(/^(\s*)(const|let)\s+(\w+)\s*=\s*\{\s*\}\s*;?/, '$1$2 $3: Record<string, unknown> = {};')
+      // function → typed function
+      l = l.replace(/^(\s*)function\s+(\w+)\s*\(([^)]*)\)/, (_, indent, name, params) => {
+        const typedParams = params ? params.split(',').map((p: string) => `${p.trim()}: unknown`).join(', ') : ''
+        return `${indent}function ${name}(${typedParams}): unknown`
+      })
+      return l
+    }).join('\n')
+  }
+
+  if (to === 'python') {
+    return [
+      '# Converted from ' + (from === 'typescript' ? 'TypeScript' : 'JavaScript') + ' to Python',
+      ...lines.map(line => {
+        let l = line
+        l = l.replace(/\/\/(.*)/, '#$1')                             // comments
+        l = l.replace(/\bconsole\.log\((.*)\)/, 'print($1)')         // console.log → print
+        l = l.replace(/\bconst\s+(\w+)\s*=/, '$1 =')                 // const → =
+        l = l.replace(/\blet\s+(\w+)\s*=/, '$1 =')                   // let → =
+        l = l.replace(/\bvar\s+(\w+)\s*=/, '$1 =')                   // var → =
+        l = l.replace(/\bfunction\s+(\w+)\s*\(([^)]*)\)\s*\{/, 'def $1($2):')  // function → def
+        l = l.replace(/\}\s*$/, '')                                   // remove closing braces
+        l = l.replace(/;\s*$/, '')                                    // remove semicolons
+        l = l.replace(/\bfalse\b/, 'False')
+        l = l.replace(/\btrue\b/, 'True')
+        l = l.replace(/\bnull\b/, 'None')
+        l = l.replace(/\bundefined\b/, 'None')
+        l = l.replace(/\bthis\./, 'self.')
+        l = l.replace(/===/, '==')
+        l = l.replace(/!==/, '!=')
+        return l
+      })
+    ].join('\n')
+  }
+
+  if (to === 'java') {
+    return [
+      '// Converted from ' + (from === 'typescript' ? 'TypeScript' : 'JavaScript') + ' to Java',
+      'public class ConvertedCode {',
+      ...lines.map(line => {
+        let l = line
+        l = l.replace(/\bconst\s+(\w+)\s*=\s*(\d+)/, 'final int $1 = $2')
+        l = l.replace(/\bconst\s+(\w+)\s*=\s*(['"`].*['"`])/, 'final String $1 = $2')
+        l = l.replace(/\blet\s+(\w+)\s*=\s*(\d+)/, 'int $1 = $2')
+        l = l.replace(/\blet\s+(\w+)\s*=\s*(['"`].*['"`])/, 'String $1 = $2')
+        l = l.replace(/\bconsole\.log\((.*)\)/, 'System.out.println($1)')
+        l = l.replace(/\bfunction\s+(\w+)\s*\(([^)]*)\)\s*\{/, 'public static void $1($2) {')
+        l = l.replace(/===/, '==')
+        l = l.replace(/!==/, '!=')
+        return '    ' + l
+      }),
+      '}',
+    ].join('\n')
+  }
+
+  if (to === 'csharp') {
+    return [
+      '// Converted from ' + (from === 'typescript' ? 'TypeScript' : 'JavaScript') + ' to C#',
+      'using System;',
+      '',
+      'class ConvertedCode {',
+      ...lines.map(line => {
+        let l = line
+        l = l.replace(/\bconst\s+(\w+)\s*=\s*(\d+)/, 'const int $1 = $2')
+        l = l.replace(/\blet\s+(\w+)\s*=\s*(\d+)/, 'int $1 = $2')
+        l = l.replace(/\bconst\s+(\w+)\s*=\s*(['"`].*['"`])/, 'const string $1 = $2')
+        l = l.replace(/\bconsole\.log\((.*)\)/, 'Console.WriteLine($1)')
+        l = l.replace(/\bfunction\s+(\w+)\s*\(([^)]*)\)\s*\{/, 'static void $1($2) {')
+        l = l.replace(/===/, '==')
+        l = l.replace(/!==/, '!=')
+        return '    ' + l
+      }),
+      '}',
+    ].join('\n')
+  }
+
+  if (to === 'go') {
+    return [
+      '// Converted from ' + (from === 'typescript' ? 'TypeScript' : 'JavaScript') + ' to Go',
+      'package main',
+      '',
+      'import "fmt"',
+      '',
+      ...lines.map(line => {
+        let l = line
+        l = l.replace(/\bconsole\.log\((.*)\)/, 'fmt.Println($1)')
+        l = l.replace(/\bconst\s+(\w+)\s*=\s*(.+)/, 'const $1 = $2')
+        l = l.replace(/\blet\s+(\w+)\s*=\s*(.+)/, '$1 := $2')
+        l = l.replace(/\bvar\s+(\w+)\s*=\s*(.+)/, 'var $1 = $2')
+        l = l.replace(/\bfunction\s+(\w+)\s*\(([^)]*)\)\s*\{/, 'func $1($2) {')
+        l = l.replace(/===/, '==')
+        l = l.replace(/!==/, '!=')
+        l = l.replace(/;\s*$/, '')
+        return l
+      }),
+    ].join('\n')
+  }
+
+  if (to === 'rust') {
+    return [
+      '// Converted from ' + (from === 'typescript' ? 'TypeScript' : 'JavaScript') + ' to Rust',
+      '',
+      'fn main() {',
+      ...lines.map(line => {
+        let l = line
+        l = l.replace(/\bconsole\.log\((.*)\)/, 'println!($1)')
+        l = l.replace(/\bconst\s+(\w+)\s*=\s*(.+)/, 'const $1: i32 = $2')
+        l = l.replace(/\blet\s+(\w+)\s*=\s*(.+)/, 'let mut $1 = $2')
+        l = l.replace(/\bfunction\s+(\w+)\s*\(([^)]*)\)\s*\{/, 'fn $1($2) {')
+        l = l.replace(/===/, '==')
+        l = l.replace(/!==/, '!=')
+        l = l.replace(/;\s*$/, ';')
+        return '    ' + l
+      }),
+      '}',
+    ].join('\n')
+  }
+
+  if (to === 'cpp') {
+    return [
+      '// Converted from ' + (from === 'typescript' ? 'TypeScript' : 'JavaScript') + ' to C++',
+      '#include <iostream>',
+      '#include <string>',
+      'using namespace std;',
+      '',
+      ...lines.map(line => {
+        let l = line
+        l = l.replace(/\bconsole\.log\((.*)\)/, 'cout << $1 << endl')
+        l = l.replace(/\bconst\s+(\w+)\s*=\s*(\d+)/, 'const int $1 = $2')
+        l = l.replace(/\blet\s+(\w+)\s*=\s*(\d+)/, 'int $1 = $2')
+        l = l.replace(/\bconst\s+(\w+)\s*=\s*(['"`].*['"`])/, 'const string $1 = $2')
+        l = l.replace(/\bfunction\s+(\w+)\s*\(([^)]*)\)\s*\{/, 'void $1($2) {')
+        l = l.replace(/===/, '==')
+        l = l.replace(/!==/, '!=')
+        return l
+      }),
+    ].join('\n')
+  }
+
+  if (to === 'php') {
+    return [
+      '<?php',
+      '// Converted from ' + (from === 'typescript' ? 'TypeScript' : 'JavaScript') + ' to PHP',
+      ...lines.map(line => {
+        let l = line
+        l = l.replace(/\/\/(.*)/, '//$1')
+        l = l.replace(/\bconsole\.log\((.*)\)/, 'echo $1 . "\\n"')
+        l = l.replace(/\bconst\s+(\w+)\s*=/, 'define("$1",')
+        l = l.replace(/\blet\s+(\w+)\s*=/, '\\$$1 =')
+        l = l.replace(/\bvar\s+(\w+)\s*=/, '\\$$1 =')
+        l = l.replace(/\bfunction\s+(\w+)\s*\(([^)]*)\)\s*\{/, 'function $1($2) {')
+        return l
+      }),
+      '?>',
+    ].join('\n')
+  }
+
+  if (to === 'ruby') {
+    return [
+      '# Converted from ' + (from === 'typescript' ? 'TypeScript' : 'JavaScript') + ' to Ruby',
+      ...lines.map(line => {
+        let l = line
+        l = l.replace(/\/\/(.*)/, '#$1')
+        l = l.replace(/\bconsole\.log\((.*)\)/, 'puts $1')
+        l = l.replace(/\bconst\s+(\w+)\s*=/, '$1 =')
+        l = l.replace(/\blet\s+(\w+)\s*=/, '$1 =')
+        l = l.replace(/\bvar\s+(\w+)\s*=/, '$1 =')
+        l = l.replace(/\bfunction\s+(\w+)\s*\(([^)]*)\)/, 'def $1($2)')
+        l = l.replace(/\}\s*$/, 'end')
+        l = l.replace(/;\s*$/, '')
+        l = l.replace(/===/, '==')
+        l = l.replace(/!==/, '!=')
+        l = l.replace(/\bnull\b/, 'nil')
+        return l
+      }),
+    ].join('\n')
+  }
+
+  if (to === 'swift') {
+    return [
+      '// Converted from ' + (from === 'typescript' ? 'TypeScript' : 'JavaScript') + ' to Swift',
+      'import Foundation',
+      '',
+      ...lines.map(line => {
+        let l = line
+        l = l.replace(/\bconsole\.log\((.*)\)/, 'print($1)')
+        l = l.replace(/\bconst\s+(\w+)\s*=/, 'let $1 =')
+        l = l.replace(/\blet\s+(\w+)\s*=/, 'var $1 =')
+        l = l.replace(/\bfunction\s+(\w+)\s*\(([^)]*)\)\s*\{/, 'func $1($2) {')
+        l = l.replace(/===/, '==')
+        l = l.replace(/!==/, '!=')
+        l = l.replace(/;\s*$/, '')
+        l = l.replace(/\bnull\b/, 'nil')
+        return l
+      }),
+    ].join('\n')
+  }
+
+  return code
+}
+
+// ─── Lined Code Editor ───────────────────────────────────────────────────────
+
+function LinedCodeEditor({
+  value,
+  onChange,
+  highlightLine,
+  placeholder,
+}: {
+  value: string
+  onChange: (v: string) => void
+  highlightLine?: number | null
+  placeholder?: string
+}) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const lineNumbersRef = useRef<HTMLDivElement>(null)
+  const lines = value.split('\n')
+  const lineCount = Math.max(lines.length, 1)
+
+  // Sync scroll between line numbers and textarea
+  const handleScroll = () => {
+    if (textareaRef.current && lineNumbersRef.current) {
+      lineNumbersRef.current.scrollTop = textareaRef.current.scrollTop
+    }
+  }
+
+  // Jump to a specific line
+  const jumpToLine = useCallback((lineNum: number) => {
+    const ta = textareaRef.current
+    if (!ta) return
+    const lines = ta.value.split('\n')
+    let pos = 0
+    for (let i = 0; i < Math.min(lineNum - 1, lines.length); i++) {
+      pos += lines[i].length + 1
+    }
+    ta.focus()
+    ta.setSelectionRange(pos, pos + (lines[lineNum - 1]?.length ?? 0))
+    // Scroll to the line
+    const lineHeight = 21 // approx px per line at text-sm leading-relaxed
+    ta.scrollTop = Math.max(0, (lineNum - 5) * lineHeight)
+    if (lineNumbersRef.current) {
+      lineNumbersRef.current.scrollTop = ta.scrollTop
+    }
+  }, [])
+
+  // Expose jumpToLine via a data attribute trick — use a custom event
+  useEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    const handler = (e: Event) => {
+      const custom = e as CustomEvent<number>
+      jumpToLine(custom.detail)
+    }
+    el.addEventListener('jump-to-line', handler)
+    return () => el.removeEventListener('jump-to-line', handler)
+  }, [jumpToLine])
+
+  return (
+    <div className="flex-1 flex overflow-hidden min-h-[400px] font-mono text-sm leading-relaxed">
+      {/* Line numbers */}
+      <div
+        ref={lineNumbersRef}
+        className="flex-shrink-0 py-4 px-2 overflow-hidden select-none text-right"
+        style={{
+          width: `${Math.max(String(lineCount).length * 9 + 20, 44)}px`,
+          background: 'var(--color-bg)',
+          borderRight: '1px solid var(--color-border)',
+          color: 'var(--foreground-muted)',
+        }}
+      >
+        {Array.from({ length: lineCount }, (_, i) => i + 1).map(n => (
+          <div
+            key={n}
+            style={{
+              lineHeight: '1.625rem',
+              background: highlightLine === n ? 'rgba(99,102,241,0.15)' : undefined,
+              color: highlightLine === n ? 'var(--color-accent)' : undefined,
+              fontWeight: highlightLine === n ? 700 : undefined,
+            }}
+          >
+            {n}
+          </div>
+        ))}
+      </div>
+      {/* Textarea */}
+      <textarea
+        ref={textareaRef}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        onScroll={handleScroll}
+        spellCheck={false}
+        className="code-analyzer-textarea flex-1 resize-none py-4 px-4 outline-none leading-relaxed"
+        style={{ background: 'transparent', color: 'var(--foreground)' }}
+        placeholder={placeholder}
+        onKeyDown={e => {
+          if (e.key === 'Tab') {
+            e.preventDefault()
+            const s = e.currentTarget.selectionStart
+            const newCode = value.substring(0, s) + '  ' + value.substring(e.currentTarget.selectionEnd)
+            onChange(newCode)
+            requestAnimationFrame(() => {
+              e.currentTarget.selectionStart = e.currentTarget.selectionEnd = s + 2
+            })
+          }
+        }}
+      />
+    </div>
+  )
+}
+
 export default function CodeAnalyzer() {
   const [code, setCode] = useState(JS_SAMPLE)
   const [language, setLanguage] = useState<'javascript' | 'typescript'>('javascript')
@@ -585,21 +924,45 @@ export default function CodeAnalyzer() {
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [expandedRec, setExpandedRec] = useState<number | null>(null)
+  const [highlightLine, setHighlightLine] = useState<number | null>(null)
+  const [showConvert, setShowConvert] = useState(false)
+  const [convertTo, setConvertTo] = useState<ConvertLang>('python')
+  const [convertedCode, setConvertedCode] = useState('')
+  const [convertCopied, setConvertCopied] = useState(false)
 
   const handleLanguageSwitch = useCallback((lang: 'javascript' | 'typescript') => {
     setLanguage(lang)
     setCode(lang === 'typescript' ? TS_SAMPLE : JS_SAMPLE)
     setResult(null)
+    setHighlightLine(null)
   }, [])
 
   const analyze = useCallback(async () => {
     if (!code.trim() || analyzing) return
     setAnalyzing(true)
     setResult(null)
+    setHighlightLine(null)
     const res = await performAnalysis(code, language)
     setResult(res)
     setAnalyzing(false)
   }, [code, language, analyzing])
+
+  const handleJumpToLine = useCallback((line: number | undefined) => {
+    if (!line) return
+    setHighlightLine(line)
+    // Dispatch custom event to LinedCodeEditor
+    const textarea = document.querySelector<HTMLTextAreaElement>('.code-analyzer-textarea')
+    if (textarea) {
+      textarea.dispatchEvent(new CustomEvent('jump-to-line', { detail: line }))
+    }
+    // Clear highlight after 3 seconds
+    setTimeout(() => setHighlightLine(null), 3000)
+  }, [])
+
+  const handleConvert = useCallback(() => {
+    const converted = convertCode(code, language, convertTo)
+    setConvertedCode(converted)
+  }, [code, language, convertTo])
 
   const tabs = [
     { id: 'efficiency' as const, label: 'Efficiency', icon: Zap },
@@ -622,29 +985,42 @@ export default function CodeAnalyzer() {
             <FileCode2 size={20} className="text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">Code Analyzer</h1>
-            <p className="text-sm text-[#64748b]">Analyze efficiency, execution, logic, syntax & get AI recommendations</p>
+            <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>Code Analyzer</h1>
+            <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Analyze efficiency, execution, logic, syntax & get AI recommendations</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Language selector */}
-          <div className="flex gap-1 bg-[#12121a] border border-[#1e1e2e] rounded-lg p-1">
+          <div className="flex gap-1 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg p-1">
             {(['javascript', 'typescript'] as const).map(lang => (
               <button
                 key={lang}
                 onClick={() => handleLanguageSwitch(lang)}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  language === lang ? 'bg-[#6366f1] text-white' : 'text-[#64748b] hover:text-white'
+                  language === lang ? 'bg-[var(--color-accent)] text-white' : 'hover:opacity-80'
                 }`}
+                style={language !== lang ? { color: 'var(--foreground-muted)' } : {}}
               >
                 {lang === 'javascript' ? 'JS' : 'TS'}
               </button>
             ))}
           </div>
+          {/* Convert toggle */}
+          <button
+            onClick={() => setShowConvert(s => !s)}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-colors ${
+              showConvert
+                ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-white'
+                : 'bg-[var(--color-card)] border-[var(--color-border)] hover:opacity-80'
+            }`}
+            style={!showConvert ? { color: 'var(--foreground-muted)' } : {}}
+          >
+            <FileCode2 size={12} />Convert
+          </button>
           <button
             onClick={analyze}
             disabled={analyzing}
-            className="flex items-center gap-2 px-4 py-2 bg-[#6366f1] hover:bg-[#5558e8] disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] hover:opacity-90 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-opacity"
           >
             {analyzing ? (
               <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
@@ -657,43 +1033,43 @@ export default function CodeAnalyzer() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        {/* Code Editor */}
-        <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#1e1e2e] bg-[#0a0a0f]">
+        {/* Code Editor with line numbers */}
+        <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--color-border)] bg-[var(--color-bg)]">
             <div className="flex items-center gap-2">
               <div className="flex gap-1.5">
                 <div className="w-3 h-3 rounded-full bg-[#ef4444]/60" />
                 <div className="w-3 h-3 rounded-full bg-[#f59e0b]/60" />
                 <div className="w-3 h-3 rounded-full bg-[#10b981]/60" />
               </div>
-              <span className="text-xs text-[#64748b] font-mono ml-1">
+              <span className="text-xs font-mono ml-1" style={{ color: 'var(--foreground-muted)' }}>
                 {language === 'javascript' ? 'script.js' : 'script.ts'}
               </span>
             </div>
-            <span className="text-xs text-[#64748b]">{code.split('\n').length} lines</span>
+            <span className="text-xs" style={{ color: 'var(--foreground-muted)' }}>{code.split('\n').length} lines</span>
           </div>
-          <textarea
+          <LinedCodeEditor
             value={code}
-            onChange={e => { setCode(e.target.value); setResult(null) }}
-            spellCheck={false}
-            className="flex-1 w-full bg-transparent p-4 font-mono text-sm text-[#e2e8f0] resize-none outline-none leading-relaxed min-h-[400px]"
+            onChange={v => { setCode(v); setResult(null); setHighlightLine(null) }}
+            highlightLine={highlightLine}
             placeholder="Paste your JavaScript or TypeScript code here…"
           />
         </div>
 
         {/* Analysis Panel */}
-        <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl overflow-hidden flex flex-col">
+        <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl overflow-hidden flex flex-col">
           {/* Tabs */}
-          <div className="flex overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden border-b border-[#1e1e2e] bg-[#0a0a0f]">
+          <div className="flex overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden border-b border-[var(--color-border)] bg-[var(--color-bg)]">
             {tabs.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => setActiveTab(id)}
                 className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium whitespace-nowrap transition-colors border-b-2 ${
                   activeTab === id
-                    ? 'text-white border-[#6366f1]'
-                    : 'text-[#64748b] hover:text-white border-transparent'
+                    ? 'border-[var(--color-accent)]'
+                    : 'border-transparent hover:opacity-80'
                 }`}
+                style={{ color: activeTab === id ? 'var(--foreground)' : 'var(--foreground-muted)' }}
               >
                 <Icon size={13} />
                 {label}
@@ -706,29 +1082,29 @@ export default function CodeAnalyzer() {
 
           {/* Summary bar */}
           {result && (
-            <div className="flex items-center gap-4 px-4 py-2 border-b border-[#1e1e2e] text-xs text-[#64748b] flex-wrap">
+            <div className="flex items-center gap-4 px-4 py-2 border-b border-[var(--color-border)] text-xs flex-wrap" style={{ color: 'var(--foreground-muted)' }}>
               <span>{result.lineCount} lines</span>
               <span>{result.functionCount} functions</span>
               <span>Complexity: <span className={complexityColor}>{result.complexity}</span></span>
-              <span className="ml-auto capitalize text-[#6366f1]">{result.language}</span>
+              <span className="ml-auto capitalize" style={{ color: 'var(--color-accent)' }}>{result.language}</span>
             </div>
           )}
 
           <div className="flex-1 overflow-y-auto p-4 min-h-[340px]">
             {!result && !analyzing && (
               <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-10">
-                <div className="w-12 h-12 bg-[#6366f1]/10 rounded-xl flex items-center justify-center">
-                  <Play size={22} className="text-[#6366f1]" />
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}>
+                  <Play size={22} style={{ color: 'var(--color-accent)' }} />
                 </div>
-                <p className="text-[#64748b] text-sm">Click <strong className="text-white">Analyze</strong> to inspect your code</p>
-                <p className="text-[#4a5568] text-xs">Detects efficiency issues, execution order, logic structure, syntax errors and provides AI recommendations</p>
+                <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Click <strong style={{ color: 'var(--foreground)' }}>Analyze</strong> to inspect your code</p>
+                <p className="text-xs" style={{ color: 'var(--foreground-muted)', opacity: 0.7 }}>Detects efficiency issues, execution order, logic structure, syntax errors and provides AI recommendations</p>
               </div>
             )}
 
             {analyzing && (
               <div className="flex flex-col items-center justify-center h-full gap-4 py-10">
-                <div className="w-10 h-10 rounded-full border-2 border-[#6366f1] border-t-transparent animate-spin" />
-                <p className="text-[#64748b] text-sm">Analyzing your code…</p>
+                <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }} />
+                <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Analyzing your code…</p>
               </div>
             )}
 
@@ -744,12 +1120,26 @@ export default function CodeAnalyzer() {
                 >
                   {/* ── Efficiency Tab ── */}
                   {activeTab === 'efficiency' && result.efficiency.map((issue, i) => (
-                    <div key={i} className="bg-[#0a0a0f] rounded-lg p-3 border border-[#1e1e2e] space-y-1.5">
+                    <div
+                      key={i}
+                      className="rounded-lg p-3 border space-y-1.5 transition-colors"
+                      style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}
+                    >
                       <div className="flex items-start gap-2">
                         <SeverityIcon severity={issue.severity} />
-                        <p className="text-sm text-[#e2e8f0] leading-snug flex-1">{issue.message}</p>
+                        <p className="text-sm leading-snug flex-1" style={{ color: 'var(--foreground)' }}>{issue.message}</p>
+                        {issue.line && (
+                          <button
+                            onClick={() => handleJumpToLine(issue.line)}
+                            className="text-[10px] px-2 py-0.5 rounded border flex-shrink-0 hover:opacity-80 transition-opacity font-mono"
+                            style={{ color: 'var(--color-accent)', borderColor: 'color-mix(in srgb, var(--color-accent) 30%, transparent)', background: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
+                            title="Click to jump to this line in the editor"
+                          >
+                            line {issue.line}
+                          </button>
+                        )}
                       </div>
-                      <div className="ml-5 text-xs text-[#6366f1] bg-[#6366f1]/10 rounded p-2 leading-relaxed">
+                      <div className="ml-5 text-xs rounded p-2 leading-relaxed" style={{ color: 'var(--color-accent)', background: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}>
                         💡 {issue.suggestion}
                       </div>
                     </div>
@@ -758,18 +1148,18 @@ export default function CodeAnalyzer() {
                   {/* ── Execution Stack Tab ── */}
                   {activeTab === 'stack' && (
                     <div className="space-y-2">
-                      <p className="text-xs text-[#64748b] mb-3">JavaScript execution order — synchronous first, then microtasks, then macrotasks.</p>
+                      <p className="text-xs mb-3" style={{ color: 'var(--foreground-muted)' }}>JavaScript execution order — synchronous first, then microtasks, then macrotasks.</p>
                       {result.executionStack.map((frame, i) => (
                         <div key={i} className="flex items-start gap-2" style={{ paddingLeft: `${frame.depth * 16}px` }}>
-                          <div className="w-5 h-5 rounded-full bg-[#1e1e2e] flex items-center justify-center text-[10px] text-[#64748b] shrink-0 mt-0.5">
+                          <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] shrink-0 mt-0.5" style={{ background: 'var(--color-border)', color: 'var(--foreground-muted)' }}>
                             {i + 1}
                           </div>
-                          <div className="flex-1 bg-[#0a0a0f] rounded-lg p-2.5 border border-[#1e1e2e]">
+                          <div className="flex-1 rounded-lg p-2.5 border" style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}>
                             <div className="flex items-center gap-2 mb-1">
                               <StackTypeChip type={frame.type} />
-                              <span className="text-xs font-mono text-white">{frame.label}</span>
+                              <span className="text-xs font-mono" style={{ color: 'var(--foreground)' }}>{frame.label}</span>
                             </div>
-                            <p className="text-xs text-[#64748b] leading-relaxed">{frame.detail}</p>
+                            <p className="text-xs leading-relaxed" style={{ color: 'var(--foreground-muted)' }}>{frame.detail}</p>
                           </div>
                         </div>
                       ))}
@@ -779,25 +1169,33 @@ export default function CodeAnalyzer() {
                   {/* ── Logic Tab ── */}
                   {activeTab === 'logic' && (
                     <div className="space-y-2">
-                      <p className="text-xs text-[#64748b] mb-3">Structural elements detected in your code.</p>
+                      <p className="text-xs mb-3" style={{ color: 'var(--foreground-muted)' }}>Structural elements detected in your code.</p>
                       {result.logicBlocks.length === 0 ? (
-                        <p className="text-[#64748b] text-sm">No named structures found — try adding functions, classes, or control flow.</p>
+                        <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>No named structures found — try adding functions, classes, or control flow.</p>
                       ) : (
                         result.logicBlocks.map((block, i) => {
                           const color = BLOCK_COLORS[block.type]
                           const icon = BLOCK_ICONS[block.type]
+                          const lineMatch = block.lines.match(/\d+/)
+                          const lineNum = lineMatch ? parseInt(lineMatch[0]) : undefined
                           return (
-                            <div key={i} className="flex items-center gap-3 bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg p-3">
+                            <div
+                              key={i}
+                              className="flex items-center gap-3 border rounded-lg p-3 cursor-pointer hover:opacity-80 transition-opacity"
+                              style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}
+                              onClick={() => lineNum && handleJumpToLine(lineNum)}
+                              title={lineNum ? `Click to jump to line ${lineNum}` : undefined}
+                            >
                               <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0"
                                 style={{ background: `${color}20`, color }}>
                                 {icon}
                               </div>
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xs font-medium text-white truncate">{block.name}</span>
-                                  <span className="text-[10px] text-[#64748b] shrink-0">{block.lines}</span>
+                                  <span className="text-xs font-medium truncate" style={{ color: 'var(--foreground)' }}>{block.name}</span>
+                                  <span className="text-[10px] shrink-0" style={{ color: 'var(--foreground-muted)' }}>{block.lines}</span>
                                 </div>
-                                <p className="text-xs text-[#64748b] truncate">{block.detail}</p>
+                                <p className="text-xs truncate" style={{ color: 'var(--foreground-muted)' }}>{block.detail}</p>
                               </div>
                               <span className="text-[10px] px-1.5 py-0.5 rounded border shrink-0 ml-auto capitalize"
                                 style={{ color, borderColor: `${color}40`, background: `${color}15` }}>
@@ -813,24 +1211,38 @@ export default function CodeAnalyzer() {
                   {/* ── Syntax Tab ── */}
                   {activeTab === 'syntax' && (
                     <div className="space-y-2">
-                      <p className="text-xs text-[#64748b] mb-1">
+                      <p className="text-xs mb-1" style={{ color: 'var(--foreground-muted)' }}>
                         JS uses real browser parsing; TS uses heuristic pattern checks. These are educational hints, not a full compiler.
                       </p>
                       {result.syntaxIssues.length === 0 ? (
-                        <div className="flex items-center gap-2 text-[#10b981] text-sm">
+                        <div className="flex items-center gap-2 text-sm text-[#10b981]">
                           <CheckCircle size={16} />
                           No syntax issues detected
                         </div>
                       ) : (
                         result.syntaxIssues.map((issue, i) => (
-                          <div key={i} className="bg-[#0a0a0f] rounded-lg p-3 border border-[#1e1e2e] flex items-start gap-2">
+                          <div
+                            key={i}
+                            className="rounded-lg p-3 border flex items-start gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                            style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}
+                            onClick={() => issue.line && handleJumpToLine(issue.line)}
+                            title={issue.line ? `Click to jump to line ${issue.line}` : undefined}
+                          >
                             {issue.type === 'error'
                               ? <XCircle size={14} className="text-[#ef4444] shrink-0 mt-0.5" />
                               : issue.type === 'warning'
                               ? <AlertTriangle size={14} className="text-[#f59e0b] shrink-0 mt-0.5" />
                               : <Info size={14} className="text-[#38bdf8] shrink-0 mt-0.5" />
                             }
-                            <p className="text-sm text-[#e2e8f0] leading-snug">{issue.message}</p>
+                            <p className="text-sm leading-snug flex-1" style={{ color: 'var(--foreground)' }}>{issue.message}</p>
+                            {issue.line && (
+                              <span
+                                className="text-[10px] px-1.5 py-0.5 rounded border shrink-0 font-mono"
+                                style={{ color: 'var(--color-accent)', borderColor: 'color-mix(in srgb, var(--color-accent) 30%, transparent)', background: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
+                              >
+                                :{issue.line}
+                              </span>
+                            )}
                           </div>
                         ))
                       )}
@@ -840,11 +1252,11 @@ export default function CodeAnalyzer() {
                   {/* ── AI Tips Tab ── */}
                   {activeTab === 'ai' && (
                     <div className="space-y-3">
-                      <p className="text-xs text-[#64748b]">AI-powered recommendations to improve your {language === 'typescript' ? 'TypeScript' : 'JavaScript'} code.</p>
+                      <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>AI-powered recommendations to improve your {language === 'typescript' ? 'TypeScript' : 'JavaScript'} code.</p>
                       {result.aiRecommendations.map((rec, i) => (
-                        <div key={i} className="bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg overflow-hidden">
+                        <div key={i} className="border rounded-lg overflow-hidden" style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}>
                           <button
-                            className="w-full flex items-center gap-3 px-3 py-3 text-left hover:bg-[#1a1a27] transition-colors"
+                            className="w-full flex items-center gap-3 px-3 py-3 text-left transition-colors hover:opacity-80"
                             onClick={() => setExpandedRec(expandedRec === i ? null : i)}
                           >
                             <div className="w-7 h-7 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] rounded-lg flex items-center justify-center shrink-0">
@@ -852,13 +1264,13 @@ export default function CodeAnalyzer() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <span className="text-xs font-medium text-white">{rec.title}</span>
+                                <span className="text-xs font-medium" style={{ color: 'var(--foreground)' }}>{rec.title}</span>
                               </div>
-                              <span className="text-[10px] text-[#6366f1]">{rec.category}</span>
+                              <span className="text-[10px]" style={{ color: 'var(--color-accent)' }}>{rec.category}</span>
                             </div>
                             {expandedRec === i
-                              ? <ChevronUp size={14} className="text-[#64748b] shrink-0" />
-                              : <ChevronDown size={14} className="text-[#64748b] shrink-0" />
+                              ? <ChevronUp size={14} style={{ color: 'var(--foreground-muted)' }} className="shrink-0" />
+                              : <ChevronDown size={14} style={{ color: 'var(--foreground-muted)' }} className="shrink-0" />
                             }
                           </button>
                           <AnimatePresence>
@@ -870,10 +1282,11 @@ export default function CodeAnalyzer() {
                                 transition={{ duration: 0.18 }}
                                 className="overflow-hidden"
                               >
-                                <div className="px-3 pb-3 pt-1 border-t border-[#1e1e2e] space-y-2">
-                                  <p className="text-xs text-[#94a3b8] leading-relaxed">{rec.description}</p>
+                                <div className="px-3 pb-3 pt-1 border-t space-y-2" style={{ borderColor: 'var(--color-border)' }}>
+                                  <p className="text-xs leading-relaxed" style={{ color: 'var(--foreground-muted)' }}>{rec.description}</p>
                                   {rec.example && (
-                                    <pre className="bg-[#12121a] rounded-lg p-3 text-xs text-[#a5b4fc] font-mono overflow-x-auto border border-[#1e1e2e] leading-relaxed">
+                                    <pre className="rounded-lg p-3 text-xs font-mono overflow-x-auto border leading-relaxed"
+                                      style={{ background: 'var(--color-card)', color: '#a5b4fc', borderColor: 'var(--color-border)' }}>
                                       {rec.example}
                                     </pre>
                                   )}
@@ -892,6 +1305,93 @@ export default function CodeAnalyzer() {
         </div>
       </div>
 
+      {/* ─── Code Conversion Panel ─── */}
+      <AnimatePresence>
+        {showConvert && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="border rounded-xl overflow-hidden"
+            style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}
+          >
+            <div className="flex items-center gap-3 px-4 py-3 border-b flex-wrap" style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg)' }}>
+              <div className="w-7 h-7 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] rounded-lg flex items-center justify-center">
+                <FileCode2 size={14} className="text-white" />
+              </div>
+              <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                Code Converter — {language === 'javascript' ? 'JavaScript' : 'TypeScript'} →
+              </span>
+              {/* Target language selector */}
+              <div className="flex flex-wrap gap-1">
+                {(Object.keys(CONVERT_LANG_LABELS) as ConvertLang[]).map(lang => (
+                  <button
+                    key={lang}
+                    onClick={() => setConvertTo(lang)}
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors border ${
+                      convertTo === lang ? 'text-white' : 'hover:opacity-80'
+                    }`}
+                    style={
+                      convertTo === lang
+                        ? { background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }
+                        : { borderColor: 'var(--color-border)', color: 'var(--foreground-muted)' }
+                    }
+                  >
+                    {CONVERT_LANG_LABELS[lang]}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={handleConvert}
+                className="ml-auto flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium text-white transition-opacity hover:opacity-90"
+                style={{ background: 'var(--color-accent)' }}
+              >
+                <Play size={12} />Convert
+              </button>
+            </div>
+
+            {convertedCode && (
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium" style={{ color: 'var(--foreground-muted)' }}>
+                    Converted to {CONVERT_LANG_LABELS[convertTo]}
+                  </span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(convertedCode).then(() => {
+                        setConvertCopied(true)
+                        setTimeout(() => setConvertCopied(false), 2000)
+                      }).catch(() => {})
+                    }}
+                    className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-colors hover:opacity-80"
+                    style={{ color: 'var(--foreground-muted)', borderColor: 'var(--color-border)' }}
+                  >
+                    {convertCopied ? <CheckCircle size={11} className="text-[#10b981]" /> : <FileCode2 size={11} />}
+                    {convertCopied ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+                <pre
+                  className="text-xs font-mono p-4 rounded-xl border overflow-x-auto leading-relaxed"
+                  style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)', color: 'var(--foreground)' }}
+                >
+                  {convertedCode}
+                </pre>
+                <p className="text-xs mt-2" style={{ color: 'var(--foreground-muted)', opacity: 0.6 }}>
+                  ⚠️ This is a structural conversion to help you get started. Review and adjust types, idioms, and library APIs for your target language.
+                </p>
+              </div>
+            )}
+
+            {!convertedCode && (
+              <div className="p-8 text-center" style={{ color: 'var(--foreground-muted)' }}>
+                <FileCode2 size={32} className="mx-auto mb-2 opacity-20" />
+                <p className="text-sm">Select a target language above and click Convert</p>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Educational Footer */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
@@ -899,13 +1399,13 @@ export default function CodeAnalyzer() {
           { icon: Layers, title: 'Execution Stack', color: '#8b5cf6', desc: 'Visualizes how JavaScript executes your code: call stack → microtasks (Promises) → macrotasks (timers). Essential for debugging async bugs.' },
           { icon: Sparkles, title: 'AI Recommendations', color: '#10b981', desc: 'Pattern-based suggestions for modern JavaScript/TypeScript best practices: avoid var, use types, prefer async/await, document your code.' },
         ].map(({ icon: Icon, title, color, desc }) => (
-          <div key={title} className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-4 flex items-start gap-3">
+          <div key={title} className="border rounded-xl p-4 flex items-start gap-3" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
             <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${color}20` }}>
               <Icon size={16} style={{ color }} />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-white mb-1">{title}</h3>
-              <p className="text-xs text-[#64748b] leading-relaxed">{desc}</p>
+              <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--foreground)' }}>{title}</h3>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--foreground-muted)' }}>{desc}</p>
             </div>
           </div>
         ))}

@@ -30,14 +30,14 @@ export default function CodeBlock({ code, language = 'javascript' }: CodeBlockPr
   }
 
   return (
-    <div className="relative rounded-lg overflow-hidden border border-[#1e1e2e]">
-      <div className="flex items-center justify-between px-4 py-2 bg-[#0a0a0f] border-b border-[#1e1e2e]">
-        <span className="text-xs text-[#64748b] font-mono">{language}</span>
-        <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={handleCopy} className="text-[#64748b] hover:text-white transition-colors">
+    <div className="relative rounded-lg overflow-hidden border" style={{ borderColor: 'var(--color-border)' }}>
+      <div className="flex items-center justify-between px-4 py-2 border-b" style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}>
+        <span className="text-xs font-mono" style={{ color: 'var(--foreground-muted)' }}>{language}</span>
+        <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={handleCopy} style={{ color: 'var(--foreground-muted)' }}>
           {copied ? <Check size={14} className="text-[#10b981]" /> : <Copy size={14} />}
         </motion.button>
       </div>
-      <pre className="p-4 text-sm font-mono overflow-x-auto bg-[#0a0a0f] text-[#e2e8f0] leading-relaxed">
+      <pre className="p-4 text-sm font-mono overflow-x-auto leading-relaxed" style={{ background: 'var(--color-bg)', color: 'var(--foreground)' }}>
         <code dangerouslySetInnerHTML={{ __html: highlight(code) }} />
       </pre>
     </div>

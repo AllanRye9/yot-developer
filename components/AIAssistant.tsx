@@ -50,15 +50,15 @@ export default function AIAssistant({ category }: AIAssistantProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#12121a] rounded-xl border border-[#1e1e2e] overflow-hidden">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-[#1e1e2e] bg-[#0a0a0f]">
-        <div className="w-7 h-7 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] rounded-lg flex items-center justify-center">
+    <div className="flex flex-col h-full rounded-xl border overflow-hidden" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
+      <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg)' }}>
+        <div className="w-7 h-7 bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-light)] rounded-lg flex items-center justify-center">
           <Sparkles size={14} className="text-white" />
         </div>
-        <span className="font-semibold text-sm text-white">AI Assistant</span>
+        <span className="font-semibold text-sm" style={{ color: 'var(--foreground)' }}>AI Assistant</span>
         <div className="ml-auto flex items-center gap-1">
           <div className="w-2 h-2 bg-[#10b981] rounded-full animate-pulse" />
-          <span className="text-xs text-[#64748b]">Online</span>
+          <span className="text-xs" style={{ color: 'var(--foreground-muted)' }}>Online</span>
         </div>
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
@@ -67,19 +67,26 @@ export default function AIAssistant({ category }: AIAssistantProps) {
             <motion.div key={message.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
               className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {message.role === 'assistant' && (
-                <div className="w-7 h-7 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] rounded-lg flex-shrink-0 flex items-center justify-center mt-1">
+                <div className="w-7 h-7 bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-light)] rounded-lg flex-shrink-0 flex items-center justify-center mt-1">
                   <Bot size={14} className="text-white" />
                 </div>
               )}
-              <div className={`max-w-[85%] rounded-xl px-4 py-3 text-sm leading-relaxed ${
-                message.role === 'user' ? 'bg-[#6366f1] text-white rounded-tr-sm' : 'bg-[#1e1e2e] text-[#e2e8f0] rounded-tl-sm'
-              }`}>
+              <div
+                className={`max-w-[85%] rounded-xl px-4 py-3 text-sm leading-relaxed ${
+                  message.role === 'user' ? 'rounded-tr-sm' : 'rounded-tl-sm'
+                }`}
+                style={
+                  message.role === 'user'
+                    ? { background: 'var(--color-accent)', color: '#fff' }
+                    : { background: 'var(--color-border)', color: 'var(--foreground)' }
+                }
+              >
                 {message.content}
-                {message.streaming && <span className="inline-block w-1 h-4 bg-[#6366f1] ml-1 animate-pulse align-middle" />}
+                {message.streaming && <span className="inline-block w-1 h-4 ml-1 animate-pulse align-middle" style={{ background: 'var(--color-accent)' }} />}
               </div>
               {message.role === 'user' && (
-                <div className="w-7 h-7 bg-[#1e1e2e] rounded-lg flex-shrink-0 flex items-center justify-center mt-1">
-                  <User size={14} className="text-[#64748b]" />
+                <div className="w-7 h-7 rounded-lg flex-shrink-0 flex items-center justify-center mt-1" style={{ background: 'var(--color-border)' }}>
+                  <User size={14} style={{ color: 'var(--foreground-muted)' }} />
                 </div>
               )}
             </motion.div>
@@ -89,25 +96,28 @@ export default function AIAssistant({ category }: AIAssistantProps) {
       </div>
       {messages.length <= 2 && (
         <div className="px-4 pb-2">
-          <p className="text-xs text-[#64748b] mb-2 flex items-center gap-1"><Zap size={10} />Quick suggestions:</p>
+          <p className="text-xs mb-2 flex items-center gap-1" style={{ color: 'var(--foreground-muted)' }}><Zap size={10} />Quick suggestions:</p>
           <div className="flex flex-wrap gap-1">
             {quickSuggestions.slice(0, 4).map((s, i) => (
               <button key={i} onClick={() => handleSend(s)}
-                className="text-xs px-2 py-1 bg-[#1e1e2e] hover:bg-[#2e2e3e] text-[#64748b] hover:text-[#e2e8f0] rounded-md transition-colors">
+                className="text-xs px-2 py-1 rounded-md transition-colors"
+                style={{ background: 'var(--color-border)', color: 'var(--foreground-muted)' }}>
                 {s}
               </button>
             ))}
           </div>
         </div>
       )}
-      <div className="p-4 border-t border-[#1e1e2e]">
+      <div className="p-4 border-t" style={{ borderColor: 'var(--color-border)' }}>
         <div className="flex gap-2">
           <input type="text" value={input} onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder="Ask about DevTools..."
-            className="flex-1 bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2 text-sm text-[#e2e8f0] placeholder-[#64748b] focus:outline-none focus:border-[#6366f1] transition-colors" />
+            className="flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none transition-colors border"
+            style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)', color: 'var(--foreground)' }} />
           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleSend()}
             disabled={!input.trim() || isLoading}
-            className="w-9 h-9 bg-[#6366f1] hover:bg-[#5457e5] disabled:opacity-50 rounded-lg flex items-center justify-center transition-colors">
+            className="w-9 h-9 disabled:opacity-50 rounded-lg flex items-center justify-center transition-opacity hover:opacity-90"
+            style={{ background: 'var(--color-accent)' }}>
             <Send size={14} className="text-white" />
           </motion.button>
         </div>
