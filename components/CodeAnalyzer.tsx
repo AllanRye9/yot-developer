@@ -656,7 +656,6 @@ function convertCode(code: string, from: 'javascript' | 'typescript', to: Conver
         l = l.replace(/\bfunction\s+(\w+)\s*\(([^)]*)\)\s*\{/, 'public static void $1($2) {')
         l = l.replace(/===/, '==')
         l = l.replace(/!==/, '!=')
-        l = l.replace(/\bnull\b/, 'null')
         return '    ' + l
       }),
       '}',
@@ -759,8 +758,6 @@ function convertCode(code: string, from: 'javascript' | 'typescript', to: Conver
         l = l.replace(/\blet\s+(\w+)\s*=/, '\\$$1 =')
         l = l.replace(/\bvar\s+(\w+)\s*=/, '\\$$1 =')
         l = l.replace(/\bfunction\s+(\w+)\s*\(([^)]*)\)\s*\{/, 'function $1($2) {')
-        l = l.replace(/===/, '===')
-        l = l.replace(/!==/, '!==')
         return l
       }),
       '?>',
@@ -782,8 +779,6 @@ function convertCode(code: string, from: 'javascript' | 'typescript', to: Conver
         l = l.replace(/;\s*$/, '')
         l = l.replace(/===/, '==')
         l = l.replace(/!==/, '!=')
-        l = l.replace(/\btrue\b/, 'true')
-        l = l.replace(/\bfalse\b/, 'false')
         l = l.replace(/\bnull\b/, 'nil')
         return l
       }),
@@ -903,7 +898,7 @@ function LinedCodeEditor({
         onChange={e => onChange(e.target.value)}
         onScroll={handleScroll}
         spellCheck={false}
-        className="flex-1 resize-none py-4 px-4 outline-none leading-relaxed"
+        className="code-analyzer-textarea flex-1 resize-none py-4 px-4 outline-none leading-relaxed"
         style={{ background: 'transparent', color: 'var(--foreground)' }}
         placeholder={placeholder}
         onKeyDown={e => {
@@ -1181,7 +1176,8 @@ export default function CodeAnalyzer() {
                         result.logicBlocks.map((block, i) => {
                           const color = BLOCK_COLORS[block.type]
                           const icon = BLOCK_ICONS[block.type]
-                          const lineNum = block.lines.match(/\d+/)?.[0] ? parseInt(block.lines.match(/\d+/)![0]) : undefined
+                          const lineMatch = block.lines.match(/\d+/)
+                          const lineNum = lineMatch ? parseInt(lineMatch[0]) : undefined
                           return (
                             <div
                               key={i}

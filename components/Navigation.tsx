@@ -66,7 +66,7 @@ export default function Navigation() {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0f]/80 backdrop-blur-md border-b border-[#1e1e2e]">
+      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b" style={{ background: 'color-mix(in srgb, var(--color-bg) 85%, transparent)', borderColor: 'var(--color-border)' }}>
         <div className="max-w-7xl mx-auto px-4 h-12 flex items-center justify-between gap-2">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
@@ -75,11 +75,11 @@ export default function Navigation() {
               whileTap={{ scale: 0.95 }}
               className="flex items-center gap-2"
             >
-              <div className="w-7 h-7 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] rounded-lg flex items-center justify-center shadow-lg shadow-[#6366f1]/30">
+              <div className="w-7 h-7 bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-light)] rounded-lg flex items-center justify-center shadow-lg" style={{ boxShadow: 'var(--color-accent) 0 0 10px 0' }}>
                 <Cpu size={15} className="text-white" />
               </div>
-              <span className="font-bold text-base text-white">
-                <span className="text-[#6366f1]">YOT</span>
+              <span className="font-bold text-base" style={{ color: 'var(--foreground)' }}>
+                <span style={{ color: 'var(--color-accent)' }}>YOT</span>
                 <span className="hidden sm:inline"> Developer</span>
               </span>
             </motion.div>
@@ -92,11 +92,12 @@ export default function Navigation() {
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors duration-150 whitespace-nowrap ${
+                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors duration-150 whitespace-nowrap"
+                  style={
                     pathname === href
-                      ? 'bg-[#6366f1] text-white shadow-md shadow-[#6366f1]/30'
-                      : 'text-[#64748b] hover:text-white hover:bg-[#1e1e2e]'
-                  }`}
+                      ? { background: 'var(--color-accent)', color: '#fff' }
+                      : { color: 'var(--foreground-muted)' }
+                  }
                 >
                   <Icon size={14} />
                   <span className="hidden lg:inline">{label}</span>
@@ -110,7 +111,8 @@ export default function Navigation() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setThemeOpen(o => !o)}
-                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium text-[#64748b] hover:text-white hover:bg-[#1e1e2e] transition-colors duration-150"
+                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors duration-150"
+                style={{ color: 'var(--foreground-muted)' }}
                 title="Change theme"
                 aria-label="Change color theme"
                 aria-expanded={themeOpen}
@@ -126,19 +128,21 @@ export default function Navigation() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -6, scale: 0.95 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 top-full mt-2 bg-[#12121a] border border-[#1e1e2e] rounded-xl p-3 shadow-xl shadow-black/50 min-w-[160px] z-50"
+                    className="absolute right-0 top-full mt-2 rounded-xl p-3 shadow-xl min-w-[160px] z-50"
+                    style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}
                   >
-                    <p className="text-xs text-[#64748b] font-medium mb-2 px-1">Color Theme</p>
+                    <p className="text-xs font-medium mb-2 px-1" style={{ color: 'var(--foreground-muted)' }}>Color Theme</p>
                     <div className="space-y-1">
                       {themes.map(theme => (
                         <button
                           key={theme.id}
                           onClick={() => applyTheme(theme.id)}
-                          className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-xs transition-colors ${
+                          className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-xs transition-colors"
+                          style={
                             activeThemeId === theme.id
-                              ? 'bg-[#1e1e2e] text-white'
-                              : 'text-[#64748b] hover:text-white hover:bg-[#1e1e2e]'
-                          }`}
+                              ? { background: 'var(--color-border)', color: 'var(--foreground)' }
+                              : { color: 'var(--foreground-muted)' }
+                          }
                         >
                           <span
                             className="w-4 h-4 rounded-full shrink-0 border-2"
@@ -150,7 +154,7 @@ export default function Navigation() {
                           />
                           {theme.name}
                           {activeThemeId === theme.id && (
-                            <span className="ml-auto text-[10px] text-[#64748b]">✓</span>
+                            <span className="ml-auto text-[10px]" style={{ color: 'var(--foreground-muted)' }}>✓</span>
                           )}
                         </button>
                       ))}
@@ -165,7 +169,8 @@ export default function Navigation() {
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => setMobileOpen(o => !o)}
-            className="md:hidden flex items-center justify-center w-8 h-8 rounded-lg text-[#64748b] hover:text-white hover:bg-[#1e1e2e] transition-colors"
+            className="md:hidden flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
+            style={{ color: 'var(--foreground-muted)' }}
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileOpen}
           >
@@ -198,17 +203,20 @@ export default function Navigation() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 z-50 w-72 bg-[#0d0d14] border-l border-[#1e1e2e] flex flex-col md:hidden shadow-2xl"
+              className="fixed top-0 right-0 bottom-0 z-50 w-72 flex flex-col md:hidden shadow-2xl border-l"
+              style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}
             >
               {/* Drawer header */}
-              <div className="flex items-center justify-between px-5 h-14 border-b border-[#1e1e2e] shrink-0">
+              <div className="flex items-center justify-between px-5 h-14 border-b shrink-0" style={{ borderColor: 'var(--color-border)' }}>
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] rounded-md flex items-center justify-center">
+                  <div className="w-6 h-6 bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-light)] rounded-md flex items-center justify-center">
                     <Cpu size={13} className="text-white" />
                   </div>
-                  <span className="font-bold text-sm text-white"><span className="text-[#6366f1]">YOT</span> Developer</span>
+                  <span className="font-bold text-sm" style={{ color: 'var(--foreground)' }}>
+                    <span style={{ color: 'var(--color-accent)' }}>YOT</span> Developer
+                  </span>
                 </div>
-                <button onClick={() => setMobileOpen(false)} className="w-7 h-7 flex items-center justify-center rounded-lg text-[#64748b] hover:text-white hover:bg-[#1e1e2e] transition-colors">
+                <button onClick={() => setMobileOpen(false)} className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors" style={{ color: 'var(--foreground-muted)' }}>
                   <X size={16} />
                 </button>
               </div>
@@ -223,11 +231,14 @@ export default function Navigation() {
                     transition={{ delay: i * 0.04 }}
                   >
                     <Link href={href}>
-                      <div className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                        pathname === href
-                          ? 'bg-[#6366f1]/15 text-[#6366f1] border border-[#6366f1]/30'
-                          : 'text-[#94a3b8] hover:text-white hover:bg-[#1e1e2e]'
-                      }`}>
+                      <div
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all border"
+                        style={
+                          pathname === href
+                            ? { background: 'color-mix(in srgb, var(--color-accent) 15%, transparent)', color: 'var(--color-accent)', borderColor: 'color-mix(in srgb, var(--color-accent) 30%, transparent)' }
+                            : { color: 'var(--foreground-muted)', borderColor: 'transparent' }
+                        }
+                      >
                         <Icon size={17} />
                         <span>{label}</span>
                         {pathname === href && <ChevronRight size={14} className="ml-auto" />}
@@ -238,8 +249,8 @@ export default function Navigation() {
               </nav>
 
               {/* Theme section in drawer */}
-              <div className="shrink-0 border-t border-[#1e1e2e] px-4 py-4">
-                <p className="text-xs font-semibold text-[#64748b] uppercase tracking-wider mb-3 flex items-center gap-2">
+              <div className="shrink-0 border-t px-4 py-4" style={{ borderColor: 'var(--color-border)' }}>
+                <p className="text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-2" style={{ color: 'var(--foreground-muted)' }}>
                   <Palette size={12} /> Color Theme
                 </p>
                 <div className="grid grid-cols-2 gap-2">
@@ -247,11 +258,12 @@ export default function Navigation() {
                     <button
                       key={theme.id}
                       onClick={() => applyTheme(theme.id)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-all ${
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-all"
+                      style={
                         activeThemeId === theme.id
-                          ? 'bg-[#1e1e2e] text-white ring-1 ring-[#6366f1]/40'
-                          : 'text-[#64748b] hover:text-white hover:bg-[#1e1e2e]'
-                      }`}
+                          ? { background: 'var(--color-border)', color: 'var(--foreground)' }
+                          : { color: 'var(--foreground-muted)' }
+                      }
                     >
                       <span
                         className="w-3 h-3 rounded-full shrink-0 border"

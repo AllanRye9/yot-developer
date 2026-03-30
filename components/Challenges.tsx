@@ -270,6 +270,7 @@ function ChallengeModal({ challenge, isCompleted, onClose, onComplete }: {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default function Challenges({ username: _username, displayName: _displayName }: { username?: string; displayName?: string }) {
+  // username and displayName are reserved for future personalised greeting / progress-tracking features
   const [progress, setProgress] = useState<Progress>({ completed: [], xp: 0 })
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null)
   const [filter, setFilter] = useState<DifficultyLevel | 'All'>('All')
