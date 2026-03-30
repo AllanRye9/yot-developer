@@ -524,8 +524,8 @@ function generateBlockTestCode(block: LogicBlock, fullCode: string): string {
     for (let i = startLine; i < lines.length; i++) {
       funcCode += lines[i] + '\n'
       for (const ch of lines[i]) {
-        if (ch === '{' || ch === '(') { depth++; started = true }
-        if (ch === '}' || ch === ')') depth--
+        if (ch === '{') { depth++; started = true }
+        if (ch === '}') depth--
       }
       if (started && depth <= 0) break
     }
@@ -608,6 +608,10 @@ function runBlockCode(code: string): string[] {
     trace: (...a: unknown[]) => outputs.push('Trace: ' + a.join(' ')),
   }
   try {
+    // The code executed here is the user's own code, pasted into this client-side tool.
+    // It runs entirely in the user's own browser context — there is no server involved.
+    // The mock console intercepts output; all other browser APIs remain accessible,
+    // which is intentional so users can test real browser APIs in their snippets.
     // eslint-disable-next-line no-new-func
     const fn = new Function('console', code)
     fn(mockConsole)

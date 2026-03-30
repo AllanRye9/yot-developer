@@ -27,9 +27,10 @@ body {
   touch-action: manipulation;
 }
 
-/* Smooth theme variable transitions */
-*, *::before, *::after {
-  transition-property: background-color, border-color, color, box-shadow;
+/* Smooth theme variable transitions on key elements */
+nav, main, aside, header, footer,
+div, section, article, button, a, input, textarea, pre, code, span, p, h1, h2, h3, h4, h5, h6 {
+  transition-property: background-color, border-color, color;
   transition-duration: 0.25s;
   transition-timing-function: ease;
 }
