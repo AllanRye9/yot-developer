@@ -77,3 +77,9 @@ export function logoutUser(): void {
 export function getUserByUsername(username: string): AppUser | undefined {
   return getUsers().find(u => u.username === username)
 }
+
+/** Returns true when a regular-user session is currently active. */
+export function isUserSessionActive(): boolean {
+  if (typeof window === 'undefined') return false
+  return Boolean(sessionStorage.getItem('yot-user-session'))
+}

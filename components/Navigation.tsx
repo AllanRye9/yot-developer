@@ -68,6 +68,9 @@ export default function Navigation() {
     { href: '/site-tester', label: 'Site Tester', icon: Shield },
   ]
 
+  // Admin pages use their own full-screen layout — hide the global nav entirely.
+  if (pathname.startsWith('/admin')) return null
+
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b" style={{ background: 'color-mix(in srgb, var(--color-bg) 85%, transparent)', borderColor: 'var(--color-border)' }}>

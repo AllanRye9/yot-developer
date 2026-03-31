@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LogOut, User, UserPlus, Eye, EyeOff, GraduationCap } from 'lucide-react'
+import { LogOut, User, UserPlus, Eye, EyeOff, GraduationCap, ShieldAlert } from 'lucide-react'
 import {
   loginUser,
   registerUser,
@@ -10,6 +10,7 @@ import {
   logoutUser,
   getUserByUsername,
 } from '@/lib/user-auth'
+import { isAdminSessionActive } from '@/lib/admin-auth'
 
 interface UserAuthProps {
   children: (username: string, displayName: string) => React.ReactNode
@@ -19,6 +20,7 @@ export default function UserAuth({ children }: UserAuthProps) {
   const [session, setSession] = useState<string | null>(null)
   const [displayName, setDisplayName] = useState('')
   const [ready, setReady] = useState(false)
+  const [adminActive, setAdminActive] = useState(false)
   const [tab, setTab] = useState<'login' | 'register'>('login')
 
   // Login form state
@@ -39,6 +41,7 @@ export default function UserAuth({ children }: UserAuthProps) {
   const [regLoading, setRegLoading] = useState(false)
 
   useEffect(() => {
+    setAdminActive(isAdminSessionActive())
     const s = getUserSession()
     if (s) {
       const user = getUserByUsername(s)
@@ -95,6 +98,28 @@ export default function UserAuth({ children }: UserAuthProps) {
   }
 
   if (!ready) return null
+
+  // Block all user sign-in while an admin session is active
+  if (adminActive) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md bg-[var(--color-card)] border border-[#ef4444]/30 rounded-2xl p-8 text-center shadow-2xl shadow-black/40"
+        >
+          <div className="w-14 h-14 mx-auto mb-4 bg-[#ef4444]/15 border border-[#ef4444]/30 rounded-xl flex items-center justify-center">
+            <ShieldAlert size={28} className="text-[#ef4444]" />
+          </div>
+          <h2 className="text-lg font-bold text-[var(--foreground)] mb-2">Sign-in Locked</h2>
+          <p className="text-sm text-[var(--foreground-muted)]">
+            An administrator is currently logged in. User sign-in is disabled while an admin
+            session is active. Please try again later.
+          </p>
+        </motion.div>
+      </div>
+    )
+  }
 
   if (session) {
     return (

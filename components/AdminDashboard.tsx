@@ -2,32 +2,52 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+  BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  AreaChart, Area,
 } from 'recharts'
-import { Users, Activity, Brain, TrendingUp, TrendingDown, Globe, type LucideIcon } from 'lucide-react'
+import {
+  Users, Activity, Brain, TrendingUp, TrendingDown, Globe,
+  UserCheck, ShieldCheck, Clock, Database, type LucideIcon,
+} from 'lucide-react'
 import { dailyStats, featureUsage, experienceLevels, recentActivity, adminStats } from '@/lib/mock-data'
 import { getVisitorStats, getRealFeatureUsage } from '@/lib/analytics'
+import { getUsers } from '@/lib/user-auth'
+import { getAdminUsers } from '@/lib/admin-auth'
 
 const BAR_RADIUS_HORIZONTAL = [0, 4, 4, 0] as [number, number, number, number]
-const BAR_RADIUS_VERTICAL = [3, 3, 0, 0] as [number, number, number, number]
+
+const TOOLTIP_STYLE = {
+  background: '#12121a',
+  border: '1px solid #1e1e2e',
+  borderRadius: '8px',
+  color: '#e2e8f0',
+}
 
 const StatCard = ({
-  title, value, change, icon: Icon, color,
+  title, value, change, icon: Icon, color, subtitle,
 }: {
-  title: string; value: string | number; change: number; icon: LucideIcon; color: string
+  title: string; value: string | number; change: number; icon: LucideIcon; color: string; subtitle?: string
 }) => (
-  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2 }} className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-6">
-    <div className="flex items-center justify-between mb-4">
-      <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: `${color}20`, border: `1px solid ${color}30` }}>
-        <Icon size={20} style={{ color }} />
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    whileHover={{ y: -2, boxShadow: `0 8px 24px ${color}18` }}
+    className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-5 transition-shadow"
+  >
+    <div className="flex items-center justify-between mb-3">
+      <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${color}20`, border: `1px solid ${color}30` }}>
+        <Icon size={18} style={{ color }} />
       </div>
-      <div className={`flex items-center gap-1 text-sm ${change >= 0 ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>
-        {change >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}{Math.abs(change)}%
+      <div className={`flex items-center gap-1 text-xs font-medium ${change >= 0 ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>
+        {change >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}{Math.abs(change)}%
       </div>
     </div>
-    <div className="text-2xl font-bold text-[var(--foreground)] mb-1">{typeof value === 'number' ? value.toLocaleString() : value}</div>
-    <div className="text-sm text-[var(--foreground-muted)]">{title}</div>
+    <div className="text-2xl font-bold text-[var(--foreground)] mb-0.5">
+      {typeof value === 'number' ? value.toLocaleString() : value}
+    </div>
+    <div className="text-xs text-[var(--foreground-muted)]">{title}</div>
+    {subtitle && <div className="text-[10px] mt-1" style={{ color }}>{subtitle}</div>}
   </motion.div>
 )
 
@@ -35,10 +55,15 @@ export default function AdminDashboard() {
   const [activeChart, setActiveChart] = useState<'users' | 'experiments' | 'queries'>('users')
   const [visitorStats, setVisitorStats] = useState(getVisitorStats())
   const [realFeatures, setRealFeatures] = useState(getRealFeatureUsage())
+  const [registeredUsers, setRegisteredUsers] = useState(0)
+  const [adminUser, setAdminUser] = useState<string>('')
 
   useEffect(() => {
     setVisitorStats(getVisitorStats())
     setRealFeatures(getRealFeatureUsage())
+    setRegisteredUsers(getUsers().length)
+    const admins = getAdminUsers()
+    if (admins.length > 0) setAdminUser(admins[0]?.username ?? '')
   }, [])
 
   const chartDataKey = activeChart === 'users' ? 'activeUsers' : activeChart === 'experiments' ? 'experiments' : 'aiQueries'
@@ -49,19 +74,111 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Users" value={adminStats.totalUsers} change={12} icon={Users} color="#6366f1" />
-        <StatCard title="Active Sessions" value={adminStats.activeSessions} change={-3} icon={Activity} color="#06b6d4" />
-        <StatCard title="Page Visits" value={visitorStats.totalVisits || adminStats.experimentsRun} change={24} icon={Brain} color="#10b981" />
-        <StatCard title="AI Queries" value={adminStats.aiQueries} change={18} icon={Brain} color="#8b5cf6" />
+      {/* Page heading */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-[var(--foreground)]">Admin Dashboard</h1>
+          <p className="text-sm text-[var(--foreground-muted)] mt-0.5">
+            Platform analytics &amp; system overview
+          </p>
+        </div>
+        <div className="hidden sm:flex items-center gap-2 text-xs text-[var(--foreground-muted)]">
+          <Clock size={12} />
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        </div>
+      </div>
+
+      {/* KPI Stat Cards */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard
+          title="Registered Users"
+          value={registeredUsers || adminStats.totalUsers}
+          change={12}
+          icon={Users}
+          color="#6366f1"
+          subtitle={registeredUsers > 0 ? `${registeredUsers} real accounts` : 'mock data'}
+        />
+        <StatCard
+          title="Active Sessions"
+          value={adminStats.activeSessions}
+          change={-3}
+          icon={Activity}
+          color="#06b6d4"
+        />
+        <StatCard
+          title="Page Visits"
+          value={visitorStats.totalVisits || adminStats.experimentsRun}
+          change={24}
+          icon={Globe}
+          color="#10b981"
+          subtitle={visitorStats.totalVisits > 0 ? 'live analytics' : undefined}
+        />
+        <StatCard
+          title="AI Queries"
+          value={adminStats.aiQueries}
+          change={18}
+          icon={Brain}
+          color="#8b5cf6"
+        />
+      </div>
+
+      {/* System status row */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-4 flex items-center gap-4"
+        >
+          <div className="w-9 h-9 bg-[#10b981]/15 border border-[#10b981]/30 rounded-lg flex items-center justify-center shrink-0">
+            <UserCheck size={18} className="text-[#10b981]" />
+          </div>
+          <div>
+            <p className="text-xs text-[var(--foreground-muted)]">Admin Account</p>
+            <p className="text-sm font-semibold text-[var(--foreground)]">{adminUser || '—'}</p>
+            <p className="text-[10px] text-[#10b981] font-medium mt-0.5">Superadmin · Active</p>
+          </div>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-4 flex items-center gap-4"
+        >
+          <div className="w-9 h-9 bg-[#6366f1]/15 border border-[#6366f1]/30 rounded-lg flex items-center justify-center shrink-0">
+            <ShieldCheck size={18} className="text-[#6366f1]" />
+          </div>
+          <div>
+            <p className="text-xs text-[var(--foreground-muted)]">Auth Status</p>
+            <p className="text-sm font-semibold text-[var(--foreground)]">User sign-in locked</p>
+            <p className="text-[10px] text-[#6366f1] font-medium mt-0.5">While admin session is active</p>
+          </div>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-4 flex items-center gap-4"
+        >
+          <div className="w-9 h-9 bg-[#f59e0b]/15 border border-[#f59e0b]/30 rounded-lg flex items-center justify-center shrink-0">
+            <Database size={18} className="text-[#f59e0b]" />
+          </div>
+          <div>
+            <p className="text-xs text-[var(--foreground-muted)]">Storage</p>
+            <p className="text-sm font-semibold text-[var(--foreground)]">localStorage</p>
+            <p className="text-[10px] text-[#f59e0b] font-medium mt-0.5">Demo mode (client-side)</p>
+          </div>
+        </motion.div>
       </div>
 
       {/* Visitor Stats */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-6">
         <h3 className="font-semibold text-[var(--foreground)] mb-4 flex items-center gap-2">
           <Globe size={16} className="text-[#6366f1]" />
-          Visitor Stats (Real Analytics)
+          Visitor Stats
+          {visitorStats.totalVisits > 0 && (
+            <span className="text-[10px] bg-[#10b981]/15 text-[#10b981] border border-[#10b981]/20 rounded px-1.5 py-0.5 font-semibold uppercase tracking-wider">Live</span>
+          )}
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
           <div className="bg-[var(--color-bg)] rounded-lg p-4 border border-[var(--color-border)]">
@@ -91,13 +208,19 @@ export default function AdminDashboard() {
           <>
             <p className="text-xs text-[var(--foreground-muted)] mb-2">Visits Per Day (last 14 days)</p>
             <ResponsiveContainer width="100%" height={120}>
-              <BarChart data={visitorStats.visitsPerDay}>
+              <AreaChart data={visitorStats.visitsPerDay}>
+                <defs>
+                  <linearGradient id="visitGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" vertical={false} />
                 <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} />
                 <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '8px', color: '#e2e8f0' }} />
-                <Bar dataKey="count" fill="#6366f1" radius={BAR_RADIUS_VERTICAL} />
-              </BarChart>
+                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                <Area type="monotone" dataKey="count" stroke="#6366f1" fill="url(#visitGrad)" strokeWidth={2} dot={false} />
+              </AreaChart>
             </ResponsiveContainer>
           </>
         )}
@@ -112,50 +235,63 @@ export default function AdminDashboard() {
               <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" horizontal={false} />
               <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} tickLine={false} axisLine={false} />
               <YAxis type="category" dataKey="language" tick={{ fill: '#64748b', fontSize: 11 }} tickLine={false} axisLine={false} width={80} />
-              <Tooltip contentStyle={{ background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '8px', color: '#e2e8f0' }} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} />
               <Bar dataKey="count" fill="#06b6d4" radius={BAR_RADIUS_HORIZONTAL} />
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
       )}
 
-      {/* Activity Over Time */}
+      {/* Activity Over Time — Area chart */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="font-semibold text-[var(--foreground)]">Activity Over Time (30 Days)</h3>
-          <div className="flex gap-2">
+          <div>
+            <h3 className="font-semibold text-[var(--foreground)]">Activity Over Time</h3>
+            <p className="text-xs text-[var(--foreground-muted)] mt-0.5">Last 30 days</p>
+          </div>
+          <div className="flex gap-1 bg-[var(--color-bg)] rounded-lg p-1 border border-[var(--color-border)]">
             {(['users', 'experiments', 'queries'] as const).map(t => (
               <button key={t} onClick={() => setActiveChart(t)}
-                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${activeChart === t ? 'bg-[#6366f1] text-[var(--foreground)]' : 'text-[var(--foreground-muted)] hover:text-white'}`}>
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${activeChart === t ? 'text-white' : 'text-[var(--foreground-muted)] hover:text-white'}`}
+                style={activeChart === t ? { background: chartColor } : {}}
+              >
                 {t === 'users' ? 'Users' : t === 'experiments' ? 'Experiments' : 'AI Queries'}
               </button>
             ))}
           </div>
         </div>
-        <ResponsiveContainer width="100%" height={250}>
-          <LineChart data={dailyStats}>
+        <ResponsiveContainer width="100%" height={260}>
+          <AreaChart data={dailyStats}>
+            <defs>
+              <linearGradient id="actGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={chartColor} stopOpacity={0.25} />
+                <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
+              </linearGradient>
+            </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
             <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 11 }} tickLine={false} interval={4} />
             <YAxis tick={{ fill: '#64748b', fontSize: 11 }} tickLine={false} axisLine={false} />
-            <Tooltip contentStyle={{ background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '8px', color: '#e2e8f0' }} itemStyle={{ color: chartColor }} />
-            <Line type="monotone" dataKey={chartDataKey} stroke={chartColor} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-          </LineChart>
+            <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={{ color: chartColor }} />
+            <Area type="monotone" dataKey={chartDataKey} stroke={chartColor} fill="url(#actGrad)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+          </AreaChart>
         </ResponsiveContainer>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Feature Usage */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-6">
-          <h3 className="font-semibold text-[var(--foreground)] mb-2">Feature Usage</h3>
-          {realFeatures.length > 0 && (
-            <p className="text-xs text-[#10b981] mb-4">● Live data from your session</p>
-          )}
-          <ResponsiveContainer width="100%" height={250}>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-[var(--foreground)]">Feature Usage</h3>
+            {realFeatures.length > 0 && (
+              <span className="text-[10px] bg-[#10b981]/15 text-[#10b981] border border-[#10b981]/20 rounded px-1.5 py-0.5 font-semibold uppercase tracking-wider">Live session</span>
+            )}
+          </div>
+          <ResponsiveContainer width="100%" height={260}>
             <BarChart data={displayedFeatures} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" horizontal={false} />
               <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} tickLine={false} axisLine={false} />
               <YAxis type="category" dataKey="feature" tick={{ fill: '#64748b', fontSize: 11 }} tickLine={false} axisLine={false} width={70} />
-              <Tooltip contentStyle={{ background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '8px', color: '#e2e8f0' }} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} />
               <Bar dataKey="count" fill="#6366f1" radius={BAR_RADIUS_HORIZONTAL} />
             </BarChart>
           </ResponsiveContainer>
@@ -164,13 +300,13 @@ export default function AdminDashboard() {
         {/* User Experience Levels */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-6">
           <h3 className="font-semibold text-[var(--foreground)] mb-6">User Experience Levels</h3>
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={210}>
             <PieChart>
-              <Pie data={experienceLevels} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3} dataKey="count">
+              <Pie data={experienceLevels} cx="50%" cy="50%" innerRadius={65} outerRadius={95} paddingAngle={3} dataKey="count">
                 {experienceLevels.map((entry, index) => <Cell key={index} fill={entry.color} />)}
               </Pie>
-              <Tooltip contentStyle={{ background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '8px', color: '#e2e8f0' }} />
-              <Legend formatter={(value) => <span style={{ color: '#64748b', fontSize: '12px' }}>{value}</span>} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} />
+              <Legend formatter={(value) => <span style={{ color: '#94a3b8', fontSize: '12px' }}>{value}</span>} />
             </PieChart>
           </ResponsiveContainer>
         </motion.div>
@@ -179,14 +315,19 @@ export default function AdminDashboard() {
       {/* Recent Activity */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-6">
         <h3 className="font-semibold text-[var(--foreground)] mb-4">Recent Activity</h3>
-        <div className="space-y-3">
+        <div className="space-y-1">
           {recentActivity.map((activity, i) => (
             <div key={i} className="flex items-center justify-between py-3 border-b border-[var(--color-border)] last:border-0">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-[#1e1e2e] rounded-full flex items-center justify-center text-xs font-bold text-[#6366f1]">{activity.user[0]}</div>
-                <div><p className="text-sm font-medium text-[var(--foreground)]">{activity.user}</p><p className="text-xs text-[var(--foreground-muted)]">{activity.action}</p></div>
+                <div className="w-8 h-8 bg-gradient-to-br from-[#6366f1]/30 to-[#8b5cf6]/30 border border-[#6366f1]/20 rounded-full flex items-center justify-center text-xs font-bold text-[#a5b4fc]">
+                  {activity.user[0]}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[var(--foreground)]">{activity.user}</p>
+                  <p className="text-xs text-[var(--foreground-muted)]">{activity.action}</p>
+                </div>
               </div>
-              <span className="text-xs text-[var(--foreground-muted)]">{activity.time}</span>
+              <span className="text-xs text-[var(--foreground-muted)] shrink-0">{activity.time}</span>
             </div>
           ))}
         </div>
