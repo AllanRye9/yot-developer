@@ -24,10 +24,13 @@ class _SiteTesterScreenState extends State<SiteTesterScreen> {
     try {
       final api = context.read<ApiService>();
       final result = await api.testSite(url);
+      if (!mounted) return;
       setState(() { _result = result; _loading = false; });
     } on ApiException catch (e) {
+      if (!mounted) return;
       setState(() { _error = e.message; _loading = false; });
     } catch (e) {
+      if (!mounted) return;
       setState(() { _error = e.toString(); _loading = false; });
     }
   }
@@ -40,8 +43,13 @@ class _SiteTesterScreenState extends State<SiteTesterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.yotColors;
     return Scaffold(
-      appBar: AppBar(title: const Text('Security Tester')),
+      backgroundColor: c.backgroundColor,
+      appBar: AppBar(
+        backgroundColor: c.cardColor,
+        title: Text('Security Tester', style: TextStyle(color: c.textPrimary)),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -52,9 +60,9 @@ class _SiteTesterScreenState extends State<SiteTesterScreen> {
               Expanded(
                 child: TextField(
                   controller: _urlController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: 'https://example.com',
-                    prefixIcon: Icon(Icons.security, size: 18),
+                    prefixIcon: Icon(Icons.security, size: 18, color: c.mutedColor),
                   ),
                   onSubmitted: (_) => _testSite(),
                   keyboardType: TextInputType.url,
@@ -72,28 +80,28 @@ class _SiteTesterScreenState extends State<SiteTesterScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppTheme.errorColor.withAlpha(20),
+                    color: c.errorColor.withAlpha(20),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.errorColor.withAlpha(77)),
+                    border: Border.all(color: c.errorColor.withAlpha(77)),
                   ),
                   child: Row(children: [
-                    const Icon(Icons.error_outline, color: AppTheme.errorColor),
+                    Icon(Icons.error_outline, color: c.errorColor),
                     const SizedBox(width: 10),
-                    Expanded(child: Text(_error!, style: const TextStyle(color: AppTheme.errorColor))),
+                    Expanded(child: Text(_error!, style: TextStyle(color: c.errorColor))),
                   ]),
                 ),
               ))
 
             else if (_result != null)
-              Expanded(child: _ResultView(result: _result!))
+              Expanded(child: _ResultView(result: _result!, colors: c))
 
             else
               Expanded(child: Center(
                 child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const Icon(Icons.shield_outlined, size: 56, color: AppTheme.mutedColor),
+                  Icon(Icons.shield_outlined, size: 56, color: c.mutedColor),
                   const SizedBox(height: 14),
-                  const Text('Enter a URL to test its security headers',
-                      style: TextStyle(color: AppTheme.mutedColor),
+                  Text('Enter a URL to test its security headers',
+                      style: TextStyle(color: c.mutedColor),
                       textAlign: TextAlign.center),
                 ]),
               )),
@@ -105,14 +113,14 @@ class _SiteTesterScreenState extends State<SiteTesterScreen> {
 }
 
 class _ResultView extends StatelessWidget {
-  const _ResultView({required this.result});
+  const _ResultView({required this.result, required this.colors});
   final SiteTestResult result;
+  final YotColors colors;
 
   @override
   Widget build(BuildContext context) {
     final passed = result.checks.where((c) => c.passed).length;
     final total = result.checks.length;
-    final pct = total > 0 ? passed / total : 0.0;
 
     return Column(
       children: [
@@ -120,24 +128,24 @@ class _ResultView extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppTheme.cardColor,
+            color: colors.cardColor,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppTheme.borderColor),
+            border: Border.all(color: colors.borderColor),
           ),
           child: Row(children: [
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Score', style: const TextStyle(color: AppTheme.mutedColor, fontSize: 12)),
+              Text('Score', style: TextStyle(color: colors.mutedColor, fontSize: 12)),
               Text('${result.score}/100',
-                  style: const TextStyle(color: AppTheme.textPrimary, fontSize: 28, fontWeight: FontWeight.bold)),
+                  style: TextStyle(color: colors.textPrimary, fontSize: 28, fontWeight: FontWeight.bold)),
             ]),
             const SizedBox(width: 16),
             Expanded(child: ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: result.score / 100,
-                backgroundColor: AppTheme.borderColor,
+                backgroundColor: colors.borderColor,
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  result.score >= 70 ? AppTheme.successColor : AppTheme.errorColor,
+                  result.score >= 70 ? colors.successColor : colors.errorColor,
                 ),
                 minHeight: 8,
               ),
@@ -146,7 +154,7 @@ class _ResultView extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         Text('$passed / $total checks passed',
-            style: const TextStyle(color: AppTheme.mutedColor, fontSize: 13)),
+            style: TextStyle(color: colors.mutedColor, fontSize: 13)),
         const SizedBox(height: 12),
         Expanded(
           child: ListView.separated(
@@ -157,25 +165,25 @@ class _ResultView extends StatelessWidget {
               return Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: check.passed ? AppTheme.successColor.withAlpha(20) : AppTheme.errorColor.withAlpha(20),
+                  color: check.passed ? colors.successColor.withAlpha(20) : colors.errorColor.withAlpha(20),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: check.passed ? AppTheme.successColor.withAlpha(77) : AppTheme.errorColor.withAlpha(77),
+                    color: check.passed ? colors.successColor.withAlpha(77) : colors.errorColor.withAlpha(77),
                   ),
                 ),
                 child: Row(children: [
                   Icon(
                     check.passed ? Icons.check_circle_outline : Icons.cancel_outlined,
                     size: 16,
-                    color: check.passed ? AppTheme.successColor : AppTheme.errorColor,
+                    color: check.passed ? colors.successColor : colors.errorColor,
                   ),
                   const SizedBox(width: 10),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text(check.name,
-                        style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+                        style: TextStyle(color: colors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
                     if (check.description.isNotEmpty)
                       Text(check.description,
-                          style: const TextStyle(color: AppTheme.mutedColor, fontSize: 12)),
+                          style: TextStyle(color: colors.mutedColor, fontSize: 12)),
                   ])),
                 ]),
               );

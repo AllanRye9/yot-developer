@@ -52,11 +52,18 @@ class _PlaygroundScreenState extends State<PlaygroundScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.yotColors;
     return Scaffold(
+      backgroundColor: c.backgroundColor,
       appBar: AppBar(
-        title: const Text('Playground'),
+        backgroundColor: c.cardColor,
+        title: Text('Playground', style: TextStyle(color: c.textPrimary)),
         actions: [
-          IconButton(icon: const Icon(Icons.copy), onPressed: _copy, tooltip: 'Copy code'),
+          IconButton(
+            icon: Icon(Icons.copy, color: c.mutedColor),
+            onPressed: _copy,
+            tooltip: 'Copy code',
+          ),
         ],
       ),
       body: Column(
@@ -67,27 +74,34 @@ class _PlaygroundScreenState extends State<PlaygroundScreen> {
             child: Container(
               margin: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.cardColor,
+                color: c.cardColor,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppTheme.borderColor),
+                border: Border.all(color: c.borderColor),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: const BoxDecoration(
-                      border: Border(bottom: BorderSide(color: AppTheme.borderColor)),
+                    decoration: BoxDecoration(
+                      border: Border(bottom: BorderSide(color: c.borderColor)),
                     ),
                     child: Row(
                       children: [
-                        const Text('editor.js', style: TextStyle(color: AppTheme.mutedColor, fontSize: 12, fontFamily: 'Courier New')),
+                        Text(
+                          'editor.js',
+                          style: TextStyle(
+                            color: c.mutedColor,
+                            fontSize: 12,
+                            fontFamily: 'Courier New',
+                          ),
+                        ),
                         const Spacer(),
                         Container(width: 10, height: 10, decoration: const BoxDecoration(color: Color(0xFFEF4444), shape: BoxShape.circle)),
                         const SizedBox(width: 5),
                         Container(width: 10, height: 10, decoration: const BoxDecoration(color: Color(0xFFF59E0B), shape: BoxShape.circle)),
                         const SizedBox(width: 5),
-                        Container(width: 10, height: 10, decoration: const BoxDecoration(color: AppTheme.successColor, shape: BoxShape.circle)),
+                        Container(width: 10, height: 10, decoration: BoxDecoration(color: c.successColor, shape: BoxShape.circle)),
                       ],
                     ),
                   ),
@@ -96,8 +110,8 @@ class _PlaygroundScreenState extends State<PlaygroundScreen> {
                       controller: _controller,
                       maxLines: null,
                       expands: true,
-                      style: const TextStyle(
-                        color: AppTheme.textPrimary,
+                      style: TextStyle(
+                        color: c.textPrimary,
                         fontFamily: 'Courier New',
                         fontSize: 13,
                         height: 1.6,
@@ -134,27 +148,38 @@ class _PlaygroundScreenState extends State<PlaygroundScreen> {
             child: Container(
               margin: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.cardColor,
+                color: c.cardColor,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppTheme.borderColor),
+                border: Border.all(color: c.borderColor),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(14, 8, 14, 8),
-                    child: Text('Output', style: TextStyle(color: AppTheme.mutedColor, fontSize: 12, fontFamily: 'Courier New')),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
+                    child: Text(
+                      'Output',
+                      style: TextStyle(
+                        color: c.mutedColor,
+                        fontSize: 12,
+                        fontFamily: 'Courier New',
+                      ),
+                    ),
                   ),
-                  const Divider(height: 1, color: AppTheme.borderColor),
+                  Divider(height: 1, color: c.borderColor),
                   Expanded(
                     child: ListView.builder(
                       padding: const EdgeInsets.all(12),
                       itemCount: _output.isEmpty ? 1 : _output.length,
                       itemBuilder: (_, i) {
                         if (_output.isEmpty) {
-                          return const Text(
+                          return Text(
                             'Run your code to see output',
-                            style: TextStyle(color: AppTheme.mutedColor, fontFamily: 'Courier New', fontSize: 13),
+                            style: TextStyle(
+                              color: c.mutedColor,
+                              fontFamily: 'Courier New',
+                              fontSize: 13,
+                            ),
                           );
                         }
                         final line = _output[i];
@@ -163,7 +188,7 @@ class _PlaygroundScreenState extends State<PlaygroundScreen> {
                           child: Text(
                             line,
                             style: TextStyle(
-                              color: line.startsWith('Error') ? AppTheme.errorColor : AppTheme.textPrimary,
+                              color: line.startsWith('Error') ? c.errorColor : c.textPrimary,
                               fontFamily: 'Courier New',
                               fontSize: 13,
                             ),
