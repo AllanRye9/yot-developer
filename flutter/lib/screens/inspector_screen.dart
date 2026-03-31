@@ -34,8 +34,13 @@ class _InspectorScreenState extends State<InspectorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.yotColors;
     return Scaffold(
-      appBar: AppBar(title: const Text('DOM Inspector')),
+      backgroundColor: c.backgroundColor,
+      appBar: AppBar(
+        backgroundColor: c.cardColor,
+        title: Text('DOM Inspector', style: TextStyle(color: c.textPrimary)),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -44,9 +49,9 @@ class _InspectorScreenState extends State<InspectorScreen> {
               Expanded(
                 child: TextField(
                   controller: _urlController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: 'https://example.com',
-                    prefixIcon: Icon(Icons.search, size: 18),
+                    prefixIcon: Icon(Icons.search, size: 18, color: c.mutedColor),
                   ),
                   onSubmitted: (_) => _inspect(),
                   keyboardType: TextInputType.url,
@@ -63,15 +68,15 @@ class _InspectorScreenState extends State<InspectorScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppTheme.cardColor,
+                    color: c.cardColor,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.borderColor),
+                    border: Border.all(color: c.borderColor),
                   ),
                   child: SingleChildScrollView(
                     child: Text(
                       _result!,
-                      style: const TextStyle(
-                        color: AppTheme.textPrimary,
+                      style: TextStyle(
+                        color: c.textPrimary,
                         fontFamily: 'Courier New',
                         fontSize: 12,
                         height: 1.6,
@@ -84,9 +89,9 @@ class _InspectorScreenState extends State<InspectorScreen> {
               Expanded(
                 child: Center(
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    const Icon(Icons.document_scanner_outlined, size: 48, color: AppTheme.mutedColor),
+                    Icon(Icons.document_scanner_outlined, size: 48, color: c.mutedColor),
                     const SizedBox(height: 12),
-                    const Text('Enter a URL to inspect its DOM', style: TextStyle(color: AppTheme.mutedColor)),
+                    Text('Enter a URL to inspect its DOM', style: TextStyle(color: c.mutedColor)),
                   ]),
                 ),
               ),

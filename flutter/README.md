@@ -24,11 +24,12 @@ flutter run
 ```
 flutter/
 ├── lib/
-│   ├── main.dart              # Entry point, router, AppShell
+│   ├── main.dart              # Entry point, router, AppShell (with theme picker)
 │   ├── theme/
-│   │   └── app_theme.dart     # Design tokens (colors, typography, widgets)
+│   │   └── app_theme.dart     # Design tokens + YotColors ThemeExtension (dark/white/ocean)
 │   ├── services/
-│   │   └── api_service.dart   # REST API client (http package)
+│   │   ├── api_service.dart   # REST API client (http package)
+│   │   └── theme_notifier.dart # ThemeNotifier ChangeNotifier (SharedPreferences)
 │   ├── models/
 │   │   └── models.dart        # Shared data classes
 │   ├── screens/

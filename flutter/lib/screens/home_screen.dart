@@ -6,30 +6,21 @@ class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   static const _categories = [
-    {'icon': Icons.terminal, 'name': 'Console', 'desc': 'Logging, debugging and output inspection'},
-    {'icon': Icons.network_check, 'name': 'Network', 'desc': 'XHR, Fetch, WebSockets and performance'},
-    {'icon': Icons.speed, 'name': 'Performance', 'desc': 'Profiling and runtime measurements'},
-    {'icon': Icons.layers, 'name': 'Elements', 'desc': 'DOM structure and CSS styles'},
-    {'icon': Icons.storage, 'name': 'Storage', 'desc': 'Cookies, localStorage and IndexedDB'},
-    {'icon': Icons.bug_report, 'name': 'Debugger', 'desc': 'Breakpoints and call-stack inspection'},
-    {'icon': Icons.memory, 'name': 'Memory', 'desc': 'Heap snapshots and allocation tracking'},
-    {'icon': Icons.security, 'name': 'Security', 'desc': 'HTTPS, CSP and certificate details'},
+    {'icon': Icons.terminal,     'name': 'Console',     'desc': 'Logging, debugging and output inspection'},
+    {'icon': Icons.network_check,'name': 'Network',     'desc': 'XHR, Fetch, WebSockets and performance'},
+    {'icon': Icons.speed,        'name': 'Performance', 'desc': 'Profiling and runtime measurements'},
+    {'icon': Icons.layers,       'name': 'Elements',    'desc': 'DOM structure and CSS styles'},
+    {'icon': Icons.storage,      'name': 'Storage',     'desc': 'Cookies, localStorage and IndexedDB'},
+    {'icon': Icons.bug_report,   'name': 'Debugger',    'desc': 'Breakpoints and call-stack inspection'},
+    {'icon': Icons.memory,       'name': 'Memory',      'desc': 'Heap snapshots and allocation tracking'},
+    {'icon': Icons.security,     'name': 'Security',    'desc': 'HTTPS, CSP and certificate details'},
   ];
 
   @override
   Widget build(BuildContext context) {
+    final c = context.yotColors;
     return Scaffold(
-      appBar: AppBar(
-        title: RichText(
-          text: const TextSpan(
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            children: [
-              TextSpan(text: 'YOT ', style: TextStyle(color: AppTheme.accentColor)),
-              TextSpan(text: 'Developer', style: TextStyle(color: AppTheme.textPrimary)),
-            ],
-          ),
-        ),
-      ),
+      backgroundColor: c.backgroundColor,
       body: CustomScrollView(
         slivers: [
           SliverPadding(
@@ -38,18 +29,18 @@ class HomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'DevTools Explorer',
                     style: TextStyle(
-                      color: AppTheme.textPrimary,
+                      color: c.textPrimary,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'Explore browser DevTools concepts with interactive examples',
-                    style: TextStyle(color: AppTheme.mutedColor, fontSize: 14),
+                    style: TextStyle(color: c.mutedColor, fontSize: 14),
                   ),
                   const SizedBox(height: 20),
                 ],
@@ -96,7 +87,14 @@ class _CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.yotColors;
     return Card(
+      color: c.cardColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: c.borderColor),
+      ),
+      elevation: 0,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () {},
@@ -109,17 +107,17 @@ class _CategoryCard extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: AppTheme.accentColor.withAlpha(26),
+                  color: c.accentColor.withAlpha(26),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.accentColor.withAlpha(77)),
+                  border: Border.all(color: c.accentColor.withAlpha(77)),
                 ),
-                child: Icon(icon, size: 18, color: AppTheme.accentColor),
+                child: Icon(icon, size: 18, color: c.accentColor),
               ),
               const SizedBox(height: 10),
               Text(
                 name,
-                style: const TextStyle(
-                  color: AppTheme.textPrimary,
+                style: TextStyle(
+                  color: c.textPrimary,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
@@ -127,7 +125,7 @@ class _CategoryCard extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 desc,
-                style: const TextStyle(color: AppTheme.mutedColor, fontSize: 11),
+                style: TextStyle(color: c.mutedColor, fontSize: 11),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),

@@ -42,6 +42,7 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
       _completed.add(ch.id);
       _xp += ch.xp;
     });
+    final c = context.yotColors;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(children: [
@@ -49,7 +50,7 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
           const SizedBox(width: 8),
           Text('+${ch.xp} XP – ${ch.title} complete!'),
         ]),
-        backgroundColor: AppTheme.accentColor,
+        backgroundColor: c.accentColor,
         duration: const Duration(seconds: 3),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -59,8 +60,13 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.yotColors;
     return Scaffold(
-      appBar: AppBar(title: const Text('Challenges')),
+      backgroundColor: c.backgroundColor,
+      appBar: AppBar(
+        backgroundColor: c.cardColor,
+        title: Text('Challenges', style: TextStyle(color: c.textPrimary)),
+      ),
       body: CustomScrollView(
         slivers: [
           // Stats + XP bar
@@ -72,11 +78,11 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                   // Stat cards
                   Row(
                     children: [
-                      _StatCard(label: 'Level', value: '$_level', color: AppTheme.accentColor),
+                      _StatCard(label: 'Level', value: '$_level', color: c.accentColor, colors: c),
                       const SizedBox(width: 10),
-                      _StatCard(label: 'XP', value: '$_xp', color: AppTheme.warningColor),
+                      _StatCard(label: 'XP', value: '$_xp', color: c.warningColor, colors: c),
                       const SizedBox(width: 10),
-                      _StatCard(label: 'Done', value: '${_completed.length}/${_challenges.length}', color: AppTheme.successColor),
+                      _StatCard(label: 'Done', value: '${_completed.length}/${_challenges.length}', color: c.successColor, colors: c),
                     ],
                   ),
                   const SizedBox(height: 14),
@@ -88,9 +94,9 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('Level $_level Progress',
-                              style: const TextStyle(color: AppTheme.mutedColor, fontSize: 12)),
+                              style: TextStyle(color: c.mutedColor, fontSize: 12)),
                           Text('${500 - (_xp % 500)} XP to Level ${_level + 1}',
-                              style: const TextStyle(color: AppTheme.mutedColor, fontSize: 12)),
+                              style: TextStyle(color: c.mutedColor, fontSize: 12)),
                         ],
                       ),
                       const SizedBox(height: 6),
@@ -98,8 +104,8 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                         borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
                           value: _levelProgress,
-                          backgroundColor: AppTheme.borderColor,
-                          valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.accentColor),
+                          backgroundColor: c.borderColor,
+                          valueColor: AlwaysStoppedAnimation<Color>(c.accentColor),
                           minHeight: 8,
                         ),
                       ),
@@ -125,14 +131,14 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                         label: Text(f),
                         selected: selected,
                         onSelected: (_) => setState(() => _filter = f),
-                        selectedColor: AppTheme.accentColor,
-                        backgroundColor: AppTheme.cardColor,
+                        selectedColor: c.accentColor,
+                        backgroundColor: c.cardColor,
                         labelStyle: TextStyle(
-                          color: selected ? Colors.white : AppTheme.mutedColor,
+                          color: selected ? Colors.white : c.mutedColor,
                           fontSize: 12,
                         ),
                         side: BorderSide(
-                          color: selected ? AppTheme.accentColor : AppTheme.borderColor,
+                          color: selected ? c.accentColor : c.borderColor,
                         ),
                       ),
                     );
@@ -178,18 +184,24 @@ class _ChallengeCard extends StatelessWidget {
   final bool isCompleted;
   final VoidCallback onTap;
 
-  Color get _diffColor {
-    switch (challenge.difficulty) {
-      case 'Beginner': return AppTheme.successColor;
-      case 'Intermediate': return AppTheme.accentColor;
-      case 'Advanced': return AppTheme.warningColor;
-      default: return AppTheme.mutedColor;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final c = context.yotColors;
+
+    Color diffColor = c.mutedColor;
+    switch (challenge.difficulty) {
+      case 'Beginner':     diffColor = c.successColor; break;
+      case 'Intermediate': diffColor = c.accentColor;  break;
+      case 'Advanced':     diffColor = c.warningColor; break;
+    }
+
     return Card(
+      color: c.cardColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: c.borderColor),
+      ),
+      elevation: 0,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: isCompleted ? null : onTap,
@@ -202,13 +214,13 @@ class _ChallengeCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: isCompleted ? AppTheme.successColor.withAlpha(26) : AppTheme.accentColor.withAlpha(26),
+                  color: isCompleted ? c.successColor.withAlpha(26) : c.accentColor.withAlpha(26),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   isCompleted ? Icons.check_circle : Icons.code,
                   size: 20,
-                  color: isCompleted ? AppTheme.successColor : AppTheme.accentColor,
+                  color: isCompleted ? c.successColor : c.accentColor,
                 ),
               ),
               const SizedBox(width: 12),
@@ -217,10 +229,10 @@ class _ChallengeCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(challenge.title,
-                        style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                        style: TextStyle(color: c.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
                     const SizedBox(height: 4),
                     Text(challenge.desc,
-                        style: const TextStyle(color: AppTheme.mutedColor, fontSize: 13),
+                        style: TextStyle(color: c.mutedColor, fontSize: 13),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 8),
@@ -228,22 +240,22 @@ class _ChallengeCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: _diffColor.withAlpha(26),
+                          color: diffColor.withAlpha(26),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: _diffColor.withAlpha(77)),
+                          border: Border.all(color: diffColor.withAlpha(77)),
                         ),
                         child: Text(challenge.difficulty,
-                            style: TextStyle(color: _diffColor, fontSize: 11, fontWeight: FontWeight.w600)),
+                            style: TextStyle(color: diffColor, fontSize: 11, fontWeight: FontWeight.w600)),
                       ),
                       const SizedBox(width: 8),
-                      const Icon(Icons.bolt, size: 13, color: AppTheme.warningColor),
+                      Icon(Icons.bolt, size: 13, color: c.warningColor),
                       Text('${challenge.xp} XP',
-                          style: const TextStyle(color: AppTheme.warningColor, fontSize: 12)),
+                          style: TextStyle(color: c.warningColor, fontSize: 12)),
                     ]),
                   ],
                 ),
               ),
-              if (isCompleted) const Icon(Icons.check_circle, color: AppTheme.successColor, size: 20),
+              if (isCompleted) Icon(Icons.check_circle, color: c.successColor, size: 20),
             ],
           ),
         ),
@@ -253,10 +265,11 @@ class _ChallengeCard extends StatelessWidget {
 }
 
 class _StatCard extends StatelessWidget {
-  const _StatCard({required this.label, required this.value, required this.color});
+  const _StatCard({required this.label, required this.value, required this.color, required this.colors});
   final String label;
   final String value;
   final Color color;
+  final YotColors colors;
 
   @override
   Widget build(BuildContext context) {
@@ -264,15 +277,15 @@ class _StatCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
-          color: AppTheme.cardColor,
+          color: colors.cardColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.borderColor),
+          border: Border.all(color: colors.borderColor),
         ),
         child: Column(
           children: [
             Text(value, style: TextStyle(color: color, fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 2),
-            Text(label, style: const TextStyle(color: AppTheme.mutedColor, fontSize: 11)),
+            Text(label, style: TextStyle(color: colors.mutedColor, fontSize: 11)),
           ],
         ),
       ),

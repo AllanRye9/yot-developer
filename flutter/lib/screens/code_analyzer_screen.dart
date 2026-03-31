@@ -33,22 +33,6 @@ class _CodeAnalyzerScreenState extends State<CodeAnalyzerScreen> {
     });
   }
 
-  Color _severityColor(_Issue issue) {
-    switch (issue.severity) {
-      case 'error': return AppTheme.errorColor;
-      case 'warning': return AppTheme.warningColor;
-      default: return AppTheme.cyanAccent;
-    }
-  }
-
-  IconData _severityIcon(_Issue issue) {
-    switch (issue.severity) {
-      case 'error': return Icons.error_outline;
-      case 'warning': return Icons.warning_amber_outlined;
-      default: return Icons.info_outline;
-    }
-  }
-
   @override
   void dispose() {
     _controller.dispose();
@@ -57,8 +41,30 @@ class _CodeAnalyzerScreenState extends State<CodeAnalyzerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.yotColors;
+
+    Color severityColor(_Issue issue) {
+      switch (issue.severity) {
+        case 'error':   return c.errorColor;
+        case 'warning': return c.warningColor;
+        default:        return c.cyanAccent;
+      }
+    }
+
+    IconData severityIcon(_Issue issue) {
+      switch (issue.severity) {
+        case 'error':   return Icons.error_outline;
+        case 'warning': return Icons.warning_amber_outlined;
+        default:        return Icons.info_outline;
+      }
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Code Analyzer')),
+      backgroundColor: c.backgroundColor,
+      appBar: AppBar(
+        backgroundColor: c.cardColor,
+        title: Text('Code Analyzer', style: TextStyle(color: c.textPrimary)),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -67,19 +73,20 @@ class _CodeAnalyzerScreenState extends State<CodeAnalyzerScreen> {
               flex: 2,
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.cardColor,
+                  color: c.cardColor,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.borderColor),
+                  border: Border.all(color: c.borderColor),
                 ),
                 child: TextField(
                   controller: _controller,
                   maxLines: null,
                   expands: true,
-                  style: const TextStyle(color: AppTheme.textPrimary, fontFamily: 'Courier New', fontSize: 13, height: 1.6),
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: c.textPrimary, fontFamily: 'Courier New', fontSize: 13, height: 1.6),
+                  decoration: InputDecoration(
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.all(14),
+                    contentPadding: const EdgeInsets.all(14),
                     hintText: 'Paste your JavaScript here…',
+                    hintStyle: TextStyle(color: c.mutedColor),
                   ),
                 ),
               ),
@@ -103,9 +110,9 @@ class _CodeAnalyzerScreenState extends State<CodeAnalyzerScreen> {
                   : _issues.isEmpty
                       ? Center(
                           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                            const Icon(Icons.check_circle_outline, size: 40, color: AppTheme.successColor),
+                            Icon(Icons.check_circle_outline, size: 40, color: c.successColor),
                             const SizedBox(height: 8),
-                            const Text('No issues found', style: TextStyle(color: AppTheme.mutedColor)),
+                            Text('No issues found', style: TextStyle(color: c.mutedColor)),
                           ]),
                         )
                       : ListView.separated(
@@ -113,21 +120,22 @@ class _CodeAnalyzerScreenState extends State<CodeAnalyzerScreen> {
                           separatorBuilder: (_, __) => const SizedBox(height: 8),
                           itemBuilder: (_, i) {
                             final issue = _issues[i];
+                            final color = severityColor(issue);
                             return Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: _severityColor(issue).withAlpha(20),
+                                color: color.withAlpha(20),
                                 borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: _severityColor(issue).withAlpha(77)),
+                                border: Border.all(color: color.withAlpha(77)),
                               ),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(_severityIcon(issue), size: 16, color: _severityColor(issue)),
+                                  Icon(severityIcon(issue), size: 16, color: color),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(issue.message,
-                                        style: TextStyle(color: _severityColor(issue), fontSize: 13)),
+                                        style: TextStyle(color: color, fontSize: 13)),
                                   ),
                                 ],
                               ),
