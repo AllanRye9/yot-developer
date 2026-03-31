@@ -4,11 +4,18 @@ export interface DevToolsExample {
   code: string
 }
 
+export interface ExecutionStep {
+  label: string
+  sublabel?: string
+  color: string
+}
+
 export interface DevToolsCategory {
   id: string
   name: string
   icon: string
   description: string
+  executionFlow?: ExecutionStep[]
   examples: DevToolsExample[]
 }
 
@@ -18,6 +25,12 @@ export const devToolsCategories: DevToolsCategory[] = [
     name: 'Console API',
     icon: 'Terminal',
     description: 'The Console API provides methods for logging information to the browser console, enabling debugging and monitoring of web applications.',
+    executionFlow: [
+      { label: 'JS Code', sublabel: 'console.log()', color: '#6366f1' },
+      { label: 'Console API', sublabel: 'Browser built-in', color: '#8b5cf6' },
+      { label: 'DevTools', sublabel: 'Console panel', color: '#06b6d4' },
+      { label: 'Developer', sublabel: 'Reads output', color: '#10b981' },
+    ],
     examples: [
       {
         title: 'Basic Logging',
@@ -52,6 +65,52 @@ const sum = arr.reduce((a, b) => a + b, 0);
 console.timeEnd("Array processing");
 console.log("Sum:", sum);`,
       },
+      {
+        title: 'console.dir() & Inspection',
+        description: 'Inspect object properties in a tree view and count occurrences.',
+        code: `// console.dir() shows an interactive property tree
+const btn = document.querySelector("button") || document.body;
+console.dir(btn);  // Expand in DevTools to see all DOM properties
+
+// console.count() tracks how many times a label has been called
+function greet(name) {
+  console.count("greet called");
+  return "Hello, " + name;
+}
+greet("Alice");
+greet("Bob");
+greet("Carol");
+// Output: greet called: 1, 2, 3
+
+// console.countReset("greet called");
+
+// console.assert() — only logs if the condition is FALSE
+const age = 17;
+console.assert(age >= 18, "User is underage:", age);
+// Prints assertion error since age < 18`,
+      },
+      {
+        title: 'Styled & Rich Output',
+        description: 'Use %c to apply CSS styles to console output.',
+        code: `// Apply CSS styles to log messages using %c
+console.log(
+  "%cYOT Developer%c — DevTools Explorer",
+  "color:#6366f1;font-weight:bold;font-size:16px",
+  "color:#94a3b8;font-size:14px"
+);
+
+// Multiple style segments
+console.log(
+  "%c✅ Pass%c  %c❌ Fail%c  %c⚠️ Warn",
+  "color:#34d399;font-weight:bold", "",
+  "color:#f87171;font-weight:bold", "",
+  "color:#fbbf24;font-weight:bold"
+);
+
+// Log objects inline
+const user = { name: "Alice", score: 99 };
+console.log("User data: %o", user);`,
+      },
     ],
   },
   {
@@ -59,6 +118,13 @@ console.log("Sum:", sum);`,
     name: 'Network',
     icon: 'Network',
     description: 'Monitor and analyze HTTP requests, responses, and network performance using the Fetch API and Performance Observer.',
+    executionFlow: [
+      { label: 'fetch(url)', sublabel: 'JS initiates', color: '#6366f1' },
+      { label: 'Browser', sublabel: 'DNS + TCP + TLS', color: '#f59e0b' },
+      { label: 'Server', sublabel: 'HTTP response', color: '#ec4899' },
+      { label: 'Response', sublabel: 'Headers + body', color: '#06b6d4' },
+      { label: 'Network Tab', sublabel: 'DevTools records', color: '#10b981' },
+    ],
     examples: [
       {
         title: 'Fetch API',
@@ -98,6 +164,55 @@ fetchData("https://jsonplaceholder.typicode.com/posts/1");`,
 console.log("POST request function ready");
 console.log("Usage: postData(url, { key: 'value' })");`,
       },
+      {
+        title: 'AbortController & Timeout',
+        description: 'Cancel in-flight requests or enforce a timeout using AbortController.',
+        code: `// Create a controller whose signal can be passed to fetch
+const controller = new AbortController();
+
+// Automatically abort after 5 seconds
+const timeoutId = setTimeout(() => {
+  controller.abort();
+  console.warn("Request aborted due to timeout");
+}, 5000);
+
+async function fetchWithTimeout(url) {
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    const data = await res.json();
+    console.log("Response:", data);
+  } catch (err) {
+    if (err.name === "AbortError") {
+      console.error("Fetch was aborted:", err.message);
+    } else {
+      console.error("Network error:", err.message);
+    }
+  }
+}
+
+fetchWithTimeout("https://jsonplaceholder.typicode.com/todos/1");
+// Call controller.abort() at any time to cancel`,
+      },
+      {
+        title: 'Inspect Response Headers',
+        description: 'Read and iterate over response headers from a fetch call.',
+        code: `async function inspectHeaders(url) {
+  const res = await fetch(url);
+  console.log("Status:", res.status, res.statusText);
+  console.log("Content-Type:", res.headers.get("content-type"));
+  console.log("Cache-Control:", res.headers.get("cache-control"));
+  
+  // Iterate all headers
+  console.group("All Response Headers");
+  res.headers.forEach((value, key) => {
+    console.log(\`  \${key}: \${value}\`);
+  });
+  console.groupEnd();
+}
+
+inspectHeaders("https://jsonplaceholder.typicode.com/posts/1");`,
+      },
     ],
   },
   {
@@ -105,6 +220,13 @@ console.log("Usage: postData(url, { key: 'value' })");`,
     name: 'Performance',
     icon: 'Gauge',
     description: 'Measure and optimize the performance of your web applications using the Performance API and timing utilities.',
+    executionFlow: [
+      { label: 'performance.mark()', sublabel: 'Create timestamp', color: '#6366f1' },
+      { label: 'Code Runs', sublabel: 'Your JS executes', color: '#f59e0b' },
+      { label: 'performance.measure()', sublabel: 'Calculate duration', color: '#ec4899' },
+      { label: 'getEntries()', sublabel: 'Read results', color: '#06b6d4' },
+      { label: 'Perf Tab', sublabel: 'Visualise timeline', color: '#10b981' },
+    ],
     examples: [
       {
         title: 'Performance Marks',
@@ -137,6 +259,70 @@ console.log("Result:", result.toFixed(2));`,
   console.log("Available in Chrome DevTools");
 }`,
       },
+      {
+        title: 'Resource Timing',
+        description: 'Inspect timing details for every resource loaded by the page.',
+        code: `// Get all resource timing entries (scripts, images, CSS, fonts, etc.)
+const resources = performance.getEntriesByType("resource");
+
+console.log(\`Total resources loaded: \${resources.length}\`);
+
+// Show the 5 slowest resources
+const slowest = [...resources]
+  .sort((a, b) => b.duration - a.duration)
+  .slice(0, 5);
+
+console.group("5 Slowest Resources");
+slowest.forEach((r, i) => {
+  const name = r.name.split("/").pop() || r.name;
+  console.log(
+    \`\${i + 1}. \${name}\`,
+    \`— \${r.duration.toFixed(1)}ms\`,
+    \`(type: \${r.initiatorType})\`
+  );
+});
+console.groupEnd();
+
+// Navigation timing
+const [nav] = performance.getEntriesByType("navigation");
+if (nav) {
+  console.log("DOM Interactive:", nav.domInteractive.toFixed(0) + "ms");
+  console.log("DOM Complete:", nav.domComplete.toFixed(0) + "ms");
+  console.log("Load Event End:", nav.loadEventEnd.toFixed(0) + "ms");
+}`,
+      },
+      {
+        title: 'PerformanceObserver',
+        description: 'Subscribe to performance events as they happen in real time.',
+        code: `// PerformanceObserver fires callbacks as entries are recorded
+const observer = new PerformanceObserver((list) => {
+  list.getEntries().forEach((entry) => {
+    console.log(
+      \`[Observer] \${entry.entryType}: \${entry.name}\`,
+      \`\${entry.duration?.toFixed(2) ?? "—"}ms\`
+    );
+  });
+});
+
+// Observe layout shifts (CLS), largest contentful paint (LCP), etc.
+try {
+  observer.observe({ type: "largest-contentful-paint", buffered: true });
+  console.log("Observing LCP entries…");
+} catch {
+  console.log("LCP not supported — trying measure entries");
+  observer.observe({ entryTypes: ["measure"] });
+  // Trigger a measure to test
+  performance.mark("test-start");
+  performance.mark("test-end");
+  performance.measure("test-measure", "test-start", "test-end");
+}
+
+// Disconnect when done
+setTimeout(() => {
+  observer.disconnect();
+  console.log("Observer disconnected after 2s");
+}, 2000);`,
+      },
     ],
   },
   {
@@ -144,6 +330,13 @@ console.log("Result:", result.toFixed(2));`,
     name: 'DOM',
     icon: 'Layout',
     description: 'Inspect and manipulate the Document Object Model, observe mutations, and use intersection observers for efficient DOM handling.',
+    executionFlow: [
+      { label: 'JavaScript', sublabel: 'DOM API calls', color: '#6366f1' },
+      { label: 'DOM Tree', sublabel: 'Nodes updated', color: '#f59e0b' },
+      { label: 'Style Engine', sublabel: 'CSSOM recalc', color: '#8b5cf6' },
+      { label: 'Layout', sublabel: 'Reflow / paint', color: '#ec4899' },
+      { label: 'Screen', sublabel: 'Pixels rendered', color: '#10b981' },
+    ],
     examples: [
       {
         title: 'QuerySelector',
@@ -185,6 +378,71 @@ observer.observe(document.body, {
 console.log("MutationObserver is now watching the DOM");
 // Remember to call observer.disconnect() when done`,
       },
+      {
+        title: 'Create, Style & Remove Elements',
+        description: 'Dynamically create elements, apply styles, and clean them up.',
+        code: `// Create a styled notification badge
+const badge = document.createElement("div");
+badge.textContent = "🔔 New notification";
+badge.setAttribute("data-demo", "true");
+Object.assign(badge.style, {
+  position: "fixed",
+  bottom: "20px",
+  right: "20px",
+  background: "#6366f1",
+  color: "#fff",
+  padding: "10px 16px",
+  borderRadius: "8px",
+  fontSize: "14px",
+  zIndex: "9999",
+  boxShadow: "0 4px 12px rgba(99,102,241,0.4)",
+});
+
+document.body.appendChild(badge);
+console.log("Badge added to DOM:", badge);
+
+// Animate it out after 2 seconds
+setTimeout(() => {
+  badge.style.transition = "opacity 0.4s";
+  badge.style.opacity = "0";
+  setTimeout(() => badge.remove(), 400);
+  console.log("Badge removed from DOM");
+}, 2000);`,
+      },
+      {
+        title: 'Event Delegation',
+        description: 'Handle events on many elements efficiently with a single listener on a parent.',
+        code: `// Instead of adding listeners to each item, add ONE to the parent
+// This is called event delegation — much more efficient for lists
+
+const list = document.createElement("ul");
+list.setAttribute("data-event-demo", "true");
+list.style.cssText = "position:fixed;top:60px;right:20px;background:#12121a;border:1px solid #1e1e2e;border-radius:8px;padding:8px;list-style:none;z-index:9998";
+
+["Apple", "Banana", "Cherry"].forEach(item => {
+  const li = document.createElement("li");
+  li.textContent = item;
+  li.dataset.fruit = item.toLowerCase();
+  li.style.cssText = "padding:6px 12px;cursor:pointer;color:#e2e8f0;border-radius:4px";
+  list.appendChild(li);
+});
+
+document.body.appendChild(list);
+
+// Single delegated listener on parent
+list.addEventListener("click", (event) => {
+  const target = event.target;
+  if (target.tagName === "LI") {
+    console.log("Clicked fruit:", target.dataset.fruit);
+    target.style.background = "#6366f1";
+    setTimeout(() => target.style.background = "", 500);
+  }
+});
+
+// Clean up after 5 seconds
+setTimeout(() => list.remove(), 5000);
+console.log("Click a fruit in the list (top-right). Cleaned up in 5s.");`,
+      },
     ],
   },
   {
@@ -192,6 +450,12 @@ console.log("MutationObserver is now watching the DOM");
     name: 'Storage',
     icon: 'Database',
     description: 'Work with browser storage APIs including localStorage, sessionStorage, and IndexedDB for persistent client-side data.',
+    executionFlow: [
+      { label: 'JS Code', sublabel: 'setItem / get', color: '#6366f1' },
+      { label: 'Storage API', sublabel: 'Browser sandbox', color: '#f59e0b' },
+      { label: 'Persisted Data', sublabel: 'Survives reload', color: '#ec4899' },
+      { label: 'Application Tab', sublabel: 'DevTools view', color: '#10b981' },
+    ],
     examples: [
       {
         title: 'localStorage',
@@ -224,6 +488,40 @@ console.log("Session ID:", sessionId);
 console.log("Cart items:", cartItems);
 console.log("Session storage length:", sessionStorage.length);`,
       },
+      {
+        title: 'IndexedDB Basics',
+        description: 'Use IndexedDB for structured, larger-scale client-side storage.',
+        code: `// IndexedDB — async, structured, supports indexes and transactions
+const request = indexedDB.open("YOT-DB", 1);
+
+request.onupgradeneeded = (event) => {
+  const db = event.target.result;
+  if (!db.objectStoreNames.contains("notes")) {
+    const store = db.createObjectStore("notes", { keyPath: "id", autoIncrement: true });
+    store.createIndex("title", "title", { unique: false });
+    console.log("Object store 'notes' created");
+  }
+};
+
+request.onsuccess = (event) => {
+  const db = event.target.result;
+  console.log("IndexedDB opened:", db.name, "version:", db.version);
+
+  // Write a record
+  const tx = db.transaction("notes", "readwrite");
+  const store = tx.objectStore("notes");
+  store.add({ title: "Hello IndexedDB", body: "Structured storage!", created: Date.now() });
+
+  tx.oncomplete = () => {
+    console.log("Record added. Check DevTools > Application > IndexedDB");
+    db.close();
+  };
+};
+
+request.onerror = (event) => {
+  console.error("IndexedDB error:", event.target.error);
+};`,
+      },
     ],
   },
   {
@@ -231,6 +529,13 @@ console.log("Session storage length:", sessionStorage.length);`,
     name: 'Debugging',
     icon: 'Bug',
     description: 'Master browser debugging techniques including breakpoints, the debugger statement, error handling, and stack traces.',
+    executionFlow: [
+      { label: 'Bug Found', sublabel: 'Unexpected output', color: '#ef4444' },
+      { label: 'Breakpoint', sublabel: 'Pause execution', color: '#f59e0b' },
+      { label: 'Scope / Watch', sublabel: 'Inspect variables', color: '#6366f1' },
+      { label: 'Step Through', sublabel: 'Line by line', color: '#8b5cf6' },
+      { label: 'Bug Fixed', sublabel: 'Root cause clear', color: '#10b981' },
+    ],
     examples: [
       {
         title: 'Error Handling',
@@ -277,6 +582,58 @@ function inner() {
 
 outer();`,
       },
+      {
+        title: 'debugger Statement',
+        description: 'Pause execution at a specific line when DevTools is open.',
+        code: `function calculateDiscount(price, percent) {
+  // The debugger statement halts execution here when DevTools is open
+  // Open DevTools BEFORE running this to hit the breakpoint
+  debugger;
+
+  if (percent < 0 || percent > 100) {
+    throw new RangeError(\`Invalid discount: \${percent}%\`);
+  }
+  const discount = price * (percent / 100);
+  const final = price - discount;
+
+  console.log(\`Price: \$\${price}\`);
+  console.log(\`Discount: \$\${discount.toFixed(2)} (\${percent}%)\`);
+  console.log(\`Final price: \$\${final.toFixed(2)}\`);
+  return final;
+}
+
+// Open DevTools → Sources tab first, then run this
+calculateDiscount(49.99, 20);`,
+      },
+      {
+        title: 'Async Error Patterns',
+        description: 'Handle errors in async/await and Promise chains reliably.',
+        code: `// Pattern 1: try/catch in async function
+async function loadUser(id) {
+  try {
+    const res = await fetch(\`https://jsonplaceholder.typicode.com/users/\${id}\`);
+    if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
+    return await res.json();
+  } catch (err) {
+    console.error("loadUser failed:", err.message);
+    return null; // return fallback instead of crashing
+  }
+}
+
+// Pattern 2: catch on the Promise chain
+loadUser(1)
+  .then(user => console.log("Got user:", user?.name))
+  .catch(err => console.error("Chain error:", err.message));
+
+// Pattern 3: Promise.allSettled — never rejects, see all outcomes
+Promise.allSettled([loadUser(1), loadUser(9999)])
+  .then(results => {
+    results.forEach((r, i) => {
+      if (r.status === "fulfilled") console.log(\`User \${i+1}:\`, r.value?.name ?? "null");
+      else console.warn(\`User \${i+1} failed:\`, r.reason?.message);
+    });
+  });`,
+      },
     ],
   },
   {
@@ -284,6 +641,13 @@ outer();`,
     name: 'Web Workers',
     icon: 'Cpu',
     description: 'Run scripts in background threads using Web Workers and Service Workers for improved performance and offline capabilities.',
+    executionFlow: [
+      { label: 'Main Thread', sublabel: 'UI & events', color: '#6366f1' },
+      { label: 'new Worker()', sublabel: 'Spawn thread', color: '#f59e0b' },
+      { label: 'Worker Thread', sublabel: 'Heavy computation', color: '#ec4899' },
+      { label: 'postMessage()', sublabel: 'Pass result back', color: '#06b6d4' },
+      { label: 'UI Unblocked', sublabel: 'Smooth experience', color: '#10b981' },
+    ],
     examples: [
       {
         title: 'Worker Basics',
@@ -310,6 +674,59 @@ const workerCode = \`
 console.log("Web Worker example (workers require separate files in production)");
 console.log("Workers prevent heavy computation from blocking the UI thread");`,
       },
+      {
+        title: 'Inline Worker via Blob',
+        description: 'Create a worker from a string without a separate file.',
+        code: `// You can create a worker inline using a Blob URL
+const workerScript = \`
+self.onmessage = function({ data }) {
+  const { n } = data;
+  // Compute nth Fibonacci number (CPU-intensive)
+  function fib(k) { return k <= 1 ? k : fib(k-1) + fib(k-2); }
+  const result = fib(n);
+  self.postMessage({ n, result });
+};
+\`;
+
+const blob = new Blob([workerScript], { type: "application/javascript" });
+const url = URL.createObjectURL(blob);
+const worker = new Worker(url);
+
+worker.onmessage = ({ data }) => {
+  console.log(\`Fibonacci(\${data.n}) = \${data.result}\`);
+  worker.terminate();
+  URL.revokeObjectURL(url); // clean up
+};
+
+worker.onerror = (err) => console.error("Worker error:", err.message);
+
+console.log("Sending fib(35) to worker thread…");
+worker.postMessage({ n: 35 });
+// Main thread stays responsive while worker computes`,
+      },
+      {
+        title: 'BroadcastChannel',
+        description: 'Communicate between tabs, windows, and workers on the same origin.',
+        code: `// BroadcastChannel lets multiple contexts on the same origin talk to each other
+// Open this page in two tabs and run this in both DevTools consoles
+
+const channel = new BroadcastChannel("yot-demo");
+
+// Listen for messages from other tabs/workers
+channel.onmessage = ({ data }) => {
+  console.log("Received broadcast:", data);
+};
+
+// Send a message to all other contexts on this channel
+channel.postMessage({
+  type: "ping",
+  from: location.href,
+  timestamp: new Date().toISOString(),
+});
+
+console.log("BroadcastChannel 'yot-demo' open — open another tab and run the same code!");
+// Clean up with: channel.close()`,
+      },
     ],
   },
   {
@@ -317,6 +734,12 @@ console.log("Workers prevent heavy computation from blocking the UI thread");`,
     name: 'Security',
     icon: 'Shield',
     description: 'Implement security best practices including Content Security Policy, XSS prevention, and safe data handling.',
+    executionFlow: [
+      { label: 'User Input', sublabel: 'Untrusted data', color: '#ef4444' },
+      { label: 'Sanitize', sublabel: 'Encode / validate', color: '#f59e0b' },
+      { label: 'Safe Output', sublabel: 'textContent / DOMPurify', color: '#6366f1' },
+      { label: 'No XSS', sublabel: 'Attack blocked', color: '#10b981' },
+    ],
     examples: [
       {
         title: 'XSS Prevention',
@@ -360,6 +783,62 @@ for (const [directive, sources] of Object.entries(cspDirectives)) {
   console.log(\`  \${directive}: \${sources.join(" ")}\`);
 }`,
       },
+      {
+        title: 'CORS & Same-Origin Policy',
+        description: 'Understand cross-origin resource sharing and how browsers enforce boundaries.',
+        code: `// Same-Origin Policy: browsers block cross-origin reads by default
+// CORS headers on the SERVER opt-in to allow specific origins
+
+// Check if a request will be blocked by CORS
+function isSameOrigin(url) {
+  try {
+    const target = new URL(url, location.href);
+    return target.origin === location.origin;
+  } catch { return false; }
+}
+
+console.log("Same origin?", isSameOrigin("/api/data"));         // true
+console.log("Cross origin?", isSameOrigin("https://google.com")); // false
+
+// Simulate what CORS headers look like (returned by server):
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "https://yoursite.com",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Max-Age": "86400", // preflight cache for 1 day
+};
+console.log("Server would respond with CORS headers:", corsHeaders);
+
+// Credentials (cookies) require:
+// Access-Control-Allow-Credentials: true
+// Access-Control-Allow-Origin: <specific origin>  (no wildcard *)`,
+      },
+      {
+        title: 'Subresource Integrity (SRI)',
+        description: 'Verify that third-party scripts have not been tampered with.',
+        code: `// SRI ensures a loaded resource matches a known cryptographic hash
+// If the file is modified by a CDN or attacker, the browser blocks it
+
+// Example HTML (copy into your page):
+// <script
+//   src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"
+//   integrity="sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k="
+//   crossorigin="anonymous">
+// </script>
+
+// Generate an SRI hash in Node.js (server-side):
+// const crypto = require("crypto");
+// const hash = crypto.createHash("sha256").update(fileContent).digest("base64");
+// console.log("sha256-" + hash);
+
+// Verify the current page's script integrity
+const scripts = document.querySelectorAll("script[integrity]");
+console.log("Scripts with SRI:", scripts.length);
+scripts.forEach(s => {
+  console.log("  src:", s.src.split("/").pop());
+  console.log("  integrity:", s.integrity);
+});`,
+      },
     ],
   },
   {
@@ -367,6 +846,13 @@ for (const [directive, sources] of Object.entries(cspDirectives)) {
     name: 'JS Reference',
     icon: 'Database',
     description: 'All major JavaScript built-in functions, objects, and classes — with clear explanations and live examples you can run directly in the browser.',
+    executionFlow: [
+      { label: 'Source Code', sublabel: 'Your JS file', color: '#6366f1' },
+      { label: 'V8 / SpiderMonkey', sublabel: 'JS engine parses', color: '#f59e0b' },
+      { label: 'JIT Compile', sublabel: 'Optimise hot paths', color: '#ec4899' },
+      { label: 'Machine Code', sublabel: 'Native execution', color: '#06b6d4' },
+      { label: 'Result', sublabel: 'Output / side-effects', color: '#10b981' },
+    ],
     examples: [
       {
         title: 'Array Methods',
@@ -680,6 +1166,85 @@ for (const input of [null, { name: "Bob" }, { email: "alice@x.com" }]) {
     else throw e;
   }
 }`,
+      },
+      {
+        title: 'Generators & Iterators',
+        description: 'Generator functions can pause execution and resume, making them ideal for lazy sequences and async control flow.',
+        code: `// Generator function — uses function* and yield
+function* range(start, end, step = 1) {
+  for (let i = start; i <= end; i += step) {
+    yield i;  // pause here, return value to caller
+  }
+}
+
+// Consume with for...of
+for (const n of range(1, 10, 2)) {
+  process.stdout?.write?.(n + " ") ?? console.log(n);
+}
+// 1 3 5 7 9
+
+// Convert to array with spread
+console.log("Range:", [...range(0, 5)]);
+
+// Infinite generator
+function* naturals() {
+  let n = 1;
+  while (true) yield n++;
+}
+
+const gen = naturals();
+const first5 = Array.from({ length: 5 }, () => gen.next().value);
+console.log("First 5 naturals:", first5); // [1, 2, 3, 4, 5]
+
+// Generator as state machine
+function* trafficLight() {
+  while (true) {
+    yield "🟢 Green";
+    yield "🟡 Yellow";
+    yield "🔴 Red";
+  }
+}
+const light = trafficLight();
+console.log(light.next().value); // 🟢 Green
+console.log(light.next().value); // 🟡 Yellow
+console.log(light.next().value); // 🔴 Red
+console.log(light.next().value); // 🟢 Green (wraps)`,
+      },
+      {
+        title: 'Proxy & Reflect',
+        description: 'Intercept and customise fundamental operations on objects with Proxy and Reflect.',
+        code: `// Proxy wraps an object and intercepts operations (get, set, delete, etc.)
+const handler = {
+  get(target, prop) {
+    console.log(\`GET \${String(prop)}\`);
+    return prop in target ? target[prop] : \`Property "\${String(prop)}" not found\`;
+  },
+  set(target, prop, value) {
+    if (typeof value !== "number") throw new TypeError("Only numbers allowed");
+    console.log(\`SET \${String(prop)} = \${value}\`);
+    target[prop] = value;
+    return true; // must return true to indicate success
+  },
+  deleteProperty(target, prop) {
+    console.log(\`DELETE \${String(prop)}\`);
+    return Reflect.deleteProperty(target, prop);
+  },
+};
+
+const scores = new Proxy({}, handler);
+scores.alice = 95;   // SET alice = 95
+scores.bob = 87;     // SET bob = 87
+console.log(scores.alice);    // GET alice → 95
+console.log(scores.charlie);  // GET charlie → "Property not found"
+
+// Reflect mirrors the default behaviour — useful inside traps
+const obj = { x: 1 };
+const proxy = new Proxy(obj, {
+  get(target, key, receiver) {
+    return Reflect.get(target, key, receiver); // default behaviour
+  },
+});
+console.log(proxy.x); // 1`,
       },
     ],
   },

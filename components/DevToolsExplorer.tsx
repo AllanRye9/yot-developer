@@ -1,14 +1,51 @@
 'use client'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Terminal, Network, Gauge, Layout, Database, Bug, Cpu, Shield, ChevronRight, ChevronDown, Bot, type LucideIcon } from 'lucide-react'
-import { devToolsCategories } from '@/lib/devtools-data'
+import { Terminal, Network, Gauge, Layout, Database, Bug, Cpu, Shield, ChevronRight, ChevronDown, Bot, ArrowRight, type LucideIcon } from 'lucide-react'
+import { devToolsCategories, type ExecutionStep } from '@/lib/devtools-data'
 import CodeBlock from './CodeBlock'
 import CodeRunner from './CodeRunner'
 import AIAssistant from './AIAssistant'
 
 const iconMap: Record<string, LucideIcon> = {
   Terminal, Network, Gauge, Layout, Database, Bug, Cpu, Shield
+}
+
+// ─── Execution Flow Diagram ──────────────────────────────────────────────────
+
+function ExecutionDiagram({ steps }: { steps: ExecutionStep[] }) {
+  return (
+    <div className="rounded-xl border p-4" style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}>
+      <p className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--foreground-muted)' }}>
+        How It Executes
+      </p>
+      <div className="flex flex-wrap items-center gap-y-2">
+        {steps.map((step, i) => (
+          <div key={i} className="flex items-center gap-1 flex-shrink-0">
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.07 }}
+              className="flex flex-col items-center px-3 py-2 rounded-lg border text-center min-w-[72px]"
+              style={{ borderColor: step.color + '40', background: step.color + '15' }}
+            >
+              <span className="text-[11px] font-semibold leading-tight" style={{ color: step.color }}>
+                {step.label}
+              </span>
+              {step.sublabel && (
+                <span className="text-[9px] mt-0.5 leading-tight" style={{ color: 'var(--foreground-muted)' }}>
+                  {step.sublabel}
+                </span>
+              )}
+            </motion.div>
+            {i < steps.length - 1 && (
+              <ArrowRight size={13} className="flex-shrink-0 mx-0.5" style={{ color: 'var(--foreground-muted)' }} />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export default function DevToolsExplorer() {
@@ -120,7 +157,10 @@ export default function DevToolsExplorer() {
                     <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>{selectedCategory.examples.length} examples</p>
                   </div>
                 </div>
-                <p className="text-sm leading-relaxed" style={{ color: 'var(--foreground-muted)' }}>{selectedCategory.description}</p>
+                <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--foreground-muted)' }}>{selectedCategory.description}</p>
+                {selectedCategory.executionFlow && selectedCategory.executionFlow.length > 0 && (
+                  <ExecutionDiagram steps={selectedCategory.executionFlow} />
+                )}
               </div>
 
               {/* Example tabs */}

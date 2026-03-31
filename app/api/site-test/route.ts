@@ -59,7 +59,7 @@ interface CookieCheck {
 
 export interface TestItem {
   id: string
-  category: 'security' | 'vulnerability' | 'general'
+  category: 'security' | 'vulnerability' | 'general' | 'performance'
   name: string
   status: 'pass' | 'warn' | 'fail' | 'info'
   detail: string
@@ -426,6 +426,195 @@ export async function POST(req: NextRequest) {
         : undefined,
     })
   } catch { /* ignore */ }
+
+  // ── Performance: Response time (detailed) ────────────────────────────────────
+  tests.push({
+    id: 'perf-load-time',
+    category: 'performance',
+    name: 'Page Load Time',
+    status: responseTimeMs < 800 ? 'pass' : responseTimeMs < 2000 ? 'warn' : 'fail',
+    detail: responseTimeMs < 800
+      ? `Excellent load time: ${responseTimeMs}ms (target < 800ms).`
+      : responseTimeMs < 2000
+      ? `Acceptable load time: ${responseTimeMs}ms. Target is under 800ms for best user experience.`
+      : `Slow load time: ${responseTimeMs}ms. Google recommends Time to First Byte (TTFB) under 800ms.`,
+    tip: responseTimeMs >= 800
+      ? 'Reduce TTFB with server-side caching (Redis/Varnish), a CDN, or optimised database queries. Consider edge deployment.'
+      : undefined,
+  })
+
+  // ── Performance: Content compression ─────────────────────────────────────────
+  const contentEncoding = headers.get('content-encoding')
+  const isCompressed = !!(contentEncoding && /gzip|br|zstd|deflate/i.test(contentEncoding))
+  tests.push({
+    id: 'compression',
+    category: 'performance',
+    name: 'Content Compression',
+    status: isCompressed ? 'pass' : 'warn',
+    detail: isCompressed
+      ? `Response is compressed with: ${contentEncoding}. Reduces transfer size significantly.`
+      : 'No compression detected (Content-Encoding header absent). Responses are sent uncompressed.',
+    tip: !isCompressed
+      ? 'Enable Gzip or Brotli compression on your server. Brotli (br) provides 20–26% better compression than Gzip. In nginx: "gzip on;" or "brotli on;".'
+      : undefined,
+  })
+
+  // ── Performance: Cache-Control ────────────────────────────────────────────────
+  const cacheControl = headers.get('cache-control')
+  const etag = headers.get('etag')
+  const lastModified = headers.get('last-modified')
+  const hasCacheHeaders = !!(cacheControl || etag || lastModified)
+  const hasNoCacheDirective = !!(cacheControl && /no-store|no-cache/i.test(cacheControl))
+  const maxAgeMatch = cacheControl?.match(/max-age=(\d+)/i)
+  const maxAge = maxAgeMatch ? parseInt(maxAgeMatch[1], 10) : null
+
+  tests.push({
+    id: 'cache-control',
+    category: 'performance',
+    name: 'Cache-Control Headers',
+    status: hasCacheHeaders && !hasNoCacheDirective && (maxAge === null || maxAge > 0) ? 'pass'
+      : hasCacheHeaders ? 'info'
+      : 'warn',
+    detail: cacheControl
+      ? `Cache-Control: ${cacheControl}${etag ? `; ETag present` : ''}${lastModified ? `; Last-Modified present` : ''}`
+      : etag || lastModified
+      ? `No Cache-Control header, but ${[etag && 'ETag', lastModified && 'Last-Modified'].filter(Boolean).join(' and ')} are present for conditional requests.`
+      : 'No caching headers detected. Every request will fetch the full response from the server.',
+    tip: !hasCacheHeaders
+      ? 'Add Cache-Control headers (e.g. max-age=86400 for 1 day) and ETag or Last-Modified for conditional requests. This dramatically reduces server load and improves repeat-visit performance.'
+      : undefined,
+  })
+
+  // ── Performance: CDN / Edge delivery ─────────────────────────────────────────
+  const cfRay = headers.get('cf-ray')
+  const xVercel = headers.get('x-vercel-id') || headers.get('x-vercel-cache')
+  const xAmz = headers.get('x-amz-cf-id') || headers.get('x-amz-request-id')
+  const xFastly = headers.get('x-served-by')?.includes('cache') || headers.get('x-cache')?.toLowerCase().includes('hit')
+  const cdnDetected = cfRay ? 'Cloudflare'
+    : xVercel ? 'Vercel Edge Network'
+    : xAmz ? 'AWS CloudFront'
+    : xFastly ? 'Fastly / CDN cache hit'
+    : null
+  tests.push({
+    id: 'cdn',
+    category: 'performance',
+    name: 'CDN / Edge Delivery',
+    status: cdnDetected ? 'pass' : 'info',
+    detail: cdnDetected
+      ? `CDN detected: ${cdnDetected}. Assets are served from edge nodes close to users.`
+      : 'No CDN signature detected. Content appears to be served directly from the origin server.',
+    tip: !cdnDetected
+      ? 'Use a CDN (Cloudflare, Fastly, AWS CloudFront) to serve static assets from edge nodes worldwide, reducing latency for global users by 50–90%.'
+      : undefined,
+  })
+
+  // ── Performance: HTTP/2 or HTTP/3 ────────────────────────────────────────────
+  // Node.js fetch doesn't expose protocol version directly; infer from headers
+  const altSvc = headers.get('alt-svc')
+  const http2Hint = altSvc && (altSvc.includes('h2') || altSvc.includes('h3'))
+  const upgradeHeader = headers.get('upgrade')
+  tests.push({
+    id: 'http-version',
+    category: 'performance',
+    name: 'Modern Protocol (HTTP/2 or HTTP/3)',
+    status: http2Hint ? 'pass' : 'info',
+    detail: http2Hint
+      ? `Alt-Svc header indicates modern protocol support: ${altSvc}`
+      : upgradeHeader
+      ? `Upgrade header present: ${upgradeHeader}`
+      : 'HTTP/2 or HTTP/3 support could not be confirmed from response headers. Check server configuration.',
+    tip: !http2Hint
+      ? 'Enable HTTP/2 (or HTTP/3) on your server. HTTP/2 multiplexing eliminates head-of-line blocking and significantly speeds up page loads with many assets. Most modern web servers support it with a simple config change.'
+      : undefined,
+  })
+
+  // ── Performance: Resource hints ───────────────────────────────────────────────
+  const linkHeader = headers.get('link')
+  const hasPreload = !!(linkHeader && linkHeader.includes('preload'))
+  const hasPrefetch = !!(linkHeader && linkHeader.includes('prefetch'))
+  const hasDnsPrefetch = !!(linkHeader && linkHeader.includes('dns-prefetch'))
+  const hasResourceHints = hasPreload || hasPrefetch || hasDnsPrefetch
+  tests.push({
+    id: 'resource-hints',
+    category: 'performance',
+    name: 'Resource Hints (preload / prefetch)',
+    status: hasResourceHints ? 'pass' : 'info',
+    detail: hasResourceHints
+      ? `Resource hints found in Link header: ${[hasPreload && 'preload', hasPrefetch && 'prefetch', hasDnsPrefetch && 'dns-prefetch'].filter(Boolean).join(', ')}.`
+      : 'No Link header with resource hints detected. Consider using preload/prefetch for critical assets.',
+    tip: !hasResourceHints
+      ? 'Add <link rel="preload"> for critical fonts and scripts, <link rel="prefetch"> for next-page resources, and <link rel="dns-prefetch"> for third-party domains to improve perceived performance.'
+      : undefined,
+  })
+
+  // ── Performance: Vary header (correct caching) ────────────────────────────────
+  const varyHeader = headers.get('vary')
+  if (isCompressed) {
+    tests.push({
+      id: 'vary',
+      category: 'performance',
+      name: 'Vary Header (Encoding)',
+      status: varyHeader?.toLowerCase().includes('accept-encoding') ? 'pass' : 'warn',
+      detail: varyHeader?.toLowerCase().includes('accept-encoding')
+        ? `Vary: ${varyHeader} — caches will correctly store separate compressed/uncompressed versions.`
+        : `Response is compressed but Vary: Accept-Encoding is ${varyHeader ? `set to "${varyHeader}"` : 'missing'}. Proxy caches may serve the wrong version to clients.`,
+      tip: !(varyHeader?.toLowerCase().includes('accept-encoding'))
+        ? 'Add "Vary: Accept-Encoding" so CDNs and proxies store separate cached copies for clients that support and do not support compression.'
+        : undefined,
+    })
+  }
+
+  // ── Performance: Device compatibility (viewport meta) via HTML scan ──────────
+  // We already read the body for mixed-content; re-use if available (body may be null for HTTP sites)
+  // Do a lightweight second read only if we haven't consumed the body yet
+  // (For HTTP URLs we skipped the body read, so attempt it now.)
+  if (!finalUrl.startsWith('https://')) {
+    // For HTTP-only pages attempt body scan for device compatibility hints
+    try {
+      const ctrl2 = new AbortController()
+      const t2 = setTimeout(() => ctrl2.abort(), 6000)
+      const r2 = await fetch(finalUrl, { method: 'GET', redirect: 'follow', signal: ctrl2.signal, headers: { 'User-Agent': 'YOT-SiteTester/1.0', Accept: 'text/html' } })
+      clearTimeout(t2)
+      const bodyText = await r2.text()
+      const hasViewport = /<meta[^>]+name=["']viewport["'][^>]*>/i.test(bodyText)
+      tests.push({
+        id: 'device-compatibility',
+        category: 'performance',
+        name: 'Responsive / Device Compatibility',
+        status: hasViewport ? 'pass' : 'warn',
+        detail: hasViewport
+          ? 'Viewport meta tag found — page is configured for responsive/mobile rendering.'
+          : 'No viewport meta tag detected. The page may not render correctly on mobile devices.',
+        tip: !hasViewport
+          ? 'Add <meta name="viewport" content="width=device-width, initial-scale=1"> to ensure the page scales correctly on all screen sizes.'
+          : undefined,
+      })
+    } catch { /* ignore body read errors */ }
+  } else {
+    // For HTTPS pages the body was already read for mixed-content check; add device compatibility based on that scan
+    // Re-read body since response was already consumed — use a new fetch
+    try {
+      const ctrl3 = new AbortController()
+      const t3 = setTimeout(() => ctrl3.abort(), 6000)
+      const r3 = await fetch(finalUrl, { method: 'GET', redirect: 'follow', signal: ctrl3.signal, headers: { 'User-Agent': 'YOT-SiteTester/1.0', Accept: 'text/html' } })
+      clearTimeout(t3)
+      const bodyText3 = await r3.text()
+      const hasViewport3 = /<meta[^>]+name=["']viewport["'][^>]*>/i.test(bodyText3)
+      const hasCharset = /<meta[^>]+charset/i.test(bodyText3)
+      tests.push({
+        id: 'device-compatibility',
+        category: 'performance',
+        name: 'Responsive / Device Compatibility',
+        status: hasViewport3 ? 'pass' : 'warn',
+        detail: hasViewport3
+          ? `Viewport meta tag found — page is configured for responsive/mobile rendering.${hasCharset ? ' Charset declaration present.' : ''}`
+          : 'No viewport meta tag detected. The page may not render correctly on mobile devices.',
+        tip: !hasViewport3
+          ? 'Add <meta name="viewport" content="width=device-width, initial-scale=1"> to ensure the page scales correctly on all screen sizes.'
+          : undefined,
+      })
+    } catch { /* ignore */ }
+  }
 
   return NextResponse.json({
     url: urlStr,
