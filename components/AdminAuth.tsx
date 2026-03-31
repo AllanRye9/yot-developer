@@ -1,13 +1,14 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LogOut, Lock, UserPlus, User, Eye, EyeOff, ShieldCheck } from 'lucide-react'
+import { LogOut, Lock, UserPlus, User, Eye, EyeOff, ShieldCheck, ShieldAlert } from 'lucide-react'
 import {
   loginAdmin,
   registerAdmin,
   setAdminSession,
   getAdminSession,
   logoutAdmin,
+  hasAdmin,
 } from '@/lib/admin-auth'
 
 interface AdminAuthProps {
@@ -17,6 +18,8 @@ interface AdminAuthProps {
 export default function AdminAuth({ children }: AdminAuthProps) {
   const [session, setSession] = useState<string | null>(null)
   const [ready, setReady] = useState(false)
+  const [adminExists, setAdminExists] = useState(false)
+  // 'login' is shown when an admin account exists; 'register' when it doesn't
   const [tab, setTab] = useState<'login' | 'register'>('login')
 
   // Login form state
@@ -26,7 +29,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
   const [loginError, setLoginError] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
 
-  // Register form state
+  // Register form state (first-time setup only)
   const [regUser, setRegUser] = useState('')
   const [regPass, setRegPass] = useState('')
   const [regConfirm, setRegConfirm] = useState('')
@@ -36,6 +39,10 @@ export default function AdminAuth({ children }: AdminAuthProps) {
   const [regLoading, setRegLoading] = useState(false)
 
   useEffect(() => {
+    const exists = hasAdmin()
+    setAdminExists(exists)
+    // If no admin registered yet, land on the Register tab
+    setTab(exists ? 'login' : 'register')
     setSession(getAdminSession())
     setReady(true)
   }, [])
@@ -66,7 +73,8 @@ export default function AdminAuth({ children }: AdminAuthProps) {
     await new Promise(r => setTimeout(r, 300))
     const result = registerAdmin(regUser.trim(), regPass)
     if (result.success) {
-      setRegSuccess('Account created! You can now log in.')
+      setRegSuccess('Admin account created! Please sign in.')
+      setAdminExists(true)
       setRegUser('')
       setRegPass('')
       setRegConfirm('')
@@ -84,17 +92,24 @@ export default function AdminAuth({ children }: AdminAuthProps) {
 
   if (!ready) return null
 
+  // ── Authenticated: show the admin dashboard (children) ──────────────────
   if (session) {
     return (
       <div className="relative">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 px-1">
           <div className="flex items-center gap-2 text-sm text-[var(--foreground-muted)]">
             <ShieldCheck size={14} className="text-[#6366f1]" />
-            <span>Logged in as <span className="text-[var(--foreground)] font-medium">{session}</span></span>
+            <span>
+              Signed in as{' '}
+              <span className="text-[var(--foreground)] font-semibold">{session}</span>
+              <span className="ml-2 text-[10px] bg-[#6366f1]/20 text-[#6366f1] border border-[#6366f1]/30 rounded px-1.5 py-0.5 uppercase tracking-widest font-semibold">
+                superadmin
+              </span>
+            </span>
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--foreground-muted)] hover:text-white hover:bg-[#1e1e2e] transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--foreground-muted)] hover:text-white hover:bg-[#1e1e2e] border border-[var(--color-border)] transition-colors"
           >
             <LogOut size={14} />
             Logout
@@ -105,62 +120,76 @@ export default function AdminAuth({ children }: AdminAuthProps) {
     )
   }
 
+  // ── Unauthenticated: show login / first-time-setup form ─────────────────
   return (
-    <div className="flex items-center justify-center min-h-[60vh]">
+    <div className="flex items-center justify-center min-h-[80vh]">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-8"
+        className="w-full max-w-md bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-8 shadow-2xl shadow-black/40"
       >
+        {/* Header */}
         <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] rounded-xl flex items-center justify-center shadow-lg shadow-[#6366f1]/30">
-            <Lock size={20} className="text-white" />
+          <div className="w-12 h-12 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] rounded-xl flex items-center justify-center shadow-lg shadow-[#6366f1]/40">
+            {adminExists ? <Lock size={22} className="text-white" /> : <ShieldAlert size={22} className="text-white" />}
           </div>
           <div>
-            <h1 className="text-xl font-bold text-[var(--foreground)]">Admin Access</h1>
+            <h1 className="text-xl font-bold text-[var(--foreground)]">
+              {adminExists ? 'Admin Sign In' : 'Admin Setup'}
+            </h1>
             <p className="text-xs text-[var(--foreground-muted)]">YOT Developer Platform</p>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 bg-[var(--color-bg)] rounded-lg p-1 mb-6">
-          {(['login', 'register'] as const).map(t => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-colors ${
-                tab === t ? 'bg-[#6366f1] text-[var(--foreground)]' : 'text-[var(--foreground-muted)] hover:text-white'
-              }`}
-            >
-              {t === 'login' ? <User size={14} /> : <UserPlus size={14} />}
-              {t === 'login' ? 'Login' : 'Register'}
-            </button>
-          ))}
-        </div>
+        {/* Tabs – only show both tabs before an admin exists */}
+        {!adminExists && (
+          <div className="flex gap-1 bg-[var(--color-bg)] rounded-lg p-1 mb-6">
+            {(['register', 'login'] as const).map(t => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-colors ${
+                  tab === t
+                    ? 'bg-[#6366f1] text-white'
+                    : 'text-[var(--foreground-muted)] hover:text-white'
+                }`}
+              >
+                {t === 'login' ? <User size={14} /> : <UserPlus size={14} />}
+                {t === 'login' ? 'Login' : 'First-time Setup'}
+              </button>
+            ))}
+          </div>
+        )}
 
         <AnimatePresence mode="wait">
-          {tab === 'login' ? (
+          {/* ── Login form ── */}
+          {(tab === 'login' || adminExists) && (
             <motion.form
               key="login"
-              initial={{ opacity: 0, x: -10 }}
+              initial={{ opacity: 0, x: adminExists ? 0 : -10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 10 }}
               onSubmit={handleLogin}
               className="space-y-4"
             >
               <div>
-                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">Username</label>
+                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">
+                  Username
+                </label>
                 <input
                   type="text"
                   value={loginUser}
                   onChange={e => setLoginUser(e.target.value)}
-                  placeholder="admin"
+                  placeholder="admin username"
                   required
+                  autoFocus
                   className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--foreground)] placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">Password</label>
+                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">
+                  Password
+                </label>
                 <div className="relative">
                   <input
                     type={loginShowPass ? 'text' : 'password'}
@@ -187,15 +216,15 @@ export default function AdminAuth({ children }: AdminAuthProps) {
               <button
                 type="submit"
                 disabled={loginLoading}
-                className="w-full bg-[#6366f1] hover:bg-[#5558e8] disabled:opacity-50 text-[var(--foreground)] font-medium py-2.5 rounded-lg text-sm transition-colors"
+                className="w-full bg-[#6366f1] hover:bg-[#5558e8] disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors"
               >
                 {loginLoading ? 'Signing in…' : 'Sign In'}
               </button>
-              <p className="text-xs text-center text-[var(--foreground-muted)]">
-                First login: use the credentials shown in the username/password placeholders.
-              </p>
             </motion.form>
-          ) : (
+          )}
+
+          {/* ── First-time Register form (shown only when no admin exists) ── */}
+          {tab === 'register' && !adminExists && (
             <motion.form
               key="register"
               initial={{ opacity: 0, x: 10 }}
@@ -204,19 +233,32 @@ export default function AdminAuth({ children }: AdminAuthProps) {
               onSubmit={handleRegister}
               className="space-y-4"
             >
+              <p
+                role="status"
+                aria-live="polite"
+                className="text-xs text-[var(--foreground-muted)] bg-[#6366f1]/10 border border-[#6366f1]/20 rounded-lg px-3 py-2"
+              >
+                No admin account exists yet. The first person to register will become the sole
+                superadmin.
+              </p>
               <div>
-                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">Username</label>
+                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">
+                  Username
+                </label>
                 <input
                   type="text"
                   value={regUser}
                   onChange={e => setRegUser(e.target.value)}
-                  placeholder="new_admin"
+                  placeholder="Choose a username"
                   required
+                  autoFocus
                   className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--foreground)] placeholder-[#4a5568] focus:outline-none focus:border-[#6366f1] transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">Password</label>
+                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">
+                  Password
+                </label>
                 <div className="relative">
                   <input
                     type={regShowPass ? 'text' : 'password'}
@@ -236,7 +278,9 @@ export default function AdminAuth({ children }: AdminAuthProps) {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">Confirm Password</label>
+                <label className="block text-xs font-medium text-[var(--foreground-muted)] mb-1.5">
+                  Confirm Password
+                </label>
                 <input
                   type="password"
                   value={regConfirm}
@@ -259,9 +303,9 @@ export default function AdminAuth({ children }: AdminAuthProps) {
               <button
                 type="submit"
                 disabled={regLoading}
-                className="w-full bg-[#6366f1] hover:bg-[#5558e8] disabled:opacity-50 text-[var(--foreground)] font-medium py-2.5 rounded-lg text-sm transition-colors"
+                className="w-full bg-[#6366f1] hover:bg-[#5558e8] disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors"
               >
-                {regLoading ? 'Creating…' : 'Create Account'}
+                {regLoading ? 'Creating account…' : 'Create Admin Account'}
               </button>
             </motion.form>
           )}

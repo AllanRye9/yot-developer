@@ -2,6 +2,7 @@ export interface AdminUser {
   username: string
   passwordHash: string
   role: 'admin' | 'superadmin'
+  createdAt: string
 }
 
 export function hashPassword(p: string): string {
@@ -21,11 +22,12 @@ export function getAdminUsers(): AdminUser[] {
   } catch {
     // ignore parse errors
   }
-  const defaults: AdminUser[] = [
-    { username: 'admin', passwordHash: hashPassword('admin123'), role: 'superadmin' },
-  ]
-  localStorage.setItem('yot-admins', JSON.stringify(defaults))
-  return defaults
+  return []
+}
+
+/** Returns true if at least one admin account has been registered. */
+export function hasAdmin(): boolean {
+  return getAdminUsers().length > 0
 }
 
 function saveAdminUsers(users: AdminUser[]): void {
@@ -38,13 +40,17 @@ export function loginAdmin(username: string, password: string): boolean {
   return users.some(u => u.username === username && u.passwordHash === hash)
 }
 
+/**
+ * Register the very first admin account.
+ * Subsequent calls are rejected — there can only be one admin.
+ */
 export function registerAdmin(
   username: string,
   password: string
 ): { success: boolean; error?: string } {
-  const users = getAdminUsers()
-  if (users.find(u => u.username === username)) {
-    return { success: false, error: 'Username already exists' }
+  // Only the first registrant may become admin.
+  if (hasAdmin()) {
+    return { success: false, error: 'An admin account already exists. Only one admin is allowed.' }
   }
   if (username.trim().length < 3) {
     return { success: false, error: 'Username must be at least 3 characters' }
@@ -55,9 +61,10 @@ export function registerAdmin(
   const newUser: AdminUser = {
     username: username.trim(),
     passwordHash: hashPassword(password),
-    role: 'admin',
+    role: 'superadmin',
+    createdAt: new Date().toISOString(),
   }
-  saveAdminUsers([...users, newUser])
+  saveAdminUsers([newUser])
   return { success: true }
 }
 
@@ -66,9 +73,15 @@ export function setAdminSession(username: string): void {
 }
 
 export function getAdminSession(): string | null {
+  if (typeof window === 'undefined') return null
   return sessionStorage.getItem('yot-admin-session')
 }
 
 export function logoutAdmin(): void {
   sessionStorage.removeItem('yot-admin-session')
+}
+
+/** Returns true when an admin is currently logged in (active session). */
+export function isAdminSessionActive(): boolean {
+  return Boolean(getAdminSession())
 }
