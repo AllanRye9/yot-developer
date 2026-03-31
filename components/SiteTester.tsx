@@ -7,6 +7,7 @@ import {
   Lock, Bug, Activity, Sparkles, Gauge,
 } from 'lucide-react'
 import type { SiteTestResult, TestItem } from '@/app/api/site-test/route'
+import { trackFeatureUsage } from '@/lib/analytics'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -443,6 +444,7 @@ export default function SiteTester() {
     setResult(null)
     setError(null)
     setActiveTab('all')
+    trackFeatureUsage('Site Tester')
 
     // Log start to console
     console.group('%c[YOT Site Tester] Starting tests for: ' + trimmed, 'color:#6366f1;font-weight:bold')

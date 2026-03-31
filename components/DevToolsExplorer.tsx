@@ -48,6 +48,8 @@ function ExecutionDiagram({ steps }: { steps: ExecutionStep[] }) {
   )
 }
 
+import { trackFeatureUsage } from '@/lib/analytics'
+
 export default function DevToolsExplorer() {
   const [selectedCategory, setSelectedCategory] = useState(devToolsCategories[0])
   const [selectedExample, setSelectedExample] = useState(0)
@@ -59,6 +61,7 @@ export default function DevToolsExplorer() {
     setSelectedCategory(cat)
     setSelectedExample(0)
     setSidebarOpen(false)
+    trackFeatureUsage(`DevTools:${cat.name}`)
   }
 
   const CategoryList = () => (

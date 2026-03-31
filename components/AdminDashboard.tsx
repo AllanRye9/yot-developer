@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
   BarChart, Bar, PieChart, Pie, Cell,
@@ -11,7 +11,7 @@ import {
   UserCheck, ShieldCheck, Clock, Database, type LucideIcon,
 } from 'lucide-react'
 import { dailyStats, featureUsage, experienceLevels, recentActivity, adminStats } from '@/lib/mock-data'
-import { getVisitorStats, getRealFeatureUsage } from '@/lib/analytics'
+import { getVisitorStats, getRealFeatureUsage, getRecentActivity, getActivityOverTime } from '@/lib/analytics'
 import { getUsers } from '@/lib/user-auth'
 import { getAdminUsers } from '@/lib/admin-auth'
 
@@ -51,23 +51,43 @@ const StatCard = ({
   </motion.div>
 )
 
+const REFRESH_INTERVAL_MS = 10_000
+
 export default function AdminDashboard() {
   const [activeChart, setActiveChart] = useState<'users' | 'experiments' | 'queries'>('users')
   const [visitorStats, setVisitorStats] = useState(getVisitorStats())
   const [realFeatures, setRealFeatures] = useState(getRealFeatureUsage())
+  const [realActivity, setRealActivity] = useState(getRecentActivity())
+  const [activityOverTime, setActivityOverTime] = useState(getActivityOverTime())
   const [registeredUsers, setRegisteredUsers] = useState(0)
   const [adminUser, setAdminUser] = useState<string>('')
+  const [lastUpdated, setLastUpdated] = useState(new Date())
 
-  useEffect(() => {
+  const refreshStats = useCallback(() => {
     setVisitorStats(getVisitorStats())
     setRealFeatures(getRealFeatureUsage())
+    setRealActivity(getRecentActivity())
+    setActivityOverTime(getActivityOverTime())
     setRegisteredUsers(getUsers().length)
+    setLastUpdated(new Date())
+  }, [])
+
+  useEffect(() => {
     const admins = getAdminUsers()
     if (admins.length > 0) setAdminUser(admins[0]?.username ?? '')
-  }, [])
+    refreshStats()
+    const interval = setInterval(refreshStats, REFRESH_INTERVAL_MS)
+    return () => clearInterval(interval)
+  }, [refreshStats])
 
   const chartDataKey = activeChart === 'users' ? 'activeUsers' : activeChart === 'experiments' ? 'experiments' : 'aiQueries'
   const chartColor = activeChart === 'users' ? '#6366f1' : activeChart === 'experiments' ? '#06b6d4' : '#8b5cf6'
+
+  // Use real visits-over-time when data exists, otherwise fall back to mock
+  const hasRealActivityData = activityOverTime.some(d => d.visits > 0)
+  const activityChartData = hasRealActivityData
+    ? activityOverTime
+    : dailyStats.map(d => ({ date: d.date, visits: d[chartDataKey] }))
 
   // Merge real feature data with mock fallback
   const displayedFeatures = realFeatures.length > 0 ? realFeatures : featureUsage
@@ -85,6 +105,10 @@ export default function AdminDashboard() {
         <div className="hidden sm:flex items-center gap-2 text-xs text-[var(--foreground-muted)]">
           <Clock size={12} />
           {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          <span className="ml-2 flex items-center gap-1 text-[10px] bg-[#10b981]/15 text-[#10b981] border border-[#10b981]/20 rounded px-1.5 py-0.5 font-semibold uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 bg-[#10b981] rounded-full animate-pulse inline-block" />
+            Live · updated {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+          </span>
         </div>
       </div>
 
@@ -246,22 +270,31 @@ export default function AdminDashboard() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="font-semibold text-[var(--foreground)]">Activity Over Time</h3>
-            <p className="text-xs text-[var(--foreground-muted)] mt-0.5">Last 30 days</p>
+            <h3 className="font-semibold text-[var(--foreground)] flex items-center gap-2">
+              Activity Over Time
+              {hasRealActivityData && (
+                <span className="text-[10px] bg-[#10b981]/15 text-[#10b981] border border-[#10b981]/20 rounded px-1.5 py-0.5 font-semibold uppercase tracking-wider">Live</span>
+              )}
+            </h3>
+            <p className="text-xs text-[var(--foreground-muted)] mt-0.5">
+              {hasRealActivityData ? 'Real page visits · last 30 days' : 'Last 30 days (demo data)'}
+            </p>
           </div>
-          <div className="flex gap-1 bg-[var(--color-bg)] rounded-lg p-1 border border-[var(--color-border)]">
-            {(['users', 'experiments', 'queries'] as const).map(t => (
-              <button key={t} onClick={() => setActiveChart(t)}
-                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${activeChart === t ? 'text-white' : 'text-[var(--foreground-muted)] hover:text-white'}`}
-                style={activeChart === t ? { background: chartColor } : {}}
-              >
-                {t === 'users' ? 'Users' : t === 'experiments' ? 'Experiments' : 'AI Queries'}
-              </button>
-            ))}
-          </div>
+          {!hasRealActivityData && (
+            <div className="flex gap-1 bg-[var(--color-bg)] rounded-lg p-1 border border-[var(--color-border)]">
+              {(['users', 'experiments', 'queries'] as const).map(t => (
+                <button key={t} onClick={() => setActiveChart(t)}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${activeChart === t ? 'text-white' : 'text-[var(--foreground-muted)] hover:text-white'}`}
+                  style={activeChart === t ? { background: chartColor } : {}}
+                >
+                  {t === 'users' ? 'Users' : t === 'experiments' ? 'Experiments' : 'AI Queries'}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <ResponsiveContainer width="100%" height={260}>
-          <AreaChart data={dailyStats}>
+          <AreaChart data={activityChartData}>
             <defs>
               <linearGradient id="actGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor={chartColor} stopOpacity={0.25} />
@@ -272,7 +305,7 @@ export default function AdminDashboard() {
             <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 11 }} tickLine={false} interval={4} />
             <YAxis tick={{ fill: '#64748b', fontSize: 11 }} tickLine={false} axisLine={false} />
             <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={{ color: chartColor }} />
-            <Area type="monotone" dataKey={chartDataKey} stroke={chartColor} fill="url(#actGrad)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+            <Area type="monotone" dataKey="visits" stroke={chartColor} fill="url(#actGrad)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
           </AreaChart>
         </ResponsiveContainer>
       </motion.div>
@@ -314,22 +347,43 @@ export default function AdminDashboard() {
 
       {/* Recent Activity */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-6">
-        <h3 className="font-semibold text-[var(--foreground)] mb-4">Recent Activity</h3>
+        <h3 className="font-semibold text-[var(--foreground)] mb-4 flex items-center gap-2">
+          Recent Activity
+          {realActivity.length > 0 && (
+            <span className="text-[10px] bg-[#10b981]/15 text-[#10b981] border border-[#10b981]/20 rounded px-1.5 py-0.5 font-semibold uppercase tracking-wider">Live</span>
+          )}
+        </h3>
         <div className="space-y-1">
-          {recentActivity.map((activity, i) => (
-            <div key={i} className="flex items-center justify-between py-3 border-b border-[var(--color-border)] last:border-0">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-[#6366f1]/30 to-[#8b5cf6]/30 border border-[#6366f1]/20 rounded-full flex items-center justify-center text-xs font-bold text-[#a5b4fc]">
-                  {activity.user[0]}
+          {realActivity.length > 0
+            ? realActivity.slice(0, 8).map((activity, i) => (
+              <div key={i} className="flex items-center justify-between py-3 border-b border-[var(--color-border)] last:border-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-[#6366f1]/30 to-[#8b5cf6]/30 border border-[#6366f1]/20 rounded-full flex items-center justify-center text-xs font-bold text-[#a5b4fc]">
+                    {activity.path === '/' ? 'H' : activity.path.replace('/', '').charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-[var(--foreground)]">Page Visit</p>
+                    <p className="text-xs text-[var(--foreground-muted)]">{activity.path}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-[var(--foreground)]">{activity.user}</p>
-                  <p className="text-xs text-[var(--foreground-muted)]">{activity.action}</p>
-                </div>
+                <span className="text-xs text-[var(--foreground-muted)] shrink-0">{activity.time}</span>
               </div>
-              <span className="text-xs text-[var(--foreground-muted)] shrink-0">{activity.time}</span>
-            </div>
-          ))}
+            ))
+            : recentActivity.map((activity, i) => (
+              <div key={i} className="flex items-center justify-between py-3 border-b border-[var(--color-border)] last:border-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-[#6366f1]/30 to-[#8b5cf6]/30 border border-[#6366f1]/20 rounded-full flex items-center justify-center text-xs font-bold text-[#a5b4fc]">
+                    {activity.user[0]}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-[var(--foreground)]">{activity.user}</p>
+                    <p className="text-xs text-[var(--foreground-muted)]">{activity.action}</p>
+                  </div>
+                </div>
+                <span className="text-xs text-[var(--foreground-muted)] shrink-0">{activity.time}</span>
+              </div>
+            ))
+          }
         </div>
       </motion.div>
     </div>

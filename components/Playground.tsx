@@ -3,6 +3,7 @@ import { useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Play, Trash2, Copy, Check, Code, Terminal, ChevronDown, Bot, Send, Sparkles } from 'lucide-react'
 import { copyToClipboard } from '@/lib/clipboard'
+import { trackFeatureUsage } from '@/lib/analytics'
 
 const runCode = (code: string): Array<{ type: string; content: string }> => {
   const outputs: Array<{ type: string; content: string }> = []
@@ -143,6 +144,7 @@ function McpPanel({ code, onCodeChange }: { code: string; onCodeChange: (code: s
     setMessages(prev => [...prev, userMsg])
     setInput('')
     setIsLoading(true)
+    trackFeatureUsage('AI Assistant')
 
     await new Promise(r => setTimeout(r, 500))
 
@@ -261,6 +263,7 @@ export default function Playground() {
 
   const handleRun = useCallback(async () => {
     setIsRunning(true); setActiveTab('output')
+    trackFeatureUsage('Playground')
     await new Promise(r => setTimeout(r, 200))
     setOutputs(runCode(code)); setIsRunning(false)
   }, [code])
