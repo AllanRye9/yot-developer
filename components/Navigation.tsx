@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import {
   Code2, Play, Cpu, Trophy, User, Search,
   Palette, FlaskConical, Shield, FileCode2,
-  Menu, X, ChevronRight,
+  Menu, X, ChevronRight, TerminalSquare,
 } from 'lucide-react'
 import { themes, getThemeById, getThemeCSSVars, defaultTheme } from '@/lib/themes'
 
@@ -60,6 +60,7 @@ export default function Navigation() {
   const links = [
     { href: '/', label: 'Explorer', icon: Code2 },
     { href: '/playground', label: 'Playground', icon: Play },
+    { href: '/ai-console', label: 'AI Console', icon: TerminalSquare },
     { href: '/challenges', label: 'Challenges', icon: Trophy },
     { href: '/inspector', label: 'Inspector', icon: Search },
     { href: '/dashboard', label: 'Dashboard', icon: User },
