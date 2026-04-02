@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronRight, ChevronDown, Play, Info } from 'lucide-react'
+import { trackFeatureUsage } from '@/lib/analytics'
 
 interface PropertyNode {
   key: string
@@ -171,7 +172,10 @@ function TreeNode({ node, depth = 0 }: { node: PropertyNode; depth?: number }) {
   }
 
   const handleRun = () => {
-    if (node.snippet) setOutput(runSnippet(node.snippet))
+    if (node.snippet) {
+      trackFeatureUsage('Inspector')
+      setOutput(runSnippet(node.snippet))
+    }
   }
 
   return (

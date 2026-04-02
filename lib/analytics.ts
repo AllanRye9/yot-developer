@@ -107,3 +107,45 @@ export function getRealFeatureUsage(): { feature: string; count: number }[] {
     .sort((a, b) => b.count - a.count)
     .slice(0, 10)
 }
+
+export function getRecentActivity(): { path: string; time: string; timestamp: number }[] {
+  const visits = safeRead<PageVisit>(VISITS_KEY)
+  return visits
+    .slice(-20)
+    .reverse()
+    .map(v => {
+      const diffMs = Date.now() - v.timestamp
+      const diffMin = Math.floor(diffMs / 60000)
+      const diffH = Math.floor(diffMs / 3600000)
+      const diffD = Math.floor(diffMs / 86400000)
+      let time: string
+      if (diffMin < 1) time = 'just now'
+      else if (diffMin < 60) time = `${diffMin} min ago`
+      else if (diffH < 24) time = `${diffH}h ago`
+      else time = `${diffD}d ago`
+      return { path: v.path, time, timestamp: v.timestamp }
+    })
+}
+
+export function getActivityOverTime(): { date: string; visits: number }[] {
+  const visits = safeRead<PageVisit>(VISITS_KEY)
+  const dayMap = new Map<string, number>()
+
+  // Seed all 30 days with 0 so gaps show as zero
+  const now = new Date()
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now)
+    d.setDate(now.getDate() - i)
+    const key = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    dayMap.set(key, 0)
+  }
+
+  for (const v of visits) {
+    const key = new Date(v.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    if (dayMap.has(key)) {
+      dayMap.set(key, (dayMap.get(key) ?? 0) + 1)
+    }
+  }
+
+  return Array.from(dayMap.entries()).map(([date, visits]) => ({ date, visits }))
+}

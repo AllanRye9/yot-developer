@@ -6,6 +6,7 @@ import {
   Play, CheckCircle, XCircle, Info, ChevronDown, ChevronUp,
   BookOpen, FlaskConical, Terminal, Lightbulb,
 } from 'lucide-react'
+import { trackFeatureUsage } from '@/lib/analytics'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -1116,6 +1117,7 @@ export default function CodeAnalyzer() {
     setAnalyzing(true)
     setResult(null)
     setHighlightLine(null)
+    trackFeatureUsage('Code Analyzer')
     const res = await performAnalysis(code, language)
     setResult(res)
     setAnalyzing(false)

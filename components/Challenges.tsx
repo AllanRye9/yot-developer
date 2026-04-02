@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Trophy, Star, Lock, CheckCircle, Play, Lightbulb, Eye, Zap, Target } from 'lucide-react'
 import { challenges, badges, type Challenge, type DifficultyLevel } from '@/lib/challenges-data'
+import { trackFeatureUsage } from '@/lib/analytics'
 
 const STORAGE_KEY = 'yot-challenge-progress'
 
@@ -130,6 +131,7 @@ function ChallengeModal({ challenge, isCompleted, onClose, onComplete }: {
 
   const handleRun = async () => {
     setIsRunning(true); setAttempted(true)
+    trackFeatureUsage('Challenges')
     await new Promise(r => setTimeout(r, 300))
     const result = runCode(code)
     setOutputs(result)
@@ -281,6 +283,7 @@ export default function Challenges({ username: _username, displayName: _displayN
   const handleComplete = useCallback((challenge: Challenge) => {
     setProgress(prev => {
       if (prev.completed.includes(challenge.id)) return prev
+      trackFeatureUsage('Challenge Completed')
       const next: Progress = {
         completed: [...prev.completed, challenge.id],
         xp: prev.xp + challenge.xpReward,
