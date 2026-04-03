@@ -374,20 +374,24 @@ function FlutterPlayground() {
 
   // Build a simple phone-mock HTML preview of the Dart widget structure
   const buildPreview = () => {
+    const escHtml = (s: string) =>
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+
     const appBarMatch = code.match(/AppBar\s*\(\s*title:\s*Text\s*\(\s*['"](.+?)['"]\s*\)/)
-    const appBarTitle = appBarMatch ? appBarMatch[1] : 'Flutter App'
+    const appBarTitle = appBarMatch ? escHtml(appBarMatch[1]) : 'Flutter App'
     const bodyTexts: string[] = []
     const textRegex = /Text\s*\(\s*['"](.+?)['"]/g
     let m
     while ((m = textRegex.exec(code)) !== null) {
-      if (m[1] !== appBarTitle) bodyTexts.push(m[1])
+      const safe = escHtml(m[1])
+      if (safe !== appBarTitle) bodyTexts.push(safe)
     }
     const listItems: string[] = []
     // Extract array items for list preview
     const arrayMatch = code.match(/\[([^\]]+)\]/)
     if (arrayMatch) {
       const items = arrayMatch[1].match(/['"]([^'"]+)['"]/g)
-      if (items) listItems.push(...items.map(i => i.replace(/['"]/g, '')))
+      if (items) listItems.push(...items.map(i => escHtml(i.replace(/['"]/g, ''))))
     }
 
     const hasCounter = code.includes('_count') || code.includes('count')

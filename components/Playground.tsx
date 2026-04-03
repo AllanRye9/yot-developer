@@ -8,11 +8,8 @@ import { trackFeatureUsage } from '@/lib/analytics'
 // ─── TypeScript type stripper (lightweight, covers common patterns) ────────────
 
 function stripTypeScript(src: string): string {
-  // Remove interface declarations ([\s\S] is the ES5-compatible alternative to /./s)
-  src = src.replace(/\binterface\s+\w+(\s*<[^>]*>)?\s*\{[^}]*\}/g, '')
-  // Remove multi-line interfaces
+  // Remove interface declarations
   src = src.replace(/\binterface\s+\w+[\s\S]*?\{[\s\S]*?\}/g, (match) => {
-    // Only remove if it looks like an interface (has typed properties)
     if (match.includes(':')) return ''
     return match
   })
@@ -26,8 +23,8 @@ function stripTypeScript(src: string): string {
   src = src.replace(/!(\s*[.[(])/g, '$1')
   // Remove type assertions: `as Type`
   src = src.replace(/\s+as\s+\w[\w<>,.\s\[\]|&?]*(?=[,;\s)\]{}])/g, '')
-  // Remove generic type parameters in function/class signatures: <T>, <T extends Foo>
-  src = src.replace(/<([A-Z]\w*(\s+extends\s+[^>]*)?(?:,\s*[A-Z]\w*(?:\s+extends\s+[^>]*)?)*)>/g, '')
+  // Remove simple generic type parameters: <T> or <T, U> (only single uppercase letter params)
+  src = src.replace(/<([A-Z](?:,\s*[A-Z])*)>/g, '')
   // Remove type annotations on variables: const x: Type = ...
   src = src.replace(/:\s*[\w\[\]<>|&{},.()\s'"]+(?=\s*[=,);{])/g, '')
   // Remove return type annotations: ): Type {

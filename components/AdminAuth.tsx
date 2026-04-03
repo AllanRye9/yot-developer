@@ -4,11 +4,6 @@ import { motion } from 'framer-motion'
 import { LogOut, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import { setAdminSession, getAdminSession, logoutAdmin } from '@/lib/admin-auth'
 
-// Admin credentials come from build-time environment variables.
-// Set NEXT_PUBLIC_ADMIN_USER and NEXT_PUBLIC_ADMIN_PASS in your .env.local or hosting dashboard.
-const ENV_ADMIN_USER = process.env.NEXT_PUBLIC_ADMIN_USER ?? 'admin'
-const ENV_ADMIN_PASS = process.env.NEXT_PUBLIC_ADMIN_PASS ?? ''
-
 interface AdminAuthProps {
   children: React.ReactNode
 }
@@ -33,14 +28,21 @@ export default function AdminAuth({ children }: AdminAuthProps) {
     e.preventDefault()
     setLoginError('')
     setLoginLoading(true)
-    await new Promise(r => setTimeout(r, 300))
-    const usernameMatch = loginUser.trim() === ENV_ADMIN_USER
-    const passwordMatch = loginPass === ENV_ADMIN_PASS
-    if (usernameMatch && passwordMatch) {
-      setAdminSession(loginUser.trim())
-      setSession(loginUser.trim())
-    } else {
-      setLoginError('Invalid username or password')
+    try {
+      const res = await fetch('/api/admin-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: loginUser.trim(), password: loginPass }),
+      })
+      const data = await res.json() as { ok: boolean; error?: string }
+      if (data.ok) {
+        setAdminSession(loginUser.trim())
+        setSession(loginUser.trim())
+      } else {
+        setLoginError(data.error ?? 'Invalid username or password')
+      }
+    } catch {
+      setLoginError('Network error — please try again')
     }
     setLoginLoading(false)
   }
@@ -158,4 +160,3 @@ export default function AdminAuth({ children }: AdminAuthProps) {
     </div>
   )
 }
-

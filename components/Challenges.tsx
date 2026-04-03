@@ -120,16 +120,18 @@ function CertificateModal({ challenge, onClose }: { challenge: Challenge; onClos
   const certRef = useRef<HTMLDivElement>(null)
   const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 
+  const escapeHtml = (str: string) =>
+    str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+
   const handlePrint = () => {
     if (!certRef.current) return
+    const safeTitle = escapeHtml(challenge.title)
     const content = certRef.current.innerHTML
     const win = window.open('', '_blank')
     if (!win) return
-    win.document.write(`<!DOCTYPE html><html><head><title>Certificate – ${challenge.title}</title>
+    win.document.write(`<!DOCTYPE html><html><head><title>Certificate &#8211; ${safeTitle}</title>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
       body { margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #1a1a2e; }
-      .cert { font-family: 'Crimson Text', serif; }
     </style></head><body>${content}</body></html>`)
     win.document.close()
     setTimeout(() => { win.print(); win.close() }, 500)
