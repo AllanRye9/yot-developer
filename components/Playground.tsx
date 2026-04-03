@@ -5,6 +5,36 @@ import { Play, Trash2, Copy, Check, Code, Terminal, ChevronDown, Bot, Send, Spar
 import { copyToClipboard } from '@/lib/clipboard'
 import { trackFeatureUsage } from '@/lib/analytics'
 
+// ─── TypeScript type stripper (lightweight, covers common patterns) ────────────
+
+function stripTypeScript(src: string): string {
+  // Remove interface declarations ([\s\S] is the ES5-compatible alternative to /./s)
+  src = src.replace(/\binterface\s+\w+(\s*<[^>]*>)?\s*\{[^}]*\}/g, '')
+  // Remove multi-line interfaces
+  src = src.replace(/\binterface\s+\w+[\s\S]*?\{[\s\S]*?\}/g, (match) => {
+    // Only remove if it looks like an interface (has typed properties)
+    if (match.includes(':')) return ''
+    return match
+  })
+  // Remove type alias declarations
+  src = src.replace(/\btype\s+\w+(\s*<[^>]*>)?\s*=\s*[^;]+;/g, '')
+  // Remove enum declarations
+  src = src.replace(/\b(const\s+)?enum\s+\w+\s*\{[^}]*\}/g, '// (enum removed)')
+  // Remove access modifiers in class bodies
+  src = src.replace(/\b(public|private|protected|readonly|abstract|override)\s+/g, '')
+  // Remove non-null assertions
+  src = src.replace(/!(\s*[.[(])/g, '$1')
+  // Remove type assertions: `as Type`
+  src = src.replace(/\s+as\s+\w[\w<>,.\s\[\]|&?]*(?=[,;\s)\]{}])/g, '')
+  // Remove generic type parameters in function/class signatures: <T>, <T extends Foo>
+  src = src.replace(/<([A-Z]\w*(\s+extends\s+[^>]*)?(?:,\s*[A-Z]\w*(?:\s+extends\s+[^>]*)?)*)>/g, '')
+  // Remove type annotations on variables: const x: Type = ...
+  src = src.replace(/:\s*[\w\[\]<>|&{},.()\s'"]+(?=\s*[=,);{])/g, '')
+  // Remove return type annotations: ): Type {
+  src = src.replace(/\)\s*:\s*[\w\[\]<>|&{},.()\s'"]+(?=\s*\{)/g, ') ')
+  return src
+}
+
 const runCode = (code: string): Array<{ type: string; content: string }> => {
   const outputs: Array<{ type: string; content: string }> = []
   const mockConsole = {
@@ -21,6 +51,7 @@ const runCode = (code: string): Array<{ type: string; content: string }> => {
     clear: () => outputs.push({ type: 'clear', content: '[Console cleared]' }),
   }
   try {
+    // eslint-disable-next-line no-new-func
     const fn = new Function('console', code)
     fn(mockConsole)
   } catch (e) {
@@ -29,11 +60,29 @@ const runCode = (code: string): Array<{ type: string; content: string }> => {
   return outputs
 }
 
-const snippets = [
+type Language = 'javascript' | 'typescript'
+
+const jsSnippets = [
   { label: 'Hello World', code: `console.log("Hello, World!");\nconsole.log("YOT Developer Platform");` },
   { label: 'Array Methods', code: `const nums = [1,2,3,4,5];\nconsole.log("Evens:", nums.filter(n => n%2===0));\nconsole.log("Doubled:", nums.map(n => n*2));` },
   { label: 'Async/Await', code: `async function main() {\n  console.log("Starting...");\n  await new Promise(r => setTimeout(r, 100));\n  console.log("Done!");\n}\nmain();` },
 ]
+
+const tsSnippets = [
+  {
+    label: 'Typed Variables',
+    code: `const name: string = "YOT Developer";\nconst version: number = 1.0;\nconst active: boolean = true;\nconsole.log(name, "v" + version, "active:", active);`,
+  },
+  {
+    label: 'Interface & Object',
+    code: `interface User {\n  id: number;\n  name: string;\n  role: "admin" | "user";\n}\n\nconst user: User = { id: 1, name: "Alice", role: "admin" };\nconsole.log("User:", user.name, "| Role:", user.role);`,
+  },
+  {
+    label: 'Generic Function',
+    code: `function identity<T>(value: T): T {\n  return value;\n}\n\nconsole.log(identity<string>("Hello TypeScript!"));\nconsole.log(identity<number>(42));\nconsole.log(identity<boolean>(true));`,
+  },
+]
+
 
 // ─── MCP AI code generation ───────────────────────────────────────────────────
 
@@ -253,7 +302,8 @@ function McpPanel({ code, onCodeChange }: { code: string; onCodeChange: (code: s
 }
 
 export default function Playground() {
-  const [code, setCode] = useState(snippets[0].code)
+  const [language, setLanguage] = useState<Language>('javascript')
+  const [code, setCode] = useState(jsSnippets[0].code)
   const [outputs, setOutputs] = useState<Array<{ type: string; content: string }>>([])
   const [isRunning, setIsRunning] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -261,12 +311,21 @@ export default function Playground() {
   const [showSnippets, setShowSnippets] = useState(false)
   const [showAI, setShowAI] = useState(false)
 
+  const activeSnippets = language === 'typescript' ? tsSnippets : jsSnippets
+
+  const handleLanguageChange = (lang: Language) => {
+    setLanguage(lang)
+    setCode(lang === 'typescript' ? tsSnippets[0].code : jsSnippets[0].code)
+    setOutputs([])
+  }
+
   const handleRun = useCallback(async () => {
     setIsRunning(true); setActiveTab('output')
     trackFeatureUsage('Playground')
     await new Promise(r => setTimeout(r, 200))
-    setOutputs(runCode(code)); setIsRunning(false)
-  }, [code])
+    const execCode = language === 'typescript' ? stripTypeScript(code) : code
+    setOutputs(runCode(execCode)); setIsRunning(false)
+  }, [code, language])
 
   const handleCopy = () => {
     copyToClipboard(code).then(() => {
@@ -288,8 +347,24 @@ export default function Playground() {
   return (
     <div className="h-full flex flex-col gap-4">
       <div className="flex items-center gap-3 flex-wrap">
+        {/* Language selector */}
+        <div className="flex bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg p-1">
+          {(['javascript', 'typescript'] as Language[]).map(lang => (
+            <button
+              key={lang}
+              onClick={() => handleLanguageChange(lang)}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                language === lang ? 'bg-[var(--color-accent)] text-white' : ''
+              }`}
+              style={language !== lang ? { color: 'var(--foreground-muted)' } : {}}
+            >
+              {lang === 'javascript' ? 'JS' : 'TS'}
+            </button>
+          ))}
+        </div>
+
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleRun} disabled={isRunning}
-          className="flex items-center gap-2 px-5 py-2.5 bg-[var(--color-accent)] hover:opacity-90 disabled:opacity-50 text-[var(--foreground)] rounded-lg font-medium transition-opacity">
+          className="flex items-center gap-2 px-5 py-2.5 bg-[var(--color-accent)] hover:opacity-90 disabled:opacity-50 text-white rounded-lg font-medium transition-opacity">
           <Play size={16} />{isRunning ? 'Running...' : 'Run Code'}
         </motion.button>
         <div className="relative">
@@ -301,7 +376,7 @@ export default function Playground() {
           <AnimatePresence>{showSnippets && (
             <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }}
               className="absolute top-full mt-1 left-0 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg overflow-hidden z-10 min-w-[160px]">
-              {snippets.map((s, i) => (
+              {activeSnippets.map((s, i) => (
                 <button key={i} onClick={() => { setCode(s.code); setShowSnippets(false); setOutputs([]) }}
                   className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-border)]"
                   style={{ color: 'var(--foreground-muted)' }}>{s.label}</button>
@@ -322,7 +397,7 @@ export default function Playground() {
         <motion.button whileHover={{ scale: 1.02 }} onClick={() => setShowAI(!showAI)}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm border transition-colors ${
             showAI
-              ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-[var(--foreground)]'
+              ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-white'
               : 'bg-[var(--color-card)] border-[var(--color-border)]'
           }`}
           style={!showAI ? { color: 'var(--foreground)' } : {}}>
@@ -331,7 +406,7 @@ export default function Playground() {
         <div className="flex bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg p-1 ml-auto lg:hidden">
           {(['editor', 'output'] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
-              className={`px-3 py-1 rounded-md text-sm capitalize ${activeTab === tab ? 'bg-[var(--color-accent)] text-[var(--foreground)]' : ''}`}
+              className={`px-3 py-1 rounded-md text-sm capitalize ${activeTab === tab ? 'bg-[var(--color-accent)] text-white' : ''}`}
               style={activeTab !== tab ? { color: 'var(--foreground-muted)' } : {}}>{tab}</button>
           ))}
         </div>
@@ -342,13 +417,20 @@ export default function Playground() {
         <div className={`flex flex-col bg-[var(--color-card)] rounded-xl border border-[var(--color-border)] overflow-hidden ${activeTab === 'output' ? 'hidden lg:flex' : 'flex'}`}>
           <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-bg)]">
             <div className="flex gap-1.5"><div className="w-3 h-3 rounded-full bg-[#ef4444]" /><div className="w-3 h-3 rounded-full bg-yellow-400" /><div className="w-3 h-3 rounded-full bg-[#10b981]" /></div>
-            <span className="text-xs font-mono ml-2" style={{ color: 'var(--foreground-muted)' }}>playground.js</span>
+            <span className="text-xs font-mono ml-2" style={{ color: 'var(--foreground-muted)' }}>
+              playground.{language === 'typescript' ? 'ts' : 'js'}
+            </span>
+            {language === 'typescript' && (
+              <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ background: 'color-mix(in srgb, #3178c6 20%, transparent)', color: '#3178c6' }}>
+                TypeScript
+              </span>
+            )}
           </div>
           <textarea value={code} onChange={(e) => setCode(e.target.value)} spellCheck={false}
             onKeyDown={(e) => { if (e.key === 'Tab') { e.preventDefault(); const s = e.currentTarget.selectionStart; setCode(code.substring(0,s)+'  '+code.substring(e.currentTarget.selectionEnd)); requestAnimationFrame(() => { e.currentTarget.selectionStart = e.currentTarget.selectionEnd = s+2 }) } }}
             className="flex-1 resize-none p-4 bg-[var(--color-bg)] font-mono text-sm leading-relaxed focus:outline-none"
             style={{ color: 'var(--foreground)' }}
-            placeholder="// Write your JavaScript here..." />
+            placeholder={language === 'typescript' ? '// Write your TypeScript here...' : '// Write your JavaScript here...'} />
         </div>
 
         {/* Console Output */}
