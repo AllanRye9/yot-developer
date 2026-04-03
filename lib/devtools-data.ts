@@ -616,7 +616,7 @@ async function loadUser(id) {
     return await res.json();
   } catch (err) {
     console.error("loadUser failed:", err.message);
-    return null; // return fallback instead of crashing
+    return null;
   }
 }
 
@@ -633,6 +633,217 @@ Promise.allSettled([loadUser(1), loadUser(9999)])
       else console.warn(\`User \${i+1} failed:\`, r.reason?.message);
     });
   });`,
+      },
+      {
+        title: 'try / catch / finally',
+        description: 'The finally block always runs regardless of whether an error was thrown — ideal for cleanup tasks.',
+        code: `function openConnection(id) {
+  console.log("Opening connection", id);
+  if (id < 0) throw new RangeError("ID must be non-negative");
+  return { id, status: "open" };
+}
+
+function closeConnection(conn) {
+  if (conn) console.log("Closing connection", conn.id);
+}
+
+let conn = null;
+
+try {
+  conn = openConnection(3);
+  console.log("Connection status:", conn.status);
+  // simulate work
+  console.log("Doing work on connection", conn.id);
+} catch (err) {
+  console.error("Connection error:", err.message);
+} finally {
+  closeConnection(conn);
+  console.log("finally block always runs");
+}
+
+// Run again with invalid ID
+console.log("---");
+conn = null;
+try {
+  conn = openConnection(-1);
+} catch (err) {
+  console.error("Caught:", err.message);
+} finally {
+  closeConnection(conn);
+  console.log("finally ran even after error");
+}`,
+      },
+      {
+        title: 'Re-throwing Errors',
+        description: 'Catch only what you can handle; re-throw errors your code cannot recover from.',
+        code: `function parseConfig(json) {
+  try {
+    const config = JSON.parse(json);
+    if (!config.host) throw new TypeError("Missing required field: host");
+    return config;
+  } catch (err) {
+    if (err instanceof SyntaxError) {
+      console.error("Invalid JSON — check the config file format");
+      return null;
+    }
+    throw err; // re-throw TypeError — caller must handle this
+  }
+}
+
+// Case 1: bad JSON — handled internally
+const result1 = parseConfig("not-json");
+console.log("Result 1:", result1);
+
+// Case 2: valid JSON but missing field — re-thrown
+try {
+  const result2 = parseConfig('{"port":8080}');
+  console.log("Result 2:", result2);
+} catch (err) {
+  console.error("Caller caught re-thrown error:", err.message);
+}
+
+// Case 3: fully valid config
+try {
+  const result3 = parseConfig('{"host":"localhost","port":3000}');
+  console.log("Result 3:", result3);
+} catch (err) {
+  console.error("Should not happen:", err.message);
+}`,
+      },
+      {
+        title: 'Custom Error Classes',
+        description: 'Extend the built-in Error class to create meaningful, type-safe custom errors.',
+        code: `class AppError extends Error {
+  constructor(message, code) {
+    super(message);
+    this.name = "AppError";
+    this.code = code;
+  }
+}
+
+class NetworkError extends AppError {
+  constructor(url, status) {
+    super(\`Request to \${url} failed with status \${status}\`, "NETWORK_ERROR");
+    this.name = "NetworkError";
+    this.url = url;
+    this.status = status;
+  }
+}
+
+class AuthError extends AppError {
+  constructor(message) {
+    super(message, "AUTH_ERROR");
+    this.name = "AuthError";
+  }
+}
+
+function handleRequest(url, token) {
+  if (!token) throw new AuthError("No auth token provided");
+  if (url.includes("bad")) throw new NetworkError(url, 404);
+  return { data: "success", url };
+}
+
+const tests = [
+  () => handleRequest("/api/data", "tok123"),
+  () => handleRequest("/api/data", null),
+  () => handleRequest("/api/bad-endpoint", "tok123"),
+];
+
+tests.forEach((fn, i) => {
+  try {
+    const res = fn();
+    console.log(\`Test \${i + 1} passed:\`, res.data);
+  } catch (err) {
+    if (err instanceof AuthError) {
+      console.error(\`Test \${i + 1} auth error [\${err.code}]:\`, err.message);
+    } else if (err instanceof NetworkError) {
+      console.error(\`Test \${i + 1} network error [\${err.status}]:\`, err.message);
+    } else {
+      console.error(\`Test \${i + 1} unexpected:\`, err.message);
+    }
+  }
+});`,
+      },
+      {
+        title: 'Nested try/catch',
+        description: 'Use nested try/catch blocks to handle errors at different levels of your call stack.',
+        code: `function parseNumber(str) {
+  const n = Number(str);
+  if (Number.isNaN(n)) throw new TypeError(\`Cannot convert "\${str}" to number\`);
+  return n;
+}
+
+function divide(a, b) {
+  if (b === 0) throw new RangeError("Division by zero");
+  return a / b;
+}
+
+function computeRatio(aStr, bStr) {
+  try {
+    const a = parseNumber(aStr);
+    try {
+      const b = parseNumber(bStr);
+      return divide(a, b);
+    } catch (inner) {
+      if (inner instanceof RangeError) {
+        console.warn("Division by zero — returning Infinity");
+        return Infinity;
+      }
+      throw inner; // re-throw parse error for outer catch
+    }
+  } catch (outer) {
+    console.error("Cannot compute ratio:", outer.message);
+    return null;
+  }
+}
+
+console.log(computeRatio("10", "2"));   // 5
+console.log(computeRatio("10", "0"));   // Infinity
+console.log(computeRatio("abc", "2"));  // null
+console.log(computeRatio("10", "xyz")); // null`,
+      },
+      {
+        title: 'Error Boundary Pattern',
+        description: 'Wrap unreliable operations in a helper that returns a result or error object instead of throwing.',
+        code: `// Result wrapper — avoids propagating exceptions through call stacks
+function tryCatch(fn) {
+  try {
+    return { ok: true, value: fn() };
+  } catch (err) {
+    return { ok: false, error: err };
+  }
+}
+
+async function tryCatchAsync(fn) {
+  try {
+    return { ok: true, value: await fn() };
+  } catch (err) {
+    return { ok: false, error: err };
+  }
+}
+
+// Usage — synchronous
+const r1 = tryCatch(() => JSON.parse('{"valid":true}'));
+console.log("r1:", r1.ok ? r1.value : r1.error.message);
+
+const r2 = tryCatch(() => JSON.parse("bad json"));
+console.log("r2:", r2.ok ? r2.value : r2.error.message);
+
+// Usage — with validation
+function validateAge(age) {
+  if (typeof age !== "number") throw new TypeError("Age must be a number");
+  if (age < 0 || age > 150) throw new RangeError("Age out of range");
+  return age;
+}
+
+[25, -5, "old", 200].forEach(input => {
+  const result = tryCatch(() => validateAge(input));
+  if (result.ok) {
+    console.log("Valid age:", result.value);
+  } else {
+    console.error(\`Invalid (\${result.error.constructor.name}):\`, result.error.message);
+  }
+});`,
       },
     ],
   },
@@ -1166,6 +1377,127 @@ for (const input of [null, { name: "Bob" }, { email: "alice@x.com" }]) {
     else throw e;
   }
 }`,
+      },
+      {
+        title: 'try / catch / finally',
+        description: 'Use finally for guaranteed cleanup — it runs whether the try block succeeds or throws.',
+        code: `// finally always runs — use it for cleanup (close files, release locks, etc.)
+function readData(source) {
+  if (source === "corrupt") throw new Error("Data is corrupt");
+  return \`data from \${source}\`;
+}
+
+function processSource(source) {
+  let data = null;
+  try {
+    data = readData(source);
+    console.log("Read:", data);
+    return data.toUpperCase();
+  } catch (err) {
+    console.error("Read failed:", err.message);
+    return null;
+  } finally {
+    console.log("finally: cleanup for", source);
+  }
+}
+
+console.log("Result 1:", processSource("db"));
+console.log("---");
+console.log("Result 2:", processSource("corrupt"));`,
+      },
+      {
+        title: 'Catching Specific Error Types',
+        description: 'Use instanceof to branch on the error type and respond appropriately to each failure mode.',
+        code: `function strictDivide(a, b) {
+  if (typeof a !== "number" || typeof b !== "number") {
+    throw new TypeError("Both arguments must be numbers");
+  }
+  if (b === 0) {
+    throw new RangeError("Divisor cannot be zero");
+  }
+  return a / b;
+}
+
+const testCases = [
+  [10, 2],
+  [10, 0],
+  ["ten", 2],
+  [9, 3],
+];
+
+testCases.forEach(([a, b]) => {
+  try {
+    const result = strictDivide(a, b);
+    console.log(\`\${a} / \${b} = \${result}\`);
+  } catch (err) {
+    if (err instanceof TypeError) {
+      console.error("TypeError:", err.message);
+    } else if (err instanceof RangeError) {
+      console.error("RangeError:", err.message);
+    } else {
+      throw err; // unexpected — propagate up
+    }
+  }
+});`,
+      },
+      {
+        title: 'Async try / catch',
+        description: 'Wrap await calls in try/catch to handle rejected Promises cleanly in async functions.',
+        code: `function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function fetchItem(id) {
+  await delay(50);
+  if (id < 1) throw new RangeError("ID must be >= 1");
+  if (id > 5) throw new Error("Item not found");
+  return { id, name: \`Item \${id}\`, price: id * 9.99 };
+}
+
+async function loadCart(ids) {
+  const cart = [];
+  for (const id of ids) {
+    try {
+      const item = await fetchItem(id);
+      cart.push(item);
+      console.log("Added:", item.name, "-", item.price.toFixed(2));
+    } catch (err) {
+      console.warn(\`Skipping id=\${id}: \${err.message}\`);
+    }
+  }
+  const total = cart.reduce((sum, item) => sum + item.price, 0);
+  console.log("Cart total:", total.toFixed(2));
+  return cart;
+}
+
+loadCart([1, -1, 3, 99, 5]);`,
+      },
+      {
+        title: 'Promise.allSettled with Errors',
+        description: 'Use Promise.allSettled to run multiple async tasks and inspect each outcome without short-circuiting on failure.',
+        code: `async function fetchPost(id) {
+  if (id === 2) throw new Error("Post 2 unavailable");
+  await new Promise(r => setTimeout(r, 10));
+  return { id, title: \`Post \${id}\`, body: "Lorem ipsum..." };
+}
+
+async function loadFeed(ids) {
+  const results = await Promise.allSettled(ids.map(id => fetchPost(id)));
+
+  results.forEach((result, i) => {
+    const id = ids[i];
+    if (result.status === "fulfilled") {
+      console.log(\`Post \${id}: \${result.value.title}\`);
+    } else {
+      console.error(\`Post \${id} failed: \${result.reason.message}\`);
+    }
+  });
+
+  const succeeded = results.filter(r => r.status === "fulfilled").length;
+  console.log(\`\${succeeded} / \${ids.length} posts loaded\`);
+}
+
+loadFeed([1, 2, 3, 4]);`,
       },
       {
         title: 'Generators & Iterators',
