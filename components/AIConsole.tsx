@@ -288,7 +288,7 @@ console.log("Type a task description below to get AI-powered method recommendati
       showExplanation: false,
       timestamp: Date.now(),
     }))
-    setEntries(prev => [...prev, ...newEntries])
+    setEntries(newEntries)
     setHasRun(true)
     setRightPanel('explain')
     trackFeatureUsage('AIConsole:run')

@@ -1,7 +1,7 @@
 'use client'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Copy, Check, Play, Monitor, Smartphone, ChevronDown, ChevronRight } from 'lucide-react'
+import { Copy, Check, Play, Monitor, Smartphone, ChevronDown, ChevronRight, Terminal, Code2 } from 'lucide-react'
 import { reactDOMPlatform, reactNativePlatform, type ReactExample } from '@/lib/react-learning-data'
 import { copyToClipboard } from '@/lib/clipboard'
 
@@ -331,6 +331,155 @@ export default function ReactLearning() {
           <PlatformPanel platform={platform} />
         </motion.div>
       </AnimatePresence>
+
+      {/* React Playground */}
+      <ReactPlayground />
+    </div>
+  )
+}
+
+// ─── React Playground ─────────────────────────────────────────────────────────
+
+const REACT_PLAYGROUND_EXAMPLES = [
+  {
+    label: 'useState Counter',
+    code: `// React useState Counter\nfunction Counter() {\n  const [count, setCount] = React.useState(0);\n  return (\n    <div style={{textAlign:'center',padding:20}}>\n      <h2 style={{marginBottom:12}}>Count: {count}</h2>\n      <button onClick={() => setCount(c => c + 1)} style={{marginRight:8,padding:'6px 16px',background:'#6366f1',color:'#fff',border:'none',borderRadius:8,cursor:'pointer'}}>+</button>\n      <button onClick={() => setCount(c => c - 1)} style={{padding:'6px 16px',background:'#ef4444',color:'#fff',border:'none',borderRadius:8,cursor:'pointer'}}>-</button>\n    </div>\n  );\n}\nrender(<Counter />);`,
+  },
+  {
+    label: 'useEffect Timer',
+    code: `// React useEffect Timer\nfunction Timer() {\n  const [seconds, setSeconds] = React.useState(0);\n  React.useEffect(() => {\n    const id = setInterval(() => setSeconds(s => s + 1), 1000);\n    return () => clearInterval(id);\n  }, []);\n  return (\n    <div style={{textAlign:'center',padding:20}}>\n      <h2 style={{fontFamily:'monospace',fontSize:48,margin:0}}>⏱ {seconds}s</h2>\n      <p style={{color:'#94a3b8',marginTop:8}}>Timer running…</p>\n    </div>\n  );\n}\nrender(<Timer />);`,
+  },
+  {
+    label: 'List & Keys',
+    code: `// React List & Keys\nfunction FruitList() {\n  const fruits = ['🍎 Apple','🍌 Banana','🍇 Grape','🍓 Strawberry'];\n  return (\n    <ul style={{padding:'16px 24px',fontFamily:'sans-serif'}}>\n      {fruits.map((fruit, i) => (\n        <li key={i} style={{padding:'6px 0',borderBottom:'1px solid #e2e8f0',color:'#1e293b'}}>{fruit}</li>\n      ))}\n    </ul>\n  );\n}\nrender(<FruitList />);`,
+  },
+]
+
+function ReactPlayground() {
+  const [code, setCode] = useState(REACT_PLAYGROUND_EXAMPLES[0].code)
+  const [previewHtml, setPreviewHtml] = useState('')
+  const [error, setError] = useState('')
+  const [showSnippets, setShowSnippets] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const handleRun = useCallback(() => {
+    setError('')
+    try {
+      // Build a standalone HTML page with React CDN + the component code
+      const html = `<!DOCTYPE html><html><head>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"><\/script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"><\/script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"><\/script>
+<style>body{margin:0;padding:0;font-family:system-ui,sans-serif;background:#fff;}</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const render = (el) => ReactDOM.createRoot(document.getElementById('root')).render(el);
+${code}
+<\/script></body></html>`
+      setPreviewHtml(html)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }, [code])
+
+  const handleCopy = () => {
+    copyToClipboard(code).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) }).catch(() => {})
+  }
+
+  return (
+    <div className="rounded-xl border overflow-hidden" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
+      <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg)' }}>
+        <div className="flex items-center gap-2">
+          <Code2 size={15} style={{ color: 'var(--color-accent)' }} />
+          <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>React Playground</span>
+          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ background: 'color-mix(in srgb, #61dafb 15%, transparent)', color: '#61dafb' }}>Live Preview</span>
+        </div>
+        <div className="flex gap-2">
+          {/* Snippets */}
+          <div className="relative">
+            <motion.button whileHover={{ scale: 1.02 }} onClick={() => setShowSnippets(s => !s)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border"
+              style={{ color: 'var(--foreground-muted)', borderColor: 'var(--color-border)', background: 'var(--color-card)' }}>
+              <ChevronDown size={12} />Examples
+            </motion.button>
+            <AnimatePresence>
+              {showSnippets && (
+                <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                  className="absolute right-0 top-full mt-1 z-10 rounded-lg overflow-hidden border min-w-[180px]"
+                  style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
+                  {REACT_PLAYGROUND_EXAMPLES.map((ex, i) => (
+                    <button key={i} onClick={() => { setCode(ex.code); setShowSnippets(false); setPreviewHtml(''); setError('') }}
+                      className="w-full text-left px-4 py-2 text-xs hover:opacity-80"
+                      style={{ color: 'var(--foreground-muted)' }}>{ex.label}</button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          <motion.button whileHover={{ scale: 1.02 }} onClick={handleCopy}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border"
+            style={{ color: 'var(--foreground-muted)', borderColor: 'var(--color-border)', background: 'var(--color-card)' }}>
+            {copied ? <Check size={12} className="text-[#10b981]" /> : <Copy size={12} />}
+          </motion.button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 min-h-[360px]">
+        {/* Editor */}
+        <div className="flex flex-col border-r" style={{ borderColor: 'var(--color-border)' }}>
+          <div className="flex items-center justify-between px-4 py-2 border-b" style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}>
+            <span className="text-xs font-mono" style={{ color: 'var(--foreground-muted)' }}>App.jsx</span>
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleRun}
+              className="flex items-center gap-1.5 px-3 py-1 bg-[var(--color-accent)] text-white rounded-lg text-xs font-medium">
+              <Play size={11} />Run
+            </motion.button>
+          </div>
+          <textarea
+            value={code}
+            onChange={e => setCode(e.target.value)}
+            spellCheck={false}
+            onKeyDown={e => {
+              if (e.key === 'Tab') {
+                e.preventDefault()
+                const s = e.currentTarget.selectionStart
+                setCode(code.substring(0, s) + '  ' + code.substring(e.currentTarget.selectionEnd))
+                requestAnimationFrame(() => { e.currentTarget.selectionStart = e.currentTarget.selectionEnd = s + 2 })
+              }
+            }}
+            className="flex-1 resize-none p-4 font-mono text-xs leading-relaxed focus:outline-none"
+            style={{ background: 'var(--color-bg)', color: 'var(--foreground)', minHeight: 320 }}
+          />
+        </div>
+
+        {/* Preview */}
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2 px-4 py-2 border-b" style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}>
+            <Monitor size={13} style={{ color: 'var(--foreground-muted)' }} />
+            <span className="text-xs font-mono" style={{ color: 'var(--foreground-muted)' }}>Live Preview</span>
+            <div className="flex gap-1 ml-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />
+            </div>
+          </div>
+          {error ? (
+            <div className="flex-1 p-4 text-xs font-mono text-[#ef4444]">{error}</div>
+          ) : previewHtml ? (
+            <iframe
+              srcDoc={previewHtml}
+              sandbox="allow-scripts"
+              className="flex-1 w-full bg-white border-0"
+              style={{ minHeight: 320 }}
+              title="React Preview"
+            />
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center gap-3" style={{ color: 'var(--foreground-muted)' }}>
+              <Terminal size={32} className="opacity-20" />
+              <p className="text-sm">Click <strong>Run</strong> to see the live preview</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

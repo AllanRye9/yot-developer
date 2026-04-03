@@ -1,7 +1,7 @@
 'use client'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Trophy, Star, Lock, CheckCircle, Play, Lightbulb, Eye, Zap, Target } from 'lucide-react'
+import { Trophy, Star, Lock, CheckCircle, Play, Lightbulb, Eye, Zap, Target, Award, Download, X } from 'lucide-react'
 import { challenges, badges, type Challenge, type DifficultyLevel } from '@/lib/challenges-data'
 import { trackFeatureUsage } from '@/lib/analytics'
 
@@ -114,6 +114,124 @@ function ChallengeCard({ challenge, isCompleted, isLocked, onSelect }: {
   )
 }
 
+// ─── Certificate Modal ────────────────────────────────────────────────────────
+
+function CertificateModal({ challenge, onClose }: { challenge: Challenge; onClose: () => void }) {
+  const certRef = useRef<HTMLDivElement>(null)
+  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+
+  const escapeHtml = (str: string) =>
+    str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+
+  const handlePrint = () => {
+    if (!certRef.current) return
+    const safeTitle = escapeHtml(challenge.title)
+    const content = certRef.current.innerHTML
+    const win = window.open('', '_blank')
+    if (!win) return
+    win.document.write(`<!DOCTYPE html><html><head><title>Certificate &#8211; ${safeTitle}</title>
+    <style>
+      body { margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #1a1a2e; }
+    </style></head><body>${content}</body></html>`)
+    win.document.close()
+    setTimeout(() => { win.print(); win.close() }, 500)
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="relative w-full max-w-2xl"
+      >
+        <button
+          onClick={onClose}
+          className="absolute -top-3 -right-3 z-10 w-8 h-8 bg-[var(--color-card)] border border-[var(--color-border)] rounded-full flex items-center justify-center text-[var(--foreground-muted)] hover:text-white transition-colors"
+        >
+          <X size={14} />
+        </button>
+
+        {/* Certificate */}
+        <div ref={certRef}>
+          <div
+            style={{
+              background: 'linear-gradient(135deg, #0d0d1a 0%, #12122a 50%, #0d0d1a 100%)',
+              border: '3px solid #6366f1',
+              borderRadius: 16,
+              padding: '48px 56px',
+              textAlign: 'center',
+              boxShadow: '0 0 60px rgba(99,102,241,0.3), inset 0 0 60px rgba(99,102,241,0.05)',
+              fontFamily: "'Georgia', serif",
+            }}
+          >
+            {/* Top decoration */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 24 }}>
+              {[...Array(5)].map((_, i) => (
+                <span key={i} style={{ color: '#f59e0b', fontSize: 18 }}>★</span>
+              ))}
+            </div>
+
+            {/* Badge icon */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+              <div style={{ width: 72, height: 72, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 30px rgba(99,102,241,0.5)' }}>
+                <span style={{ fontSize: 32 }}>🏆</span>
+              </div>
+            </div>
+
+            <p style={{ color: '#a5b4fc', fontSize: 13, letterSpacing: '0.3em', textTransform: 'uppercase', marginBottom: 8 }}>
+              Certificate of Achievement
+            </p>
+            <p style={{ color: '#64748b', fontSize: 12, marginBottom: 20 }}>This certifies that</p>
+            <p style={{ color: '#e2e8f0', fontSize: 28, fontWeight: 'bold', margin: '8px 0 20px', letterSpacing: '0.05em' }}>
+              YOT Developer
+            </p>
+            <p style={{ color: '#64748b', fontSize: 14, marginBottom: 8 }}>
+              has successfully completed the challenge
+            </p>
+            <p style={{ color: '#6366f1', fontSize: 22, fontWeight: 'bold', margin: '12px 0', padding: '8px 24px', background: 'rgba(99,102,241,0.1)', borderRadius: 8, display: 'inline-block', border: '1px solid rgba(99,102,241,0.3)' }}>
+              {challenge.title}
+            </p>
+            <p style={{ color: '#64748b', fontSize: 12, marginTop: 8, marginBottom: 24 }}>
+              Difficulty: <span style={{ color: challenge.difficulty === 'Advanced' ? '#f59e0b' : challenge.difficulty === 'Intermediate' ? '#6366f1' : '#10b981', fontWeight: 'bold' }}>{challenge.difficulty}</span>
+              &nbsp;·&nbsp; XP Earned: <span style={{ color: '#f59e0b', fontWeight: 'bold' }}>+{challenge.xpReward}</span>
+            </p>
+
+            {/* Divider */}
+            <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, #6366f1, transparent)', margin: '20px 0' }} />
+
+            <p style={{ color: '#475569', fontSize: 12, marginTop: 16 }}>
+              Issued on {today} · YOT Developer Platform
+            </p>
+
+            {/* Bottom stars */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 20 }}>
+              {[...Array(5)].map((_, i) => (
+                <span key={i} style={{ color: '#f59e0b', fontSize: 18 }}>★</span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-3 mt-4 justify-center">
+          <motion.button
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+            onClick={handlePrint}
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#6366f1] hover:bg-[#5457e5] text-white rounded-lg text-sm font-medium transition-colors"
+          >
+            <Download size={14} /> Print / Save Certificate
+          </motion.button>
+          <button onClick={onClose} className="px-5 py-2.5 bg-[var(--color-card)] border border-[var(--color-border)] text-[var(--foreground-muted)] rounded-lg text-sm hover:text-white transition-colors">
+            Close
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+
 function ChallengeModal({ challenge, isCompleted, onClose, onComplete }: {
   challenge: Challenge; isCompleted: boolean; onClose: () => void; onComplete: () => void
 }) {
@@ -124,6 +242,7 @@ function ChallengeModal({ challenge, isCompleted, onClose, onComplete }: {
   const [showSolution, setShowSolution] = useState(false)
   const [passed, setPassed] = useState(false)
   const [attempted, setAttempted] = useState(false)
+  const [showCertificate, setShowCertificate] = useState(false)
 
   const checkSolution = useCallback((userCode: string): boolean => {
     return challenge.expectedKeywords.every(kw => userCode.includes(kw))
@@ -248,7 +367,7 @@ function ChallengeModal({ challenge, isCompleted, onClose, onComplete }: {
             </div>
 
             {/* Run button */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-wrap">
               <motion.button
                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 onClick={handleRun} disabled={isRunning}
@@ -262,10 +381,27 @@ function ChallengeModal({ challenge, isCompleted, onClose, onComplete }: {
                   <CheckCircle size={14} />Challenge Complete!
                 </motion.div>
               )}
+              {(isCompleted || passed) && (
+                <motion.button
+                  initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                  onClick={() => setShowCertificate(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-[#f59e0b]/10 border border-[#f59e0b]/30 text-[#f59e0b] hover:bg-[#f59e0b]/20 rounded-lg text-sm font-medium transition-colors"
+                >
+                  <Award size={14} />Get Certificate
+                </motion.button>
+              )}
             </div>
           </div>
         </div>
       </motion.div>
+
+      {/* Certificate overlay */}
+      <AnimatePresence>
+        {showCertificate && (
+          <CertificateModal challenge={challenge} onClose={() => setShowCertificate(false)} />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
